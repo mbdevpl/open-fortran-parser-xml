@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<project name="open-fortran-parser-xml" default="jar">
+
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="target" value="1.8" />
+	<property name="source" value="1.8" />
+
+	<property name="src.dir" value="src" />
+	<property name="bin.dir" value="bin" />
+	<property name="lib.dir" value="lib" />
+	<property name="jar.name" value="OpenFortranParserXml-0.1.0.jar" />
+
+	<path id="ofp.classpath">
+		<pathelement location="bin" />
+		<!-- <pathelement location="resources" /> -->
+		<fileset dir="${lib.dir}" includes="*.jar" />
+	</path>
+
+	<target name="clean">
+		<delete dir="${bin.dir}" />
+		<delete file="${jar.name}" />
+	</target>
+
+	<target name="init">
+		<mkdir dir="${bin.dir}" />
+		<copy includeemptydirs="false" todir="${bin.dir}">
+			<fileset dir="${src.dir}">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+		<copy file="LICENSE" todir="${bin.dir}" />
+	</target>
+
+	<target name="build" depends="clean,init">
+		<echo message="${ant.project.name}: ${ant.file}" />
+		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.dir}" includeantruntime="false" source="${source}" target="${target}" encoding="UTF-8">
+			<src path="${src.dir}" />
+			<classpath refid="ofp.classpath" />
+		</javac>
+	</target>
+
+	<target name="jar" depends="build">
+		<jar jarfile="${jar.name}" basedir="bin" includes="**/*.class">
+			<manifest>
+				<attribute name="Main-Class" value="fortran.ofp.Xml" />
+			</manifest>
+		</jar>
+	</target>
+
+</project>
