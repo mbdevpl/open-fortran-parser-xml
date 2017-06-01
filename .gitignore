@@ -3,4 +3,5 @@
 /.project
 /.settings
 /bin
-/*.jar
+/dist
+/lib
