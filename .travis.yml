@@ -1,0 +1,40 @@
+sudo: false
+language: python
+os:
+  - linux
+#  - osx
+python:
+  - 3.3
+  - 3.4
+  - 3.5
+  - 3.6
+#  - 3.7
+matrix:
+  allow_failures:
+#    - python: 3.7
+
+before_install:
+  - pip install -r test_requirements.txt
+
+install:
+  # Java
+  - java -version
+  - python3 open_fortran_parser/dev_dependencies.py
+  - export CLASSPATH="${CLASSPATH}:$(pwd)/lib/*"
+  - ant
+  - export CLASSPATH="${CLASSPATH}:$(pwd)/dist/*"
+  # Python
+  - python --version
+  - pip install -r requirements.txt
+  - python3.6 setup.py sdist --formats=gztar,zip
+  - python3 setup.py bdist_wheel
+  - pip install .
+
+script:
+  - python -m unittest discover
+
+after_success:
+  - python3.6 -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y --output-format colorized  --reports y $(find . -name "*.py")
+  - python3.6 -m coverage run --branch -m unittest discover --verbose
+  - python -m coverage report --show-missing
+  - coveralls
