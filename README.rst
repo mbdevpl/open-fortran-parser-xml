@@ -167,7 +167,7 @@ how to build
 
 .. code:: bash
 
-  - pip3 install -U -r dev_requirements.txt
+    pip3 install -U -r dev_requirements.txt
     python3 setup.py sdist --formats=gztar,zip
     python3 setup.py bdist_wheel
 
