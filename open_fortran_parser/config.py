@@ -2,7 +2,7 @@
 
 import pathlib
 
-java = {
+JAVA = {
     'executable': pathlib.Path('java'),
     'classpath': None,
     'ofp_class': 'fortran.ofp.FrontEnd',

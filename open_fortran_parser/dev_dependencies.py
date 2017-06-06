@@ -32,6 +32,7 @@ DEV_DEPENDENCIES = {
 def ensure_dependencies(
         dependencies: t.Mapping[str, t.Tuple[urllib.parse.ParseResult, str]] = None,
         target_dir: pathlib.Path = None, silent: bool = False) -> None:
+    """Download missing depenedencies."""
     if dependencies is None:
         dependencies = DEV_DEPENDENCIES
     if target_dir is None:

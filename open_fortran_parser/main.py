@@ -12,7 +12,7 @@ _LOG = logging.getLogger(__name__)
 
 
 def main(args=None, namespace=None):
-
+    """Launch Open Fortran Parser."""
     parser = argparse.ArgumentParser(
         prog='open_fortran_parser',
         description='''Python wrapper around XML generator for Open Fortran Parser 0.8.4''',

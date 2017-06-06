@@ -22,13 +22,12 @@ class Tests(unittest.TestCase):
                 with self.subTest(input_path=input_path, verbosity=verbosity):
                     execute_parser(input_path, output_path, verbosity)
 
-    #@unittest.skip('too verbose')
     def test_execute_parser_stdout(self):
         for input_path in INPUT_PATHS:
             for output_path in OUTPUT_PATHS:
                 for verbosity in VERBOSITIES:
-                    with self.subTest(
-                            input_path=input_path, output_path=output_path, verbosity=verbosity):
+                    with self.subTest(input_path=input_path,
+                                      output_path=output_path, verbosity=verbosity):
                         execute_parser(input_path, output_path, verbosity)
 
     def test_parse(self):

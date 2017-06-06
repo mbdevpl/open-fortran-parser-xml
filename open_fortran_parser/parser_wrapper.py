@@ -6,7 +6,7 @@ import subprocess
 import typing as t
 import xml.etree.ElementTree as ET
 
-from .config import java as java_config
+from .config import JAVA as java_config
 
 _LOG = logging.getLogger(__name__)
 
@@ -18,8 +18,8 @@ def execute_parser(
     command = [str(java_config['executable'])]
     if java_config['classpath'] is not None:
         command += ['-cp', str(java_config['classpath'])]
-    command += [java_config['ofp_class'],
-        '--class', java_config['ofp_xml_class'], '--verbosity', str(verbosity)]
+    command.append(java_config['ofp_class'])
+    command += ['--class', java_config['ofp_xml_class'], '--verbosity', str(verbosity)]
     if output_path is not None:
         command += ['--output', str(output_path)]
     command.append(str(input_path))
