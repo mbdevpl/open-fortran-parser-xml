@@ -1,7 +1,9 @@
 /.classpath
 /.externalToolBuilders
-/.project
+/.*project
 /.settings
 /bin
 /dist
 /lib
+/*.egg-info
+__pycache__
