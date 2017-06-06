@@ -9,7 +9,7 @@
 	<property name="bin.dir" value="bin" />
 	<property name="lib.dir" value="lib" />
 	<property name="dist.dir" value="dist" />
-	<property name="jar.name" value="OpenFortranParserXML-0.1.0.jar" />
+	<property name="jar.name" value="OpenFortranParserXML-0.2.0.jar" />
 	<property name="mainclass" value="fortran.ofp.Xml" />
 
 	<path id="ofp.classpath">

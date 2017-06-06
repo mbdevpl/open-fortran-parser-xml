@@ -13,10 +13,10 @@ else:
 DEPENENCIES = DEV_DEPENDENCIES.copy()
 
 DEPENENCIES.update({
-    'Open Fortran Parser XML 0.1.0': (
+    'Open Fortran Parser XML 0.2.0': (
         urllib.parse.urlparse(
-            'https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.1.0/'),
-        pathlib.Path('OpenFortranParserXML-0.1.0.jar'))})
+            'https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/'),
+        pathlib.Path('OpenFortranParserXML-0.2.0.jar'))})
 
 
 if __name__ == '__main__':
