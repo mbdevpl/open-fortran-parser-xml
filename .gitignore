@@ -1,9 +1,11 @@
 /.classpath
+/.coverage
 /.externalToolBuilders
 /.*project
 /.settings
 /bin
 /dist
+/htmlcov
 /lib
 /*.egg-info
 __pycache__

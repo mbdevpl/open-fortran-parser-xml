@@ -1,0 +1,46 @@
+dist: trusty
+sudo: false
+language: python
+os:
+  - linux
+#  - osx
+python:
+  - "3.6"
+  - "3.6-dev"
+  - "3.7-dev"
+matrix:
+  allow_failures:
+    - python: "3.6-dev"
+    - python: "3.7-dev"
+
+env:
+  - JDK=oraclejdk8
+  - JDK=openjdk8
+
+before_install:
+  - jdk_switcher use $JDK
+  - java -version
+  - python --version
+
+install:
+  # dependencies
+  - pip install -U pip
+  - pip install -U -r dev_requirements.txt
+  # Java
+  - python open_fortran_parser/dev_dependencies.py
+  - export CLASSPATH="${CLASSPATH}:$(pwd)/lib/*"
+  - ant
+  - export CLASSPATH="${CLASSPATH}:$(pwd)/dist/*"
+  # Python
+  - python setup.py sdist --formats=gztar,zip
+  - python setup.py bdist_wheel
+  - pip install .
+
+script:
+  - python -m unittest discover
+
+after_success:
+  - python -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y --output-format colorized  --reports y $(find . -name "*.py")
+  - python -m coverage run --branch -m unittest discover --verbose
+  - python -m coverage report --show-missing
+  - coveralls
