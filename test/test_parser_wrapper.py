@@ -11,6 +11,7 @@ INPUT_PATHS = list(_HERE.joinpath('examples').glob('**/*.*'))
 OUTPUT_PATHS = ['/tmp/out.xml', None]
 VERBOSITIES = (0, 20, 80, 100)
 
+
 class Tests(unittest.TestCase):
 
     maxDiff = None

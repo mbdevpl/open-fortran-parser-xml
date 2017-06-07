@@ -33,7 +33,7 @@ Java XML generator for OFP
 ==========================
 
 This is an extension of Open Fortran Parser (OFP), which outputs abstract syntaxt tree (AST)
-of parsed Fortran file in XML format - to a file or to `System.out`.
+of parsed Fortran file in XML format - to a file or to :java:`System.out`.
 
 
 ------------
