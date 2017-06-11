@@ -331,11 +331,50 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.keyword();
 	}
 
+	public void name(Token id) {
+		super.name(id);
+	}
+
+	public void constant(Token id) {
+		super.constant(id);
+	}
+
+	public void scalar_constant() {
+		if (verbosity >= 100)
+			super.scalar_constant();
+	}
+
+	public void literal_constant() {
+		if (verbosity >= 100)
+			super.literal_constant();
+		contextClose("literal");
+	}
+
 	public void intrinsic_type_spec(Token keyword1, Token keyword2, int type, boolean hasKindSelector) {
 		contextOpen("declaration");
 		setAttribute("type", "variable");
 		super.intrinsic_type_spec(keyword1, keyword2, type, hasKindSelector);
 		// contextOpen("intrinsic-type");
+	}
+
+	public void int_literal_constant(Token digitString, Token kindParam) {
+		contextOpen("literal");
+		setAttribute("type", "int");
+		setAttribute("value", digitString);
+		super.int_literal_constant(digitString, kindParam);
+	}
+
+	public void scalar_int_literal_constant() {
+		if (verbosity >= 100)
+			super.scalar_int_literal_constant();
+		contextClose("literal");
+	}
+
+	public void char_literal_constant(Token digitString, Token id, Token str) {
+		contextOpen("literal");
+		setAttribute("type", "char");
+		setAttribute("value", str);
+		super.char_literal_constant(digitString, id, str);
 	}
 
 	public void type_declaration_stmt(Token label, int numAttributes, Token eos) {
@@ -439,20 +478,97 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose();
 	}
 
+	public void variable() {
+		if (verbosity >= 100)
+			super.variable();
+		contextClose("name");
+	}
+
+	public void designator_or_func_ref() {
+		if (verbosity >= 100)
+			super.designator_or_func_ref();
+		contextClose("name");
+	}
+
+	public void part_ref(Token id, boolean hasSectionSubscriptList, boolean hasImageSelector) {
+		Element outer_context = context;
+		Element e = null;
+		if (hasSectionSubscriptList) {
+			ArrayList<Node> nodes = contextNodes();
+			e = (Element) nodes.get(nodes.size() - 1);
+			if (e.getTagName() != "subscripts") {
+				cleanUp();
+				System.exit(1);
+			}
+		}
+		contextOpen("name");
+		setAttribute("id", id);
+		if (hasSectionSubscriptList) {
+			outer_context.removeChild(e);
+			context.appendChild(e);
+		}
+		if (verbosity >= 60)
+			super.part_ref(id, hasSectionSubscriptList, hasImageSelector);
+	}
+
 	public void section_subscript(boolean hasLowerBound, boolean hasUpperBound, boolean hasStride,
 			boolean isAmbiguous) {
-		super.section_subscript(hasLowerBound, hasUpperBound, hasStride, isAmbiguous);
+		if (verbosity >= 80)
+			super.section_subscript(hasLowerBound, hasUpperBound, hasStride, isAmbiguous);
+		contextClose("subscript");
+		contextOpen("subscript");
 	}
 
 	public void section_subscript_list__begin() {
-		contextOpen("list");
+		contextOpen("subscripts");
 		if (verbosity >= 100)
 			super.section_subscript_list__begin();
+		contextOpen("subscript");
 	}
 
 	public void section_subscript_list(int count) {
-		super.section_subscript_list(count);
-		contextClose("list");
+		contextClose("subscript");
+		if (verbosity >= 100)
+			super.section_subscript_list(count);
+		setAttribute("count", count);
+		contextClose("subscripts");
+	}
+
+	public void primary() {
+		if (verbosity >= 100)
+			super.primary();
+		// contextCloseAny("literal", "name");
+	}
+
+	public void parenthesized_expr() {
+		if (verbosity >= 100)
+			super.parenthesized_expr();
+	}
+
+	public void level_3_expr(Token relOp) {
+		if (verbosity >= 80)
+			super.level_3_expr(relOp);
+		if (relOp == null)
+			return;
+		contextClose("operand");
+		setAttribute("operator", relOp);
+		contextClose("operation");
+	}
+
+	public void rel_op(Token relOp) {
+		ArrayList<Node> nodes = contextNodes();
+		Element outer_context = context;
+		contextOpen("operation");
+		contextOpen("operand");
+		for (Node node : nodes) {
+			outer_context.removeChild(node);
+			context.appendChild(node);
+		}
+		if (verbosity >= 100)
+			super.rel_op(relOp);
+		contextClose("operand");
+		setAttribute("type", "binary");
+		contextOpen("operand");
 	}
 
 	public void block() {
@@ -472,11 +588,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void if_then_stmt(Token label, Token id, Token ifKeyword, Token thenKeyword, Token eos) {
 		contextRename("statement", "if");
 		ArrayList<Node> nodes = contextNodes();
-		Element old_context = context;
+		Element outer_context = context;
 		contextOpen("header");
 		for (Node node : nodes) {
 			// System.err.println(" " + ((Element) node).getTagName());
-			old_context.removeChild(node);
+			outer_context.removeChild(node);
 			context.appendChild(node);
 		}
 		contextClose("header");
