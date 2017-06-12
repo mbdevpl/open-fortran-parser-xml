@@ -21,14 +21,19 @@ class AstTransformer:
     def __init__(self):
         self.transforms = [f for f in dir(self) if not f.startswith('__')]
 
-    def _file(self, node: ET.Element) -> typed_ast3.AST:
-        body = []
+    def transform_all_subnodes(self, node: ET.Element, warn=True):
+        transformed = []
         for subnode in node:
             if f'_{subnode.tag}' not in self.transforms:
-                _LOG.warning('%s', subnode.tag)
+                if warn:
+                    _LOG.warning('%s', ET.tostring(subnode).decode().rstrip())
                 continue
             _transform = getattr(self, f'_{subnode.tag}')
-            body.append(_transform(subnode))
+            transformed.append(_transform(subnode))
+        return transformed
+
+    def _file(self, node: ET.Element) -> typed_ast3.AST:
+        body = self.transform_all_subnodes(node)
         return typed_ast3.Module(body=body, type_ignores=[])
 
     def _module(self, node):
@@ -40,13 +45,7 @@ class AstTransformer:
 
     def _program(self, node: ET.Element) -> typed_ast3.AST:
         module = typed_ast3.parse('''if __name__ == '__main__':\n    pass''')
-        body = []
-        for subnode in node.find('./body'):
-            if f'_{subnode.tag}' not in self.transforms:
-                _LOG.warning('%s', subnode.tag)
-                continue
-            _transform = getattr(self, f'_{subnode.tag}')
-            body.append(_transform(subnode))
+        body = self.transform_all_subnodes(node.find('./body'))
         conditional = module.body[0]
         conditional.body = body
         return conditional
@@ -65,41 +64,21 @@ class AstTransformer:
             _LOG.warning('%s', ET.tostring(subnode).decode().rstrip())
             continue
 
-        body = []
-        for subnode in node.find('./body'):
-            if f'_{subnode.tag}' not in self.transforms:
-                _LOG.warning('%s', subnode.tag)
-                continue
-            _transform = getattr(self, f'_{subnode.tag}')
-            body.append(_transform(subnode))
+        body = self.transform_all_subnodes(node.find('./body'))
 
         return typed_ast3.For(target=target, iter=iter_, body=body, orelse=[])
 
     def _if(self, node: ET.Element):
-        _LOG.warning('if header:')
-        header = []
-        for subnode in node.find('./header'):
-            if f'_{subnode.tag}' not in self.transforms:
-                _LOG.warning('%s', ET.tostring(subnode).decode().rstrip())
-                continue
-            _transform = getattr(self, f'_{subnode.tag}')
-            header.append(_transform(subnode))
-        if len(header) > 1:
+        #_LOG.warning('if header:')
+        header = self.transform_all_subnodes(node.find('./header'), warn=False)
+        if len(header) != 1:
             _LOG.warning('%s', ET.tostring(node).decode().rstrip())
             raise NotImplementedError()
-        if len(header) == 0:
-            # TODO: get rid of this
-            test = typed_ast3.NameConstant(True)
-        else:
-            test = header[0]
+        #if len(header) == 0:
+        #    test = typed_ast3.NameConstant(True)
+        test = header[0]
 
-        body = []
-        for subnode in node.find('./body'):
-            if f'_{subnode.tag}' not in self.transforms:
-                _LOG.warning('%s', subnode.tag)
-                continue
-            _transform = getattr(self, f'_{subnode.tag}')
-            body.append(_transform(subnode))
+        body = self.transform_all_subnodes(node.find('./body'))
 
         return typed_ast3.If(test=test, body=body, orelse=[])
 
@@ -130,14 +109,9 @@ class AstTransformer:
         assert len(operand_nodes) == 2
         operands = []
         for operand in operand_nodes:
-            prev_len = len(operands)
-            for subnode in operand:
-                if f'_{subnode.tag}' not in self.transforms:
-                    _LOG.warning('%s', ET.tostring(subnode).decode().rstrip())
-                    continue
-                _transform = getattr(self, f'_{subnode.tag}')
-                operands.append(_transform(subnode))
-            assert len(operands) - prev_len <= 1
+            new_operands = self.transform_all_subnodes(operand)
+            assert len(new_operands) <= 1 # TODO: change to equality
+            operands += new_operands
         assert len(operands) == 2
         operation_type, operator_type = self._operator(node.attrib['operator'])
         if operation_type is typed_ast3.Compare:
@@ -181,14 +155,9 @@ class AstTransformer:
             return name
         subscripts = []
         for subscript in subscripts_node.findall('./subscript'):
-            prev_len = len(subscripts)
-            for subnode in subscript:
-                if f'_{subnode.tag}' not in self.transforms:
-                    _LOG.warning('%s', ET.tostring(subnode).decode().rstrip())
-                    continue
-                _transform = getattr(self, f'_{subnode.tag}')
-                subscripts.append(_transform(subnode))
-            assert len(subscripts) - prev_len <= 1
+            new_subscripts = self.transform_all_subnodes(subscript)
+            assert len(new_subscripts) <= 1 # TODO: change to equality
+            subscripts += new_subscripts
         if len(subscripts) == 1:
             slice_ = typed_ast3.Index(value=subscripts[0])
         else:
