@@ -481,12 +481,14 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void variable() {
 		if (verbosity >= 100)
 			super.variable();
+		setAttribute("type", "variable");
 		contextClose("name");
 	}
 
 	public void designator_or_func_ref() {
 		if (verbosity >= 100)
 			super.designator_or_func_ref();
+		setAttribute("type", "ambiguous");
 		contextClose("name");
 	}
 
@@ -681,6 +683,56 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.end_do_stmt(label, endKeyword, doKeyword, id, eos);
 	}
 
+	@Override
+	public void input_item() {
+		contextClose("input");
+		if (verbosity >= 100)
+			super.input_item();
+		contextOpen("input");
+	}
+
+	@Override
+	public void input_item_list__begin() {
+		contextOpen("inputs");
+		if (verbosity >= 100)
+			super.input_item_list__begin();
+		contextOpen("input");
+	}
+
+	@Override
+	public void input_item_list(int count) {
+		contextClose("input");
+		if (verbosity >= 100)
+			super.input_item_list(count);
+		setAttribute("count", count);
+		contextClose("inputs");
+	}
+
+	@Override
+	public void output_item() {
+		contextClose("output");
+		if (verbosity >= 100)
+			super.output_item();
+		contextOpen("output");
+	}
+
+	@Override
+	public void output_item_list__begin() {
+		contextOpen("outputs");
+		if (verbosity >= 100)
+			super.output_item_list__begin();
+		contextOpen("output");
+	}
+
+	@Override
+	public void output_item_list(int count) {
+		contextClose("output");
+		if (verbosity >= 100)
+			super.output_item_list(count);
+		setAttribute("count", count);
+		contextClose("outputs");
+	}
+
 	public void main_program__begin() {
 		contextOpen("program");
 		contextOpen("header");
@@ -700,7 +752,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void program_stmt(Token label, Token programKeyword, Token id, Token eos) {
 		contextClose("header");
-		super.program_stmt(label, programKeyword, id, eos);
+		if (verbosity >= 20)
+			super.program_stmt(label, programKeyword, id, eos);
+		setAttribute("name", id);
 		contextOpen("body");
 		contextOpen("specification");
 	}
@@ -772,6 +826,19 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 80)
 			super.external_stmt(label, externalKeyword, eos);
 		setAttribute("type", "external");
+	}
+
+	public void call_stmt(Token label, Token callKeyword, Token eos, boolean hasActualArgSpecList) {
+		contextOpen("call");
+		super.call_stmt(label, callKeyword, eos, hasActualArgSpecList);
+		contextClose("call");
+	}
+
+	public void procedure_designator() {
+		if (verbosity >= 100)
+			super.procedure_designator();
+		setAttribute("type", "procedure");
+		contextClose("name");
 	}
 
 	public void function_stmt__begin() {
