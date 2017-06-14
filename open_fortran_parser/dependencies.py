@@ -6,7 +6,10 @@ import pathlib
 import urllib
 
 if __name__ == '__main__':
-    from dev_dependencies import DEV_DEPENDENCIES, ensure_dependencies
+    try:
+        from .dev_dependencies import DEV_DEPENDENCIES, ensure_dependencies
+    except ImportError:
+        from dev_dependencies import DEV_DEPENDENCIES, ensure_dependencies
 else:
     from .dev_dependencies import DEV_DEPENDENCIES, ensure_dependencies
 
