@@ -112,8 +112,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 					System.err.println("  " + found.getTagName());
 					found = (Element) found.getParentNode();
 				}
-				cleanUp();
-				System.exit(1);
+				cleanUpAfterError();
 			}
 			found = (Element) found.getParentNode();
 		}
@@ -130,8 +129,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (context.getTagName() != fromName) {
 			System.err.println("Cannot rename current context from '" + fromName + "' to '" + toName
 					+ "' because it has unexpected name '" + context.getTagName() + "'.");
-			cleanUp();
-			System.exit(1);
+			cleanUpAfterError();
 		}
 		doc.renameNode(context, null, toName);
 	}
@@ -147,8 +145,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 				System.err.println("Cannot close current context because there is no current context.");
 			else
 				System.err.println("Cannot close current context because it is root node of the document.");
-			cleanUp();
-			System.exit(1);
+			cleanUpAfterError();
 		}
 		context = (Element) context.getParentNode();
 	}
@@ -499,8 +496,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 			ArrayList<Node> nodes = contextNodes();
 			e = (Element) nodes.get(nodes.size() - 1);
 			if (e.getTagName() != "subscripts") {
-				cleanUp();
-				System.exit(1);
+				System.err.println("tag name is not 'subscripts' but '" + e.getTagName() + "'");
+				cleanUpAfterError();
 			}
 		}
 		contextOpen("name");
@@ -911,6 +908,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextCloseAllInner("file");
 		if (verbosity >= 100)
 			super.end_of_file(filename, path);
+	}
+
+	public void cleanUpAfterError() {
+		new RuntimeException("Aborting construction of the AST.").printStackTrace();
+		cleanUp();
+		System.exit(1);
 	}
 
 	public void cleanUp() {
