@@ -21,6 +21,7 @@ before_install:
   - jdk_switcher use $JDK
   - java -version
   - python --version
+  - git clone "https://github.com/OpenFortranProject/open-fortran-parser" "../open-fortran-parser"
 
 install:
   # dependencies

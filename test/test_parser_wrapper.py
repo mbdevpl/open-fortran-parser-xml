@@ -12,6 +12,24 @@ OUTPUT_PATHS = ['/tmp/out.xml', None]
 VERBOSITIES = (0, 20, 80, 100)
 
 
+def all_ofp_tests_paths():
+    """Find all Fortran files in "tests" subfolder of Open Fortran Parser repository."""
+    ofp_relative_repo_path = pathlib.Path('..', 'open-fortran-parser')
+    ofp_repo_path = _HERE.parent.joinpath(ofp_relative_repo_path)
+    if not ofp_repo_path.exists():
+        return []
+    all_input_paths = []
+    for extension in ('.f', '.f90', '.f03', '.f08', '.h'):
+        input_paths = ofp_repo_path.joinpath('tests').glob(
+            f'**/*{extension}')
+        for input_path in input_paths:
+            input_path = input_path.resolve()
+            all_input_paths.append(input_path)
+    return all_input_paths
+
+ALL_OFP_TEST_PATHS = all_ofp_tests_paths()
+
+
 class Tests(unittest.TestCase):
 
     maxDiff = None
@@ -43,3 +61,11 @@ class Tests(unittest.TestCase):
                     file_node = root_node[0]
                     self.assertEqual(file_node.tag, 'file')
                     self.assertGreaterEqual(len(file_node), 1)
+
+    @unittest.skipIf(not ALL_OFP_TEST_PATHS, 'no Open Fortran Parser test files found')
+    def test_ofp_test_files(self):
+        for input_path in ALL_OFP_TEST_PATHS:
+            for verbosity in VERBOSITIES:
+                with self.subTest(input_path=input_path, verbosity=verbosity):
+                    root_node = parse(input_path, verbosity)
+                    self.assertIsNotNone(root_node)
