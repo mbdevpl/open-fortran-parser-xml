@@ -17,7 +17,6 @@ import org.antlr.runtime.Token;
 import org.apache.commons.cli.CommandLine;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import fortran.ofp.parser.java.FortranParserActionPrint;
@@ -182,9 +181,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 	/**
 	 * Collection of children nodes of current XML context.
 	 *
-	 * @return
+	 * @return list of nodes
 	 */
-	protected ArrayList<Node> contextNodes() {
+	protected ArrayList<Element> contextNodes() {
 		return contextNodes(null);
 	}
 
@@ -192,18 +191,18 @@ public class XMLPrinter extends FortranParserActionPrint {
 	 * Collection of children nodes of given open XML context.
 	 *
 	 * @param name
-	 * @return
+	 * @return list of nodes
 	 */
-	protected ArrayList<Node> contextNodes(String name) {
+	protected ArrayList<Element> contextNodes(String name) {
 		Element context;
 		if (name == null)
 			context = this.context;
 		else
 			context = contextFind(name);
 		NodeList nodeList = context.getChildNodes();
-		ArrayList<Node> nodes = new ArrayList<Node>();
+		ArrayList<Element> nodes = new ArrayList<Element>();
 		for (int i = 0; i < nodeList.getLength(); i++)
-			nodes.add(nodeList.item(i));
+			nodes.add((Element)nodeList.item(i));
 		// System.err.println(nodes.size());
 		return nodes;
 	}
@@ -645,8 +644,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element outer_context = context;
 		Element e = null;
 		if (hasSectionSubscriptList) {
-			ArrayList<Node> nodes = contextNodes();
-			e = (Element) nodes.get(nodes.size() - 1);
+			ArrayList<Element> nodes = contextNodes();
+			e = nodes.get(nodes.size() - 1);
 			if (e.getTagName() != "subscripts") {
 				System.err.println("tag name is not 'subscripts' but '" + e.getTagName() + "'");
 				cleanUpAfterError();
@@ -707,11 +706,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void rel_op(Token relOp) {
-		ArrayList<Node> nodes = contextNodes();
+		ArrayList<Element> nodes = contextNodes();
 		Element outer_context = context;
 		contextOpen("operation");
 		contextOpen("operand");
-		for (Node node : nodes) {
+		for (Element node : nodes) {
 			outer_context.removeChild(node);
 			context.appendChild(node);
 		}
@@ -760,10 +759,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void if_then_stmt(Token label, Token id, Token ifKeyword, Token thenKeyword, Token eos) {
 		contextRename("statement", "if");
-		ArrayList<Node> nodes = contextNodes();
+		ArrayList<Element> nodes = contextNodes();
 		Element outer_context = context;
 		contextOpen("header");
-		for (Node node : nodes) {
+		for (Element node : nodes) {
 			// System.err.println(" " + ((Element) node).getTagName());
 			outer_context.removeChild(node);
 			context.appendChild(node);
