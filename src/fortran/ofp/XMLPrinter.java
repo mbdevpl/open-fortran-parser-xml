@@ -266,17 +266,14 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute(name, param);
 	}
 
-	@Override
 	public void generic_name_list__begin() {
-		if (context.getTagName() == "specification") {
+		if (context.getTagName().equals("specification") || context.getTagName().equals("file"))
 			contextOpen("declaration");
-		}
 		contextOpen("variables");
 		if (verbosity >= 100)
 			super.generic_name_list__begin();
 	}
 
-	@Override
 	public void generic_name_list(int count) {
 		if (verbosity >= 100)
 			super.generic_name_list(count);
@@ -285,6 +282,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void specification_part(int numUseStmts, int numImportStmts, int numImplStmts, int numDeclConstructs) {
+		if (context.getTagName() != "specification")
+			contextOpen("specification");
 		if (verbosity >= 80)
 			super.specification_part(numUseStmts, numImportStmts, numImplStmts, numDeclConstructs);
 		setAttribute("uses", numUseStmts);
@@ -347,11 +346,26 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("literal");
 	}
 
+	public void label(Token lbl) {
+		boolean closedLoop = false;
+		Element outerContext = context;
+		while (outerContext != root) {
+			if (outerContext.getTagName().equals("loop") && outerContext.getAttribute("label").equals(lbl.getText())) {
+				context = outerContext;
+				closedLoop = true;
+				break;
+			}
+			outerContext = (Element) outerContext.getParentNode();
+		}
+		super.label(lbl);
+		if (closedLoop)
+			contextOpen("statement");
+	}
+
 	public void intrinsic_type_spec(Token keyword1, Token keyword2, int type, boolean hasKindSelector) {
 		contextOpen("declaration");
 		setAttribute("type", "variable");
 		super.intrinsic_type_spec(keyword1, keyword2, type, hasKindSelector);
-		// contextOpen("intrinsic-type");
 	}
 
 	public void int_literal_constant(Token digitString, Token kindParam) {
@@ -359,6 +373,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("type", "int");
 		setAttribute("value", digitString);
 		super.int_literal_constant(digitString, kindParam);
+	}
+
+	public void real_literal_constant(Token realConstant, Token kindParam) {
+		contextOpen("literal");
+		setAttribute("type", "real");
+		setAttribute("value", realConstant);
+		super.real_literal_constant(realConstant, kindParam);
 	}
 
 	public void scalar_int_literal_constant() {
@@ -374,9 +395,28 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.char_literal_constant(digitString, id, str);
 	}
 
+	public void logical_literal_constant(Token logicalValue, boolean isTrue, Token kindParam) {
+		contextOpen("literal");
+		setAttribute("type", "bool");
+		setAttribute("value", isTrue);
+		super.logical_literal_constant(logicalValue, isTrue, kindParam);
+	}
+
+	public void derived_type_stmt(Token label, Token keyword, Token id, Token eos, boolean hasTypeAttrSpecList,
+			boolean hasGenericNameList) {
+		contextOpen("declaration");
+		setAttribute("type", "type");
+		super.derived_type_stmt(label, keyword, id, eos, hasTypeAttrSpecList, hasGenericNameList);
+	}
+
+	public void derived_type_spec(Token typeName, boolean hasTypeParamSpecList) {
+		contextOpen("declaration");
+		setAttribute("type", "variable");
+		super.derived_type_spec(typeName, hasTypeParamSpecList);
+	}
+
 	public void type_declaration_stmt(Token label, int numAttributes, Token eos) {
 		super.type_declaration_stmt(label, numAttributes, eos);
-		// contextClose("intrinsic-type");
 	}
 
 	public void entity_decl(Token id, boolean hasArraySpec, boolean hasCoarraySpec, boolean hasCharLength,
@@ -465,6 +505,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.named_constant_def_list__begin();
 	}
 
+	public void save_stmt(Token label, Token keyword, Token eos, boolean hasSavedEntityList) {
+		contextOpen("declaration");
+		super.save_stmt(label, keyword, eos, hasSavedEntityList);
+	}
+
 	public void implicit_stmt(Token label, Token implicitKeyword, Token noneKeyword, Token eos,
 			boolean hasImplicitSpecList) {
 		contextOpen("declaration");
@@ -473,6 +518,40 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("type", "implicit");
 		setAttribute("subtype", noneKeyword == null ? "some" : "none");
 		contextClose();
+	}
+
+	public void equivalence_set_list__begin() {
+		contextOpen("declaration");
+		setAttribute("type", "equivalence");
+		contextOpen("equivalents");
+		if (verbosity >= 100)
+			super.equivalence_set_list__begin();
+		contextOpen("equivalent");
+	}
+
+	public void equivalence_set_list(int count) {
+		contextClose("equivalent");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.equivalence_set_list(count);
+		contextClose("equivalents");
+	}
+
+	public void equivalence_object() {
+		contextClose("equivalent");
+		if (verbosity >= 100)
+			super.equivalence_object();
+		contextOpen("equivalent");
+	}
+
+	public void equivalence_object_list__begin() {
+		// TODO Auto-generated method stub
+		super.equivalence_object_list__begin();
+	}
+
+	public void equivalence_object_list(int count) {
+		// TODO Auto-generated method stub
+		super.equivalence_object_list(count);
 	}
 
 	public void variable() {
@@ -643,7 +722,14 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void do_stmt(Token label, Token id, Token doKeyword, Token digitString, Token eos, boolean hasLoopControl) {
+		if (context.getTagName() != "header") {
+			contextOpen("loop");
+			contextOpen("header");
+		}
 		contextClose("header");
+		if (digitString != null) {
+			setAttribute("label", digitString);
+		}
 		super.do_stmt(label, id, doKeyword, digitString, eos, hasLoopControl);
 		contextOpen("body");
 		contextOpen("statement");
@@ -680,7 +766,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.end_do_stmt(label, endKeyword, doKeyword, id, eos);
 	}
 
-	@Override
+	public void continue_stmt(Token label, Token continueKeyword, Token eos) {
+		contextOpen("statement");
+		super.continue_stmt(label, continueKeyword, eos);
+	}
+
 	public void input_item() {
 		contextClose("input");
 		if (verbosity >= 100)
@@ -688,7 +778,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("input");
 	}
 
-	@Override
 	public void input_item_list__begin() {
 		contextOpen("inputs");
 		if (verbosity >= 100)
@@ -696,7 +785,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("input");
 	}
 
-	@Override
 	public void input_item_list(int count) {
 		contextClose("input");
 		if (verbosity >= 100)
@@ -705,7 +793,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("inputs");
 	}
 
-	@Override
 	public void output_item() {
 		contextClose("output");
 		if (verbosity >= 100)
@@ -713,7 +800,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("output");
 	}
 
-	@Override
 	public void output_item_list__begin() {
 		contextOpen("outputs");
 		if (verbosity >= 100)
@@ -721,7 +807,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("output");
 	}
 
-	@Override
 	public void output_item_list(int count) {
 		contextClose("output");
 		if (verbosity >= 100)
@@ -771,6 +856,19 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("module");
 		if (verbosity >= 100)
 			super.module_stmt__begin();
+		contextOpen("header");
+	}
+
+	public void module_stmt(Token label, Token moduleKeyword, Token id, Token eos) {
+		contextClose("header");
+		setAttribute("name", id);
+		super.module_stmt(label, moduleKeyword, id, eos);
+		contextOpen("body");
+	}
+
+	public void end_module_stmt(Token label, Token endKeyword, Token moduleKeyword, Token id, Token eos) {
+		contextClose("body");
+		super.end_module_stmt(label, endKeyword, moduleKeyword, id, eos);
 	}
 
 	public void use_stmt(Token label, Token useKeyword, Token id, Token onlyKeyword, Token eos, boolean hasModuleNature,
@@ -819,10 +917,95 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("specification");
 	}
 
+	public void interface_block() {
+		// TODO Auto-generated method stub
+		super.interface_block();
+	}
+
+	public void interface_specification() {
+		// TODO Auto-generated method stub
+		super.interface_specification();
+	}
+
+	public void interface_stmt__begin() {
+		contextOpen("declaration");
+		contextOpen("interface");
+		if (verbosity >= 100)
+			super.interface_stmt__begin();
+		contextOpen("header");
+	}
+
+	public void interface_stmt(Token label, Token abstractToken, Token keyword, Token eos, boolean hasGenericSpec) {
+		Element previous_context = context;
+		contextClose("header");
+		if (context.getTagName() != "interface") {
+			context = previous_context;
+			contextOpen("declaration");
+			contextOpen("interface");
+			contextOpen("header");
+			contextClose("header");
+		}
+		super.interface_stmt(label, abstractToken, keyword, eos, hasGenericSpec);
+		if (abstractToken != null) // && abstractToken.getText().toLowerCase() == "abstract")
+			setAttribute("type", abstractToken);
+		contextOpen("body");
+	}
+
+	public void end_interface_stmt(Token label, Token kw1, Token kw2, Token eos, boolean hasGenericSpec) {
+		// TODO Auto-generated method stub
+		super.end_interface_stmt(label, kw1, kw2, eos, hasGenericSpec);
+		contextClose("interface");
+	}
+
+	public void interface_body(boolean hasPrefix) {
+		// TODO Auto-generated method stub
+		super.interface_body(hasPrefix);
+	}
+
+	public void import_stmt(Token label, Token importKeyword, Token eos, boolean hasGenericNameList) {
+		if (context.getTagName() != "declaration")
+			contextOpen("declaration");
+		setAttribute("type", "import");
+		super.import_stmt(label, importKeyword, eos, hasGenericNameList);
+		contextClose("declaration");
+	}
+
 	public void external_stmt(Token label, Token externalKeyword, Token eos) {
+		if (context.getTagName() != "declaration")
+			contextOpen("declaration");
 		if (verbosity >= 80)
 			super.external_stmt(label, externalKeyword, eos);
 		setAttribute("type", "external");
+	}
+
+	public void procedure_declaration_stmt(Token label, Token procedureKeyword, Token eos, boolean hasProcInterface,
+			int count) {
+		// TODO Auto-generated method stub
+		super.procedure_declaration_stmt(label, procedureKeyword, eos, hasProcInterface, count);
+	}
+
+	public void proc_decl(Token id, boolean hasNullInit) {
+		contextOpen("procedure");
+		setAttribute("name", id);
+		if (verbosity >= 80)
+			super.proc_decl(id, hasNullInit);
+		contextClose("procedure");
+	}
+
+	public void proc_decl_list__begin() {
+		contextOpen("declaration");
+		setAttribute("type", "procedures");
+		contextOpen("procedures");
+		if (verbosity >= 100)
+			super.proc_decl_list__begin();
+	}
+
+	public void proc_decl_list(int count) {
+		contextCloseAllInner("procedures");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.proc_decl_list(count);
+		contextClose("procedures");
 	}
 
 	public void call_stmt(Token label, Token callKeyword, Token eos, boolean hasActualArgSpecList) {
@@ -898,6 +1081,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void start_of_file(String filename, String path) {
+		if (context.getTagName().equals("file") || context.getTagName().equals("specification")) {
+			contextOpen("declaration");
+			setAttribute("type", "include");
+		}
 		contextOpen("file");
 		if (verbosity >= 100)
 			super.start_of_file(filename, path);
@@ -908,6 +1095,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextCloseAllInner("file");
 		if (verbosity >= 100)
 			super.end_of_file(filename, path);
+		contextClose("file");
 	}
 
 	public void cleanUpAfterError() {
