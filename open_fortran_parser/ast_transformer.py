@@ -58,12 +58,34 @@ class AstTransformer:
         else:
             raise NotImplementedError()
 
-    def _loop_do(self, node: ET.Element):
+    def _loop_do(self, node: ET.Element) -> typed_ast3.For:
         index_variable = node.find('./header/index-variable')
-        target = typed_ast3.Name(id=index_variable.attrib['name'], ctx=typed_ast3.Load())
-        lower_bound = index_variable.find('./lower-bound')
-        upper_bound = index_variable.find('./upper-bound')
-        step = index_variable.find('./step')
+        target, iter_ = self._index_variable(index_variable)
+        body = self.transform_all_subnodes(node.find('./body'))
+        return typed_ast3.For(target=target, iter=iter_, body=body, orelse=[])
+
+    def _loop_forall(self, node: ET.Element) -> typed_ast3.For:
+        index_variables = node.find('./header/index-variables')
+        outer_loop = None
+        inner_loop = None
+        for index_variable in index_variables.findall('./index-variable'):
+            if not index_variable:
+                continue # TODO: this is just a duct tape
+            target, iter_ = self._index_variable(index_variable)
+            if outer_loop is None:
+                outer_loop = typed_ast3.For(target=target, iter=iter_, body=[], orelse=[])
+                inner_loop = outer_loop
+                continue
+            inner_loop.body = [typed_ast3.For(target=target, iter=iter_, body=[], orelse=[])]
+            inner_loop = inner_loop.body[0]
+        inner_loop.body = self.transform_all_subnodes(node.find('./body'))
+        return outer_loop
+
+    def _index_variable(self, node: ET.Element) -> t.Tuple[typed_ast3.Name, typed_ast3.Call]:
+        target = typed_ast3.Name(id=node.attrib['name'], ctx=typed_ast3.Load())
+        lower_bound = node.find('./lower-bound')
+        upper_bound = node.find('./upper-bound')
+        step = node.find('./step')
         range_args = []
         if lower_bound is not None:
             args = self.transform_all_subnodes(lower_bound)
@@ -81,19 +103,7 @@ class AstTransformer:
         iter_ = typed_ast3.Call(
             func=typed_ast3.Name(id='range', ctx=typed_ast3.Load()),
             args=range_args, keywords=[])
-
-        body = self.transform_all_subnodes(node.find('./body'))
-
-        return typed_ast3.For(target=target, iter=iter_, body=body, orelse=[])
-
-    def _loop_forall(self, node: ET.Element):
-        target = None
-        iter_ = None
-        #for subnode in node.find('./header'):
-        target = typed_ast3.Name(id="forall_indices", ctx=typed_ast3.Load())
-        iter_ = typed_ast3.parse('range(0, 100, 1)', mode='eval')
-        body = self.transform_all_subnodes(node.find('./body'))
-        return typed_ast3.For(target=target, iter=iter_, body=body, orelse=[])
+        return target, iter_
 
     def _if(self, node: ET.Element):
         #_LOG.warning('if header:')
