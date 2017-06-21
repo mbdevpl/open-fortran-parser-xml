@@ -92,30 +92,45 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	/**
+	 * Try to find innermost open XML context with name equal to any of given names.
+	 *
+	 * @param names
+	 * @return found context of null
+	 */
+	protected Element contextTryFind(String... names) {
+		if (context == null)
+			return null;
+		Element found = context;
+		List<String> names_list = Arrays.asList(names);
+		while (!names_list.contains(found.getTagName())) {
+			if (found == root)
+				return null;
+			found = (Element) found.getParentNode();
+		}
+		return found;
+	}
+
+	/**
 	 * Find innermost open XML context with name equal to any of given names.
 	 *
 	 * @param names
-	 * @return
+	 * @return found context
 	 */
 	protected Element contextFind(String... names) {
 		if (context == null)
 			throw new NullPointerException("No open contexts, so " + Arrays.toString(names) + " cannot be found.");
-		Element found = context;
-		List<String> names_list = Arrays.asList(names);
-		while (!names_list.contains(found.getTagName())) {
-			if (found == root) {
-				System.err.println("Cannot find any context of " + Arrays.toString(names) + " among open contexts.");
-				System.err.println("Current context hierarchy (innermost first) is:");
-				found = context;
-				while (found != root) {
-					System.err.println("  " + found.getTagName());
-					found = (Element) found.getParentNode();
-				}
-				cleanUpAfterError();
-			}
+		Element found = contextTryFind(names);
+		if (found != null)
+			return found;
+		System.err.println("Cannot find any context of " + Arrays.toString(names) + " among open contexts.");
+		System.err.println("Current context hierarchy (innermost first) is:");
+		found = context;
+		while (found != root) {
+			System.err.println("  " + found.getTagName());
 			found = (Element) found.getParentNode();
 		}
-		return found;
+		cleanUpAfterError();
+		return null;
 	}
 
 	/**
