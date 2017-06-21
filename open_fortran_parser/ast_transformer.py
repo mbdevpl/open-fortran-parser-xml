@@ -51,21 +51,39 @@ class AstTransformer:
         return conditional
 
     def _loop(self, node: ET.Element):
+        if node.attrib['type'] == 'do':
+            return self._loop_do(node)
+        elif node.attrib['type'] == 'forall':
+            return self._loop_forall(node)
+        else:
+            raise NotImplementedError()
+
+    def _loop_do(self, node: ET.Element):
         target = None
         iter_ = typed_ast3.parse('range(0, 100, 1)', mode='eval')
 
-        _LOG.warning('loop header:')
+        #_LOG.warning('loop header:')
         for subnode in node.find('./header'):
             if subnode.tag == 'do-variable':
                 target = typed_ast3.Name(id=subnode.attrib['id'], ctx=typed_ast3.Load())
                 #break
                 continue
             #if f'_{subnode.tag}' not in self.transforms:
-            _LOG.warning('%s', ET.tostring(subnode).decode().rstrip())
+            #_LOG.warning('%s', ET.tostring(subnode).decode().rstrip())
             continue
+        assert target is not None, ET.tostring(node.find('./header')).decode().rstrip()
 
         body = self.transform_all_subnodes(node.find('./body'))
 
+        return typed_ast3.For(target=target, iter=iter_, body=body, orelse=[])
+
+    def _loop_forall(self, node: ET.Element):
+        target = None
+        iter_ = None
+        #for subnode in node.find('./header'):
+        target = typed_ast3.Name(id="forall_indices", ctx=typed_ast3.Load())
+        iter_ = typed_ast3.parse('range(0, 100, 1)', mode='eval')
+        body = self.transform_all_subnodes(node.find('./body'))
         return typed_ast3.For(target=target, iter=iter_, body=body, orelse=[])
 
     def _if(self, node: ET.Element):

@@ -722,11 +722,26 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("operand");
 	}
 
+	public void forall_header() {
+		contextClose("header");
+		if (verbosity >= 100)
+			super.forall_header();
+		contextOpen("body");
+		contextOpen("statement");
+	}
+
 	public void forall_triplet_spec_list__begin() {
 		contextRename("statement", "loop");
 		setAttribute("type", "forall");
 		super.forall_triplet_spec_list__begin();
 		contextOpen("header");
+	}
+
+	public void forall_stmt(Token label, Token forallKeyword) {
+		contextCloseAllInner("loop");
+		super.forall_stmt(label, forallKeyword);
+		contextClose("loop");
+		contextOpen("statement"); // TODO: temporary workaround
 	}
 
 	public void block() {
