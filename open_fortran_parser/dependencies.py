@@ -13,9 +13,9 @@ if __name__ == '__main__':
 else:
     from .dev_dependencies import DEV_DEPENDENCIES, ensure_dependencies
 
-DEPENENCIES = DEV_DEPENDENCIES.copy()
+DEPENDENCIES = DEV_DEPENDENCIES.copy()
 
-DEPENENCIES.update({
+DEPENDENCIES.update({
     'Open Fortran Parser XML 0.2.0': (
         urllib.parse.urlparse(
             'https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/'),
@@ -23,4 +23,4 @@ DEPENENCIES.update({
 
 
 if __name__ == '__main__':
-    ensure_dependencies(DEPENENCIES)
+    ensure_dependencies(DEPENDENCIES)

@@ -30,29 +30,30 @@ DEV_DEPENDENCIES = {
 
 
 def ensure_dependencies(
-        dependencies: t.Mapping[str, t.Tuple[urllib.parse.ParseResult, str]] = None,
+        dependencies: t.Mapping[str, t.Tuple[urllib.parse.ParseResult, pathlib.Path]] = None,
         target_dir: pathlib.Path = None, silent: bool = False) -> None:
     """Download missing depenedencies."""
     if dependencies is None:
         dependencies = DEV_DEPENDENCIES
     if target_dir is None:
         target_dir = ROOT_PATH
+    if not target_dir.exists():
+        _LOG.warning('Creating directory "%s"...', target_dir)
+        os.makedirs(str(target_dir), exist_ok=True)
     for dependency, (url_root, filename) in dependencies.items():
         path = target_dir.joinpath(filename)
         if path.is_file():
             _LOG.debug('%s is present already.', dependency)
             continue
         url = urllib.parse.urlunparse(url_root) + str(filename)
-        if not target_dir.exists():
-            _LOG.warning('Creating directory "%s"...', target_dir)
-            os.makedirs(str(target_dir), exist_ok=True)
         _LOG.warning('Downloading %s from URL "%s" to path "%s"...', dependency, url, path)
         wget.download(url, str(path), bar=None if silent else wget.bar_adaptive)
         if not silent:
             print()
     if not silent:
-        _LOG.warning('Please add "%s/*" to your Java classpath:', target_dir.joinpath('*'))
-        _LOG.warning('export CLASSPATH="${CLASSPATH}:%s"', target_dir.joinpath('*'))
+        classpath = target_dir.joinpath('*')
+        _LOG.warning('Please add "%s" to your Java classpath:', classpath)
+        _LOG.warning('export CLASSPATH="${CLASSPATH}:%s"', classpath)
 
 
 if __name__ == '__main__':
