@@ -375,6 +375,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.int_literal_constant(digitString, kindParam);
 	}
 
+	public void boz_literal_constant(Token constant) {
+		contextOpen("literal");
+		setAttribute("type", "int");
+		setAttribute("value", constant);
+		super.boz_literal_constant(constant);
+	}
+
 	public void real_literal_constant(Token realConstant, Token kindParam) {
 		contextOpen("literal");
 		setAttribute("type", "real");
@@ -449,6 +456,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.access_spec(keyword, type);
 	}
 
+	public void language_binding_spec(Token keyword, Token id, boolean hasName) {
+		contextOpen("declaration");
+		super.language_binding_spec(keyword, id, hasName);
+	}
+
 	public void array_spec_element(int type) {
 		/*
 		if (context.getTagName() != "entry") {
@@ -468,6 +480,18 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void access_id_list(int count) {
 		super.access_id_list(count);
 		// contextClose("access-list");
+	}
+
+	public void allocatable_decl_list__begin() {
+		contextOpen("declaration");
+		setAttribute("type", "allocatables");
+		super.allocatable_decl_list__begin();
+	}
+
+	public void codimension_decl_list__begin() {
+		contextOpen("declaration");
+		setAttribute("type", "codimensions");
+		super.codimension_decl_list__begin();
 	}
 
 	public void data_stmt_object_list__begin() {
@@ -505,9 +529,27 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.named_constant_def_list__begin();
 	}
 
+	public void pointer_decl_list__begin() {
+		contextOpen("declaration");
+		super.pointer_decl_list__begin();
+	}
+
 	public void save_stmt(Token label, Token keyword, Token eos, boolean hasSavedEntityList) {
 		contextOpen("declaration");
 		super.save_stmt(label, keyword, eos, hasSavedEntityList);
+	}
+
+	public void target_decl_list__begin() {
+		contextOpen("declaration");
+		setAttribute("type", "targets");
+		if (verbosity >= 100)
+			super.target_decl_list__begin();
+	}
+
+	public void volatile_stmt(Token label, Token keyword, Token eos) {
+		contextOpen("declaration");
+		setAttribute("type", "volatile");
+		super.volatile_stmt(label, keyword, eos);
 	}
 
 	public void implicit_stmt(Token label, Token implicitKeyword, Token noneKeyword, Token eos,
@@ -518,6 +560,31 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("type", "implicit");
 		setAttribute("subtype", noneKeyword == null ? "some" : "none");
 		contextClose();
+	}
+
+	public void namelist_stmt(Token label, Token keyword, Token eos, int count) {
+		contextCloseAllInner("namelists");
+		super.namelist_stmt(label, keyword, eos, count);
+		setAttribute("count", count);
+	}
+
+	public void namelist_group_name(Token id) {
+		if (!context.getTagName().equals("namelists"))
+			contextOpen("declaration");
+		setAttribute("type", "namelists");
+		contextOpen("namelists");
+		contextOpen("names");
+		if (verbosity >= 100)
+			super.namelist_group_name(id);
+		setAttribute("id", id);
+	}
+
+	public void namelist_group_object_list(int count) {
+		contextCloseAllInner("names");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.namelist_group_object_list(count);
+		contextClose("names");
 	}
 
 	public void equivalence_set_list__begin() {
@@ -552,6 +619,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void equivalence_object_list(int count) {
 		// TODO Auto-generated method stub
 		super.equivalence_object_list(count);
+	}
+
+	public void common_block_object_list__begin() {
+		contextOpen("declaration");
+		// TODO Auto-generated method stub
+		super.common_block_object_list__begin();
 	}
 
 	public void variable() {
@@ -647,6 +720,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("operand");
 		setAttribute("type", "binary");
 		contextOpen("operand");
+	}
+
+	public void forall_triplet_spec_list__begin() {
+		contextRename("statement", "loop");
+		setAttribute("type", "forall");
+		super.forall_triplet_spec_list__begin();
+		contextOpen("header");
 	}
 
 	public void block() {
@@ -813,6 +893,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.output_item_list(count);
 		setAttribute("count", count);
 		contextClose("outputs");
+	}
+
+	public void format_item_list__begin() {
+		contextOpen("declaration");
+		// TODO Auto-generated method stub
+		super.format_item_list__begin();
 	}
 
 	public void main_program__begin() {

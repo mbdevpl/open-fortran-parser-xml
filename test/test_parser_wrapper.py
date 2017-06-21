@@ -78,5 +78,5 @@ class Tests(unittest.TestCase):
                     failed_test_cases.append(input_path)
                     continue
 
-        self.assertLessEqual(len(failed_test_cases), 76, msg=failed_test_cases)
+        self.assertLessEqual(len(failed_test_cases), 57, msg=failed_test_cases)
         _LOG.warning("failed test cases (%i): %s", len(failed_test_cases), failed_test_cases)
