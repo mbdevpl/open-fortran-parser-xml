@@ -67,5 +67,5 @@ class Tests(unittest.TestCase):
         for input_path in ALL_OFP_TEST_PATHS:
             for verbosity in VERBOSITIES:
                 with self.subTest(input_path=input_path, verbosity=verbosity):
-                    root_node = parse(input_path, verbosity)
+                    root_node = parse(input_path, verbosity, raise_on_error=True)
                     self.assertIsNotNone(root_node)

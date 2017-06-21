@@ -27,7 +27,8 @@ def execute_parser(
     _LOG.debug('Executing %s...', command)
     return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-def parse(input_path: pathlib.Path, verbosity: int = 100) -> ET.Element:
+def parse(
+        input_path: pathlib.Path, verbosity: int = 100, raise_on_error: bool = False) -> ET.Element:
     """Parse given Fortran file and return parse tree as XML."""
 
     process = execute_parser(input_path, None, verbosity)
@@ -36,6 +37,7 @@ def parse(input_path: pathlib.Path, verbosity: int = 100) -> ET.Element:
         _LOG.error('Open Fortran Parser returned %i', process.returncode)
     if process.stderr:
         _LOG.warning(process.stderr.decode())
-    #process.check_returncode()
+    if raise_on_error:
+        process.check_returncode()
 
     return ET.fromstring(process.stdout)
