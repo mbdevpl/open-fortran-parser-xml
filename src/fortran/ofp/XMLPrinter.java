@@ -217,7 +217,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		NodeList nodeList = context.getChildNodes();
 		ArrayList<Element> nodes = new ArrayList<Element>();
 		for (int i = 0; i < nodeList.getLength(); i++)
-			nodes.add((Element)nodeList.item(i));
+			nodes.add((Element) nodeList.item(i));
 		// System.err.println(nodes.size());
 		return nodes;
 	}
@@ -296,6 +296,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void specification_part(int numUseStmts, int numImportStmts, int numImplStmts, int numDeclConstructs) {
+		if (context.getTagName().equals("header")) {
+			contextClose("header");
+			contextOpen("body");
+		}
 		if (context.getTagName() != "specification")
 			contextOpen("specification");
 		if (verbosity >= 80)
@@ -784,6 +788,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void forall_triplet_spec_list__begin() {
+		if (contextTryFind("loop") == null) {
+			contextRename("statement", "loop");
+			setAttribute("type", "forall");
+			setAttribute("subtype", "concurrent");
+			contextOpen("header");
+		}
 		contextOpen("index-variables");
 		if (verbosity >= 100)
 			super.forall_triplet_spec_list__begin();

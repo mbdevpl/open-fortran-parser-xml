@@ -56,8 +56,10 @@ class Tests(unittest.TestCase):
         passed_count = len(passed_test_cases)
         failed_count = len(failed_test_cases)
         self.assertEqual(passed_count + failed_count, len(ALL_OFP_TEST_PATHS))
-        _LOG.warning("OFP test case pass rate is %f", passed_count / (passed_count + failed_count))
+        _LOG.warning(
+            "OFP test case pass rate is %i of %i = %f", passed_count, len(ALL_OFP_TEST_PATHS),
+            passed_count / (passed_count + failed_count))
         _LOG.debug("passed OFP test cases (%i): %s", passed_count, passed_test_cases)
         _LOG.warning("failed OFP test cases (%i): %s", failed_count, failed_test_cases)
-        self.assertGreaterEqual(passed_count, 364, msg=failed_test_cases)
-        self.assertLessEqual(failed_count, 57, msg=failed_test_cases)
+        self.assertGreaterEqual(passed_count, 366, msg=failed_test_cases)
+        self.assertLessEqual(failed_count, 55, msg=failed_test_cases)
