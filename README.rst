@@ -127,9 +127,19 @@ And to dump XML with maximum verbosity to console:
 AST specification
 -----------------
 
-In progress.
-
 Root node is :xml:`<ofp>`, it has one subnode :xml:`<file>`.
+
+Combound statements, e.g.:
+
+*   :xml:`<if>`
+*   :xml:`<loop>`
+
+each have :xml:`<header>` and :xml:`<body>`.
+
+In the header of the :xml:`<loop>`, at least one :xml:`<index-variable>` is present.
+It has :xml:`<lower-bound>`, :xml:`<upper-bound>`  and :xml:`<step>`.
+
+Remaining specification is being prepared.
 
 
 ================================

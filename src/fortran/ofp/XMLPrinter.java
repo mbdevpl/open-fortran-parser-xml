@@ -702,6 +702,37 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void primary() {
 		if (verbosity >= 100)
 			super.primary();
+		if (context.getTagName().equals("index-variable")) {
+			Element indexVariableContext = context;
+			ArrayList<Element> indexVariableNodes = contextNodes();
+			boolean hasLowerBound = false;
+			boolean hasUpperBound = false;
+			boolean hasStep = false;
+			ArrayList<Element> unassignedNodes = new ArrayList<Element>();
+			for (Element node : indexVariableNodes) {
+				if (node.getTagName().equals("lower-bound"))
+					hasLowerBound = true;
+				else if (node.getTagName().equals("upper-bound"))
+					hasUpperBound = true;
+				else if (node.getTagName().equals("step"))
+					hasStep = true;
+				else
+					unassignedNodes.add(node);
+			}
+			if (unassignedNodes.size() > 0) {
+				if (!hasLowerBound)
+					contextOpen("lower-bound");
+				else if (!hasUpperBound)
+					contextOpen("upper-bound");
+				else if (!hasStep)
+					contextOpen("step");
+				for (Element node : unassignedNodes) {
+					indexVariableContext.removeChild(node);
+					context.appendChild(node);
+				}
+				contextClose();
+			}
+		}
 		// contextCloseAny("literal", "name");
 	}
 
@@ -744,10 +775,34 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("statement");
 	}
 
+	public void forall_triplet_spec(Token id, boolean hasStride) {
+		contextCloseAllInner("index-variable");
+		setAttribute("name", id);
+		super.forall_triplet_spec(id, hasStride);
+		contextClose("index-variable");
+		contextOpen("index-variable");
+	}
+
 	public void forall_triplet_spec_list__begin() {
+		contextOpen("index-variables");
+		if (verbosity >= 100)
+			super.forall_triplet_spec_list__begin();
+		contextOpen("index-variable");
+	}
+
+	public void forall_triplet_spec_list(int count) {
+		contextClose("index-variable");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.forall_triplet_spec_list(count);
+		contextClose("index-variables");
+	}
+
+	public void forall_stmt__begin() {
 		contextRename("statement", "loop");
 		setAttribute("type", "forall");
-		super.forall_triplet_spec_list__begin();
+		if (verbosity >= 100)
+			super.forall_stmt__begin();
 		contextOpen("header");
 	}
 
@@ -853,6 +908,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void loop_control(Token whileKeyword, int doConstructType, boolean hasOptExpr) {
+		contextClose("index-variable");
 		super.loop_control(whileKeyword, doConstructType, hasOptExpr);
 		setAttribute("subtype", doConstructType, "loop");
 	}
@@ -861,6 +917,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextRename("statement", "loop");
 		setAttribute("type", "do");
 		contextOpen("header");
+		contextOpen("index-variable");
+		setAttribute("name", id);
 		super.do_variable(id);
 	}
 

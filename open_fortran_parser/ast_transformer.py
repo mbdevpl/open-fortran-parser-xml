@@ -59,19 +59,28 @@ class AstTransformer:
             raise NotImplementedError()
 
     def _loop_do(self, node: ET.Element):
-        target = None
-        iter_ = typed_ast3.parse('range(0, 100, 1)', mode='eval')
-
-        #_LOG.warning('loop header:')
-        for subnode in node.find('./header'):
-            if subnode.tag == 'do-variable':
-                target = typed_ast3.Name(id=subnode.attrib['id'], ctx=typed_ast3.Load())
-                #break
-                continue
-            #if f'_{subnode.tag}' not in self.transforms:
-            #_LOG.warning('%s', ET.tostring(subnode).decode().rstrip())
-            continue
-        assert target is not None, ET.tostring(node.find('./header')).decode().rstrip()
+        index_variable = node.find('./header/index-variable')
+        target = typed_ast3.Name(id=index_variable.attrib['name'], ctx=typed_ast3.Load())
+        lower_bound = index_variable.find('./lower-bound')
+        upper_bound = index_variable.find('./upper-bound')
+        step = index_variable.find('./step')
+        range_args = []
+        if lower_bound is not None:
+            args = self.transform_all_subnodes(lower_bound)
+            assert len(args) == 1, args
+            range_args.append(args[0])
+        if upper_bound is not None:
+            args = self.transform_all_subnodes(upper_bound)
+            assert len(args) == 1, args
+            range_args.append(typed_ast3.BinOp(
+                left=args[0], op=typed_ast3.Add(), right=typed_ast3.Num(n=1)))
+        if step is not None:
+            args = self.transform_all_subnodes(step)
+            assert len(args) == 1, args
+            range_args.append(args[0])
+        iter_ = typed_ast3.Call(
+            func=typed_ast3.Name(id='range', ctx=typed_ast3.Load()),
+            args=range_args, keywords=[])
 
         body = self.transform_all_subnodes(node.find('./body'))
 
