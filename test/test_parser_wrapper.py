@@ -68,6 +68,7 @@ class Tests(unittest.TestCase):
 
     @unittest.skipIf(not ALL_OFP_TEST_PATHS, 'no Open Fortran Parser test files found')
     def test_ofp_test_files(self):
+        passed_test_cases = []
         failed_test_cases = []
         for input_path in ALL_OFP_TEST_PATHS:
             with self.subTest(input_path=input_path):
@@ -77,6 +78,13 @@ class Tests(unittest.TestCase):
                 except subprocess.CalledProcessError:
                     failed_test_cases.append(input_path)
                     continue
+                passed_test_cases.append(input_path)
 
-        self.assertLessEqual(len(failed_test_cases), 57, msg=failed_test_cases)
-        _LOG.warning("failed test cases (%i): %s", len(failed_test_cases), failed_test_cases)
+        passed_count = len(passed_test_cases)
+        failed_count = len(failed_test_cases)
+        self.assertEqual(passed_count + failed_count, len(ALL_OFP_TEST_PATHS))
+        _LOG.warning("OFP test case pass rate is %f", passed_count / (passed_count + failed_count))
+        _LOG.debug("passed OFP test cases (%i): %s", passed_count, passed_test_cases)
+        _LOG.warning("failed OFP test cases (%i): %s", failed_count, failed_test_cases)
+        self.assertGreaterEqual(passed_count, 364, msg=failed_test_cases)
+        self.assertLessEqual(failed_count, 57, msg=failed_test_cases)
