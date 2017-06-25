@@ -171,16 +171,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	 * @param name
 	 */
 	protected void contextCloseAllInner(String... names) {
-		context = (Element) contextFind(names);
-	}
-
-	/**
-	 * Close an innermost open XML context with name equal to a given name.
-	 *
-	 * @param name
-	 */
-	protected void contextClose(String name) {
-		contextCloseAny(name);
+		context = contextFind(names);
 	}
 
 	/**
@@ -188,7 +179,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	 *
 	 * @param names
 	 */
-	protected void contextCloseAny(String... names) {
+	protected void contextClose(String... names) {
 		contextCloseAllInner(names);
 		contextClose();
 	}
@@ -199,7 +190,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	 * @return list of nodes
 	 */
 	protected ArrayList<Element> contextNodes() {
-		return contextNodes(null);
+		return contextNodes(context);
 	}
 
 	/**
@@ -208,12 +199,17 @@ public class XMLPrinter extends FortranParserActionPrint {
 	 * @param name
 	 * @return list of nodes
 	 */
-	protected ArrayList<Element> contextNodes(String name) {
-		Element context;
-		if (name == null)
-			context = this.context;
-		else
-			context = contextFind(name);
+	protected ArrayList<Element> contextNodes(String... names) {
+		return contextNodes(contextFind(names));
+	}
+
+	/**
+	 * Collection of children nodes of given XML context.
+	 *
+	 * @param context
+	 * @return list of nodes
+	 */
+	protected ArrayList<Element> contextNodes(Element context) {
 		NodeList nodeList = context.getChildNodes();
 		ArrayList<Element> nodes = new ArrayList<Element>();
 		for (int i = 0; i < nodeList.getLength(); i++)
@@ -440,6 +436,29 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.derived_type_spec(typeName, hasTypeParamSpecList);
 	}
 
+	public void ac_value() {
+		contextClose("value");
+		if (verbosity >= 100)
+			super.ac_value();
+		contextOpen("value");
+	}
+
+	public void ac_value_list__begin() {
+		contextOpen("array-constructor-values");
+		if (verbosity >= 100)
+			super.ac_value_list__begin();
+		contextOpen("value");
+	}
+
+	public void ac_value_list(int count) {
+		contextClose("value");
+		contextCloseAllInner("array-constructor-values");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.ac_value_list(count);
+		contextClose("array-constructor-values");
+	}
+
 	public void type_declaration_stmt(Token label, int numAttributes, Token eos) {
 		super.type_declaration_stmt(label, numAttributes, eos);
 	}
@@ -538,6 +557,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.data_stmt_value_list(count);
 		setAttribute("count", count);
 		contextClose("values");
+	}
+
+	public void hollerith_literal_constant(Token hollerithConstant) {
+		contextOpen("literal");
+		setAttribute("type", "hollerith");
+		setAttribute("value", hollerithConstant);
+		super.hollerith_literal_constant(hollerithConstant);
 	}
 
 	public void named_constant_def_list__begin() {
@@ -672,6 +698,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		}
 		contextOpen("name");
 		setAttribute("id", id);
+		setAttribute("hasSubscripts", hasSectionSubscriptList);
 		if (hasSectionSubscriptList) {
 			outer_context.removeChild(e);
 			context.appendChild(e);
@@ -704,8 +731,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void primary() {
+		ArrayList<Element> contextNodes = contextNodes();
+		context = contextNodes.get(contextNodes.size() - 1); // temporarily reopen previously-closed context
 		if (verbosity >= 100)
 			super.primary();
+		contextClose(); // re-close previously closed context
 		if (context.getTagName().equals("index-variable")) {
 			Element indexVariableContext = context;
 			ArrayList<Element> indexVariableNodes = contextNodes();
@@ -741,34 +771,210 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void parenthesized_expr() {
+		ArrayList<Element> contextNodes = contextNodes();
+		context = contextNodes.get(contextNodes.size() - 1); // temporarily reopen previously-closed context
 		if (verbosity >= 100)
 			super.parenthesized_expr();
+		contextClose(); // re-close previously closed context
+	}
+
+	public void power_operand(boolean hasPowerOperand) {
+		if (verbosity >= 100)
+			super.power_operand(hasPowerOperand);
+		if (!hasPowerOperand)
+			return;
+		// contextClose("operand");
+		contextClose("operation");
+	}
+
+	public void power_operand__power_op(Token powerOp) {
+		contextClose("operand");
+		if (verbosity >= 100)
+			super.power_operand__power_op(powerOp);
+		if (!context.getTagName().equals("operation")) {
+			System.err.println("current context is not 'operation' but '" + context.getTagName() + "'");
+			cleanUpAfterError();
+		}
+		setAttribute("operator", powerOp);
+	}
+
+	public void mult_operand(int numMultOps) {
+		if (verbosity >= 100)
+			super.mult_operand(numMultOps);
+		if (numMultOps == 0)
+			return;
+		// contextClose("operand");
+		contextClose("operation");
+	}
+
+	public void mult_operand__mult_op(Token multOp) {
+		contextClose("operand");
+		if (verbosity >= 100)
+			super.mult_operand__mult_op(multOp);
+		if (!context.getTagName().equals("operation")) {
+			System.err.println("current context is not 'operation' but '" + context.getTagName() + "'");
+			cleanUpAfterError();
+		}
+		if (multOp == null)
+			throw new NullPointerException();
+		if (context.hasAttribute("operator") && !context.getAttribute("operator").equals(multOp.getText()))
+			throw new RuntimeException("blah blah" + context.getAttribute("operator"));
+		setAttribute("operator", multOp);
+	}
+
+	public void signed_operand(Token addOp) {
+		Element operationContext = null;
+		ArrayList<Element> operands = null;
+		if (addOp != null) {
+			if (!context.getTagName().equals("operand")) {
+				System.err.println("current context is not 'operand' but '" + context.getTagName() + "'");
+				cleanUpAfterError();
+			}
+			// ArrayList<Element> nodes = contextNodes();
+			// Element operand = nodes.get(nodes.size() - 1);
+			Element operandContext = context;
+			// contextOpen("operation");
+			setAttribute("type", "unary");
+			setAttribute("operand", addOp);
+			// contextOpen("operand");
+			// outerContext.removeChild(operand);
+			// context.appendChild(operand);
+			contextClose("operand");
+			operationContext = context;
+			ArrayList<Element> operationNodes = contextNodes();
+			operands = new ArrayList<Element>();
+			for (Element node : operationNodes)
+				if (node != operandContext && node.getTagName().equals("operand"))
+					operands.add(node);
+			if (operands.size() != 1) {
+				System.err.println("exactly 1 operand expected");
+				cleanUpAfterError();
+			}
+		}
+		if (verbosity >= 100)
+			super.signed_operand(addOp);
+		if (addOp != null) {
+			contextClose("operation");
+			for (Element operand : operands) {
+				operationContext.removeChild(operand);
+				for (Element operandExpr : contextNodes(operand))
+					context.insertBefore(operandExpr, operationContext);
+			}
+		}
+	}
+
+	public void add_operand(int numAddOps) {
+		if (verbosity >= 100)
+			super.add_operand(numAddOps);
+		if (numAddOps > 0)
+			contextClose("operation");
+	}
+
+	public void add_operand__add_op(Token addOp) {
+		contextClose("operand");
+		if (verbosity >= 100)
+			super.add_operand__add_op(addOp);
+		setAttribute("operator", addOp, "operation");
+	}
+
+	public void power_op(Token powerKeyword) {
+		ArrayList<Element> nodes = contextNodes();
+		Element previousContext = nodes.get(nodes.size() - 1);
+		Element outerContext = context;
+		contextOpen("operation");
+		setAttribute("type", "binary");
+		setAttribute("operand", powerKeyword);
+		contextOpen("operand");
+		outerContext.removeChild(previousContext);
+		context.appendChild(previousContext);
+		contextClose("operand");
+		if (verbosity >= 100)
+			super.power_op(powerKeyword);
+		contextOpen("operand");
+	}
+
+	public void mult_op(Token multKeyword) {
+		ArrayList<Element> nodes = contextNodes();
+		Element previousContext = nodes.get(nodes.size() - 1);
+		Element outerContext = context;
+		contextOpen("operation");
+		setAttribute("type", "binary");
+		contextOpen("operand");
+		outerContext.removeChild(previousContext);
+		context.appendChild(previousContext);
+		contextClose("operand");
+		if (verbosity >= 100)
+			super.mult_op(multKeyword);
+		contextOpen("operand");
+	}
+
+	public void add_op(Token addKeyword) {
+		if (context.getTagName() == "operation") {
+			// TODO
+		} else {
+			ArrayList<Element> nodes = contextNodes();
+			Element previousContext = nodes.get(nodes.size() - 1);
+			Element outerContext = context;
+			contextOpen("operation");
+			setAttribute("type", "binary");
+			contextOpen("operand");
+			outerContext.removeChild(previousContext);
+			context.appendChild(previousContext);
+		}
+		if (context.getTagName().equals("operand"))
+			contextClose("operand");
+		if (verbosity >= 100)
+			super.add_op(addKeyword);
+		contextOpen("operand");
 	}
 
 	public void level_3_expr(Token relOp) {
+		if (relOp != null)
+			contextClose("operand");
 		if (verbosity >= 80)
 			super.level_3_expr(relOp);
-		if (relOp == null)
-			return;
-		contextClose("operand");
-		setAttribute("operator", relOp);
-		contextClose("operation");
+		if (relOp != null) {
+			setAttribute("operator", relOp);
+			contextClose("operation");
+		}
 	}
 
 	public void rel_op(Token relOp) {
 		ArrayList<Element> nodes = contextNodes();
-		Element outer_context = context;
+		Element previousContext = nodes.get(nodes.size() - 1);
+		Element outerContext = context;
 		contextOpen("operation");
-		contextOpen("operand");
-		for (Element node : nodes) {
-			outer_context.removeChild(node);
-			context.appendChild(node);
-		}
-		if (verbosity >= 100)
-			super.rel_op(relOp);
-		contextClose("operand");
 		setAttribute("type", "binary");
 		contextOpen("operand");
+		outerContext.removeChild(previousContext);
+		context.appendChild(previousContext);
+		contextClose("operand");
+		if (verbosity >= 100)
+			super.rel_op(relOp);
+		contextOpen("operand");
+	}
+
+	public void assignment_stmt(Token label, Token eos) {
+		ArrayList<Element> nodes = contextNodes();
+		if (nodes.size() < 2) {
+			System.err.println("there should be at least 2 nodes for 'assignment' but " + nodes.size() + " found");
+			cleanUpAfterError();
+		}
+		Element target = nodes.get(nodes.size() - 2);
+		Element value = nodes.get(nodes.size() - 1);
+		Element outerContext = context;
+		contextOpen("assignmet");
+		contextOpen("target");
+		outerContext.removeChild(target);
+		context.appendChild(target);
+		contextClose("target");
+		contextOpen("value");
+		outerContext.removeChild(value);
+		context.appendChild(value);
+		contextClose("value");
+		if (verbosity >= 100)
+			super.assignment_stmt(label, eos);
+		contextClose("assignmet");
 	}
 
 	public void forall_header() {
@@ -855,11 +1061,31 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void else_if_stmt(Token label, Token elseKeyword, Token ifKeyword, Token thenKeyword, Token id, Token eos) {
-		super.else_if_stmt(label, elseKeyword, ifKeyword, thenKeyword, id, eos);
+		ArrayList<Element> nodes = contextNodes();
+		Element condition = nodes.get(nodes.size() - 1);
+		Element outerContext = context;
+		contextClose("body");
+		// contextOpen("else");
+		// contextOpen("if");
+		contextOpen("header");
+		setAttribute("type", "else-if");
+		outerContext.removeChild(condition);
+		context.appendChild(condition);
+		contextClose("header");
+		if (verbosity >= 80)
+			super.else_if_stmt(label, elseKeyword, ifKeyword, thenKeyword, id, eos);
+		contextOpen("body");
+		setAttribute("type", "else-if");
+		contextOpen("statement");
 	}
 
 	public void else_stmt(Token label, Token elseKeyword, Token id, Token eos) {
-		super.else_stmt(label, elseKeyword, id, eos);
+		contextClose("body");
+		if (verbosity >= 80)
+			super.else_stmt(label, elseKeyword, id, eos);
+		contextOpen("body");
+		setAttribute("type", "else");
+		contextOpen("statement");
 	}
 
 	public void end_if_stmt(Token label, Token endKeyword, Token ifKeyword, Token id, Token eos) {
@@ -924,8 +1150,18 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void do_variable(Token id) {
-		contextRename("statement", "loop");
-		setAttribute("type", "do");
+		if (context.getTagName().equals("statement")) {
+			contextRename("statement", "loop");
+			setAttribute("type", "do");
+		} else if (context.getTagName().equals("value")) {
+			// nothing special needed
+			// contextClose();
+			// contextRename("array-constructor-values", "loop");
+			// setAttribute("type", "array-constructor");
+		} else {
+			System.err.println("unexpected context name '" + context.getTagName() + "'");
+			cleanUpAfterError();
+		}
 		contextOpen("header");
 		contextOpen("index-variable");
 		setAttribute("name", id);
@@ -994,8 +1230,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void format_item_list__begin() {
 		contextOpen("declaration");
-		// TODO Auto-generated method stub
-		super.format_item_list__begin();
+		if (verbosity >= 100)
+			super.format_item_list__begin();
 	}
 
 	public void main_program__begin() {
@@ -1135,7 +1371,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void end_interface_stmt(Token label, Token kw1, Token kw2, Token eos, boolean hasGenericSpec) {
-		// TODO Auto-generated method stub
 		super.end_interface_stmt(label, kw1, kw2, eos, hasGenericSpec);
 		contextClose("interface");
 	}
@@ -1191,8 +1426,36 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("procedures");
 	}
 
+	public void intrinsic_stmt(Token label, Token intrinsicKeyword, Token eos) {
+		ArrayList<Element> nodes = contextNodes();
+		Element condition = nodes.get(nodes.size() - 1);
+		Element outerContext = context;
+		contextOpen("declaration");
+		setAttribute("type", "intrinsic");
+		outerContext.removeChild(condition);
+		context.appendChild(condition);
+		super.intrinsic_stmt(label, intrinsicKeyword, eos);
+	}
+
 	public void call_stmt(Token label, Token callKeyword, Token eos, boolean hasActualArgSpecList) {
+		Element outerContext = context;
+		ArrayList<Element> nodes = contextNodes();
+		Element name = nodes.get(nodes.size() - 1);
+		Element arguments = null;
+		if (name.getTagName() == "arguments") {
+			arguments = name;
+			name = nodes.get(nodes.size() - 2);
+		} else if (name.getTagName() != "name") {
+			System.err.println("tag name is not 'name' but '" + name.getTagName() + "'");
+			cleanUpAfterError();
+		}
 		contextOpen("call");
+		outerContext.removeChild(name);
+		context.appendChild(name);
+		if (arguments != null) {
+			outerContext.removeChild(arguments);
+			context.appendChild(arguments);
+		}
 		super.call_stmt(label, callKeyword, eos, hasActualArgSpecList);
 		contextClose("call");
 	}
@@ -1202,6 +1465,34 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.procedure_designator();
 		setAttribute("type", "procedure");
 		contextClose("name");
+	}
+
+	public void actual_arg_spec(Token keyword) {
+		if (verbosity >= 100)
+			super.actual_arg_spec(keyword);
+		contextOpen("argument");
+	}
+
+	public void actual_arg_spec_list__begin() {
+		contextOpen("arguments");
+		if (verbosity >= 100)
+			super.actual_arg_spec_list__begin();
+		contextOpen("argument");
+	}
+
+	public void actual_arg_spec_list(int count) {
+		contextClose("argument");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.actual_arg_spec_list(count);
+		contextClose("arguments");
+	}
+
+	public void actual_arg(boolean hasExpr, Token label) {
+		if (contextTryFind("argument") != null)
+			contextClose("argument");
+		if (verbosity >= 60)
+			super.actual_arg(hasExpr, label);
 	}
 
 	public void function_stmt__begin() {
