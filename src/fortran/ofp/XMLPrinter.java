@@ -877,6 +877,15 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("operator", addOp, "operation");
 	}
 
+	public void level_2_expr(int numConcatOps) {
+		if (numConcatOps > 0)
+			contextClose("operand");
+		if (verbosity >= 100)
+			super.level_2_expr(numConcatOps);
+		if (numConcatOps > 0)
+			contextClose("operation");
+	}
+
 	public void power_op(Token powerKeyword) {
 		ArrayList<Element> nodes = contextNodes();
 		Element previousContext = nodes.get(nodes.size() - 1);
@@ -937,6 +946,28 @@ public class XMLPrinter extends FortranParserActionPrint {
 			setAttribute("operator", relOp);
 			contextClose("operation");
 		}
+	}
+
+	public void concat_op(Token concatKeyword) {
+		if (context.getTagName().equals("operand"))
+			contextClose("operand");
+		if (context.getTagName() == "operation") {
+			// TODO
+		} else {
+			ArrayList<Element> nodes = contextNodes();
+			Element previousContext = nodes.get(nodes.size() - 1);
+			Element outerContext = context;
+			contextOpen("operation");
+			setAttribute("type", "binary");
+			contextOpen("operand");
+			outerContext.removeChild(previousContext);
+			context.appendChild(previousContext);
+			contextClose("operand");
+		}
+		if (verbosity >= 100)
+			super.concat_op(concatKeyword);
+		setAttribute("operator", "//");
+		contextOpen("operand");
 	}
 
 	public void rel_op(Token relOp) {
