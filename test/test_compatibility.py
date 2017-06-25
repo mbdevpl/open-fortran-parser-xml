@@ -35,31 +35,55 @@ class Tests(unittest.TestCase):
     maxDiff = None
 
     def test_ofp_test_file(self):
-        input_path = "../open-fortran-parser/tests/annex_c/c_5_3_7.f03"
-        root_node = parse(input_path, verbosity=100, raise_on_error=True)
-        self.assertIsNotNone(root_node)
+        input_paths = [pathlib.Path(_) for _ in [
+            '../open-fortran-parser/tests/annex_c/c_5_3_7.f03',
+            '../open-fortran-parser/tests/rule-tests/R802.f03',
+            '../open-fortran-parser/tests/bug-reports/bug-1759956.f90']]
+        for input_path in input_paths:
+            try:
+                root_node = parse(input_path, verbosity=100, raise_on_error=True)
+                self.assertIsNotNone(root_node)
+            except subprocess.CalledProcessError as err:
+                _LOG.exception(err.stdout.decode().rstrip())
+                self.fail('failed to parse "{}"'.format(input_path))
 
-    @unittest.skipIf(not ALL_OFP_TEST_PATHS, 'no Open Fortran Parser test files found')
     def test_ofp_test_files(self):
+        reports_path = _HERE.joinpath('compatibility_reports')
+        reports_path.mkdir(exist_ok=True)
         passed_test_cases = []
         failed_test_cases = []
         for input_path in ALL_OFP_TEST_PATHS:
-            with self.subTest(input_path=input_path):
-                try:
-                    root_node = parse(input_path, verbosity=100, raise_on_error=True)
-                    self.assertIsNotNone(root_node)
-                except subprocess.CalledProcessError:
-                    failed_test_cases.append(input_path)
-                    continue
-                passed_test_cases.append(input_path)
+            #with self.subTest(input_path=input_path):
+            report_path = reports_path.joinpath(input_path.name + '.xml')
+            try:
+                root_node = parse(input_path, verbosity=100, raise_on_error=True)
+                self.assertIsNotNone(root_node)
+            except subprocess.CalledProcessError as err:
+                if err.stdout and b'XMLPrinter' in err.stderr:
+                    with open(report_path, 'w') as report_file:
+                        print('<stderr>', file=report_file)
+                        print(err.stderr.decode().rstrip(), file=report_file)
+                        print('</stderr>', file=report_file)
+                        print('<code>', file=report_file)
+                        with open(input_path) as fortran_file:
+                            print(fortran_file.read(), file=report_file)
+                        print('</code>', file=report_file)
+                        print(err.stdout.decode().rstrip(), file=report_file)
+                elif report_path.exists():
+                    report_path.unlink()
+                failed_test_cases.append(input_path)
+                continue
+            if report_path.exists():
+                report_path.unlink()
+            passed_test_cases.append(input_path)
 
-        passed_count = len(passed_test_cases)
         failed_count = len(failed_test_cases)
+        passed_count = len(passed_test_cases)
         self.assertEqual(passed_count + failed_count, len(ALL_OFP_TEST_PATHS))
         _LOG.warning(
             "OFP test case pass rate is %i of %i = %f", passed_count, len(ALL_OFP_TEST_PATHS),
             passed_count / (passed_count + failed_count))
-        _LOG.debug("passed OFP test cases (%i): %s", passed_count, passed_test_cases)
         _LOG.warning("failed OFP test cases (%i): %s", failed_count, failed_test_cases)
-        self.assertGreaterEqual(passed_count, 366, msg=failed_test_cases)
+        _LOG.debug("passed OFP test cases (%i): %s", passed_count, passed_test_cases)
         self.assertLessEqual(failed_count, 55, msg=failed_test_cases)
+        self.assertGreaterEqual(passed_count, 366, msg=passed_test_cases)
