@@ -835,7 +835,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 			Element operandContext = context;
 			// contextOpen("operation");
 			setAttribute("type", "unary");
-			setAttribute("operand", addOp);
+			setAttribute("operator", addOp);
 			// contextOpen("operand");
 			// outerContext.removeChild(operand);
 			// context.appendChild(operand);
@@ -883,7 +883,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element outerContext = context;
 		contextOpen("operation");
 		setAttribute("type", "binary");
-		setAttribute("operand", powerKeyword);
+		setAttribute("operator", powerKeyword);
 		contextOpen("operand");
 		outerContext.removeChild(previousContext);
 		context.appendChild(previousContext);
@@ -963,7 +963,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element target = nodes.get(nodes.size() - 2);
 		Element value = nodes.get(nodes.size() - 1);
 		Element outerContext = context;
-		contextOpen("assignmet");
+		contextOpen("assignment");
 		contextOpen("target");
 		outerContext.removeChild(target);
 		context.appendChild(target);
@@ -974,7 +974,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("value");
 		if (verbosity >= 100)
 			super.assignment_stmt(label, eos);
-		contextClose("assignmet");
+		contextClose("assignment");
 	}
 
 	public void forall_header() {
