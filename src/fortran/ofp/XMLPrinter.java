@@ -685,6 +685,38 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("name");
 	}
 
+	public void substring_range(boolean hasLowerBound, boolean hasUpperBound) {
+		Element outerContext = context;
+		Element lowerBound = null;
+		Element upperBound = null;
+		if (hasLowerBound)
+			lowerBound = contextNode(-1);
+		if (hasUpperBound) {
+			upperBound = lowerBound;
+			if (hasLowerBound)
+				lowerBound = contextNode(-2);
+			else
+				lowerBound = null;
+		}
+		contextOpen("name");
+		contextOpen("range");
+		if (lowerBound != null) {
+			contextOpen("lower-bound");
+			outerContext.removeChild(lowerBound);
+			context.appendChild(lowerBound);
+			contextClose();
+		}
+		if (upperBound != null) {
+			contextOpen("upper-bound");
+			outerContext.removeChild(upperBound);
+			context.appendChild(upperBound);
+			contextClose();
+		}
+		if (verbosity >= 100)
+			super.substring_range(hasLowerBound, hasUpperBound);
+		contextClose("range");
+	}
+
 	public void part_ref(Token id, boolean hasSectionSubscriptList, boolean hasImageSelector) {
 		Element outer_context = context;
 		Element e = null;
