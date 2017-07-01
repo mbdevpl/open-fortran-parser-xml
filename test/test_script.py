@@ -1,4 +1,4 @@
-"""Tests for parser_wrapper module."""
+"""Tests for main script."""
 
 import contextlib
 import io

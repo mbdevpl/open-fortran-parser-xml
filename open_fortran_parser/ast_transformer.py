@@ -22,7 +22,7 @@ class AstTransformer:
     def __init__(self):
         self.transforms = [f for f in dir(self) if not f.startswith('__')]
 
-    def transform(self, node: ET.Element, warn=True):
+    def transform(self, node: ET.Element, warn: bool = True):
         if f'_{node.tag}' not in self.transforms:
             if warn:
                 _LOG.warning('no transformer available for node "%s"', node.tag)
@@ -31,9 +31,11 @@ class AstTransformer:
         _transform = getattr(self, f'_{node.tag}')
         return _transform(node)
 
-    def transform_all_subnodes(self, node: ET.Element, warn=True):
+    def transform_all_subnodes(self, node: ET.Element, warn: bool = True, skip_empty: bool = False):
         transformed = []
         for subnode in node:
+            if skip_empty and not subnode.attrib and len(subnode) == 0:
+                continue
             if f'_{subnode.tag}' not in self.transforms:
                 if warn:
                     _LOG.warning('no transformer available for node "%s"', subnode.tag)
@@ -44,22 +46,54 @@ class AstTransformer:
         return transformed
 
     def _file(self, node: ET.Element) -> typed_ast3.AST:
-        body = self.transform_all_subnodes(node)
+        body = self.transform_all_subnodes(node, warn=False)
         return typed_ast3.Module(body=body, type_ignores=[])
 
     def _module(self, node):
+        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
 
     def _function(self, node: ET.Element):
+        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
         #return typed_ast3.FunctionDef()
 
     def _program(self, node: ET.Element) -> typed_ast3.AST:
         module = typed_ast3.parse('''if __name__ == '__main__':\n    pass''')
         body = self.transform_all_subnodes(node.find('./body'))
+        for i in range(len(body) - 1, -1, -1):
+            if isinstance(body[i], list):
+                sublist = body[i]
+                del body[i]
+                for elem in reversed(sublist):
+                    body.insert(i, elem)
         conditional = module.body[0]
         conditional.body = body
         return conditional
+
+    def _specification(self, node: ET.Element) -> t.List[typed_ast3.AST]:
+        declarations = self.transform_all_subnodes(node, warn=False, skip_empty=True)
+        return declarations
+        #_LOG.warning('%s', ET.tostring(node).decode().rstrip())
+        #raise NotImplementedError()
+
+    def _declaration(self, node: ET.Element) -> typed_ast3.AnnAssign:
+        if node.attrib['type'] == 'implicit':
+            # TODO: generate comment here maybe?
+            if node.attrib['subtype'].lower() == 'none':
+                annotation = typed_ast3.NameConstant(value=None)
+            else:
+                annotation = typed_ast3.Str(s=node.attrib['subtype'])
+            return typed_ast3.AnnAssign(
+                target=typed_ast3.Name(id='implicit'), annotation=annotation, value=None, simple=True)
+        #elif node.attrib['type'] == 'variable':
+        #    return typed_ast3.AnnAssign()
+        return typed_ast3.Expr(value=typed_ast3.Call(
+            func=typed_ast3.Name(id='print'),
+            args=[typed_ast3.Str(s='declaration'), typed_ast3.Str(s=node.attrib['type'])],
+            keywords=[]))
+        #_LOG.warning('%s', ET.tostring(node).decode().rstrip())
+        #raise NotImplementedError()
 
     def _loop(self, node: ET.Element):
         if node.attrib['type'] == 'do':
@@ -121,6 +155,7 @@ class AstTransformer:
         header = self.transform_all_subnodes(node.find('./header'), warn=False)
         if len(header) != 1:
             _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+            _LOG.error([typed_astunparse.unparse(_).rstrip() for _ in header])
             raise NotImplementedError()
         #if len(header) == 0:
         #    test = typed_ast3.NameConstant(True)
@@ -147,9 +182,14 @@ class AstTransformer:
             args=args, keywords=[]))
 
     def _call(self, node: ET.Element):
-        elements = self.transform_all_subnodes(node, warn=False)
-        assert len(elements) == 1
-        func = elements[0]
+        called = self.transform_all_subnodes(node, warn=False)
+        if len(called) != 1:
+            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+            _LOG.error([typed_astunparse.unparse(_).rstrip() for _ in called])
+            raise SyntaxError("call statement must contain a single called object")
+        if isinstance(called[0], typed_ast3.Call):
+            return called[0]
+        func = called[0]
         #assert name.tag == 'name' or name.
         args = []
         #args = node.findall('./name/subscripts/subscript') if isinstance(name, typed_ast3.Subscript) else []
@@ -159,15 +199,11 @@ class AstTransformer:
     def _assignment(self, node: ET.Element):
         target = self.transform_all_subnodes(node.find('./target'))
         value = self.transform_all_subnodes(node.find('./value'))
-        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+        #_LOG.warning('%s', ET.tostring(node).decode().rstrip())
         assert len(target) == 1, target
         assert len(value) == 1, value
         #raise NotImplementedError()
         return typed_ast3.Assign(targets=[target], value=value)
-
-    def _declaration(self, node: ET.Element):
-        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-        raise NotImplementedError()
 
     def _operation(self, node: ET.Element) -> typed_ast3.AST:
         if node.attrib['type'] == 'binary':
@@ -236,12 +272,33 @@ class AstTransformer:
 
     def _name(self, node: ET.Element) -> typed_ast3.AST:
         name = typed_ast3.Name(id=node.attrib['id'], ctx=typed_ast3.Load())
+        name_type = node.attrib['type']
         subscripts_node = node.find('./subscripts')
+        if name_type == "procedure":
+            args = self._args(subscripts_node) if subscripts_node else []
+            return typed_ast3.Call(func=name, args=args, keywords=[])
         if not subscripts_node:
             return name
+        slice_ = self._subscripts(subscripts_node)
+        return typed_ast3.Subscript(value=name, slice=slice_, ctx=typed_ast3.Load())
+
+    def _args(self, node: ET.Element, arg_node_name: str = 'subscript') -> t.List[typed_ast3.AST]:
+        args = []
+        for arg_node in node.findall(f'./{arg_node_name}'):
+            new_args = self.transform_all_subnodes(arg_node, warn=False)
+            if not new_args:
+                continue
+            if len(new_args) != 1:
+                _LOG.error('%s', ET.tostring(arg_node).decode().rstrip())
+                _LOG.error('%s', [typed_astunparse.unparse(_) for _ in new_args])
+                raise SyntaxError('args must be specified one new arg at a time')
+            args += new_args
+        return args
+
+    def _subscripts(self, node: ET.Element) -> t.Union[typed_ast3.Index, typed_ast3.Slice]:
         subscripts = []
-        for subscript in subscripts_node.findall('./subscript'):
-            new_subscripts = self.transform_all_subnodes(subscript)
+        for subscript in node.findall('./subscript'):
+            new_subscripts = self.transform_all_subnodes(subscript, warn=False)
             if not new_subscripts:
                 continue
             if len(new_subscripts) == 1:
@@ -252,16 +309,15 @@ class AstTransformer:
             else:
                 _LOG.error('%s', ET.tostring(subscript).decode().rstrip())
                 _LOG.error('%s', [typed_astunparse.unparse(_) for _ in new_subscripts])
-                raise SyntaxError()
+                raise SyntaxError('there must be 1 or 2 new subscript data elements')
             subscripts.append(new_subscript)
-        assert len(subscripts) > 0
         if len(subscripts) == 1:
-            slice_ = subscripts[0]
-        else:
-            slice_ = typed_ast3.ExtSlice(dims=subscripts)
-        return typed_ast3.Subscript(value=name, slice=slice_, ctx=typed_ast3.Load())
+            return subscripts[0]
+        elif len(subscripts) > 1:
+            return typed_ast3.ExtSlice(dims=subscripts)
+        raise SyntaxError('subscripts node must contain at least one "subscript" node')
 
-    def _literal(self, node: ET.Element) -> typed_ast3.AST:
+    def _literal(self, node: ET.Element) -> t.Union[typed_ast3.Num, typed_ast3.Str]:
         if node.attrib['type'] == 'int':
             return typed_ast3.Num(n=int(node.attrib['value']))
         if node.attrib['type'] == 'char':
@@ -277,4 +333,4 @@ class AstTransformer:
 def transform(root_node: ET.Element) -> typed_ast3.AST:
     file_node = root_node[0]
     transformer = AstTransformer()
-    return transformer._file(file_node)
+    return transformer.transform(file_node)

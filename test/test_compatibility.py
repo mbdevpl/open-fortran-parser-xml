@@ -4,6 +4,7 @@ import logging
 import pathlib
 import subprocess
 import unittest
+import xml.etree.ElementTree as ET
 
 from open_fortran_parser.parser_wrapper import parse
 
@@ -48,34 +49,56 @@ class Tests(unittest.TestCase):
                 self.fail('failed to parse "{}"'.format(input_path))
 
     def test_ofp_test_files(self):
-        reports_path = _HERE.joinpath('compatibility_reports')
-        reports_path.mkdir(exist_ok=True)
+        failure_reports_path = _HERE.joinpath('compatibility_failure')
+        failure_reports_path.mkdir(exist_ok=True)
+        success_reports_path = _HERE.joinpath('compatibility_success')
+        success_reports_path.mkdir(exist_ok=True)
         passed_test_cases = []
         failed_test_cases = []
+
+        logger_level = logging.getLogger('open_fortran_parser.parser_wrapper').level
+        logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logging.CRITICAL)
+
         for input_path in ALL_OFP_TEST_PATHS:
             #with self.subTest(input_path=input_path):
-            report_path = reports_path.joinpath(input_path.name + '.xml')
+            result = None
             try:
-                root_node = parse(input_path, verbosity=100, raise_on_error=True)
-                self.assertIsNotNone(root_node)
+                result = parse(input_path, verbosity=100, raise_on_error=True)
+                self.assertIsNotNone(result)
             except subprocess.CalledProcessError as err:
-                if err.stdout and b'XMLPrinter' in err.stderr:
-                    with open(report_path, 'w') as report_file:
-                        print('<stderr>', file=report_file)
-                        print(err.stderr.decode().rstrip(), file=report_file)
-                        print('</stderr>', file=report_file)
-                        print('<code>', file=report_file)
-                        with open(input_path) as fortran_file:
-                            print(fortran_file.read(), file=report_file)
-                        print('</code>', file=report_file)
-                        print(err.stdout.decode().rstrip(), file=report_file)
-                elif report_path.exists():
-                    report_path.unlink()
+                result = err
+
+            failure_report_path = failure_reports_path.joinpath(input_path.name + '.xml')
+            success_report_path = success_reports_path.joinpath(input_path.name + '.xml')
+            if isinstance(result, ET.Element):
+                passed_test_cases.append(input_path)
+                if failure_report_path.exists():
+                    failure_report_path.unlink()
+            else:
                 failed_test_cases.append(input_path)
-                continue
-            if report_path.exists():
-                report_path.unlink()
-            passed_test_cases.append(input_path)
+                if success_report_path.exists():
+                    success_report_path.unlink()
+
+            if isinstance(result, ET.Element):
+                with open(success_report_path, 'w') as report_file:
+                    print('<code>', file=report_file)
+                    with open(input_path) as fortran_file:
+                        print(fortran_file.read(), file=report_file)
+                    print('</code>', file=report_file)
+                    print(ET.tostring(result).decode(), file=report_file)
+            elif isinstance(result, subprocess.CalledProcessError) and result.stdout \
+                    and b'XMLPrinter' in result.stderr:
+                with open(failure_report_path, 'w') as report_file:
+                    print('<stderr>', file=report_file)
+                    print(result.stderr.decode().rstrip(), file=report_file)
+                    print('</stderr>', file=report_file)
+                    print('<code>', file=report_file)
+                    with open(input_path) as fortran_file:
+                        print(fortran_file.read(), file=report_file)
+                    print('</code>', file=report_file)
+                    print(result.stdout.decode().rstrip(), file=report_file)
+
+        logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logger_level)
 
         failed_count = len(failed_test_cases)
         passed_count = len(passed_test_cases)
@@ -85,5 +108,5 @@ class Tests(unittest.TestCase):
             passed_count / (passed_count + failed_count))
         _LOG.warning("failed OFP test cases (%i): %s", failed_count, failed_test_cases)
         _LOG.debug("passed OFP test cases (%i): %s", passed_count, passed_test_cases)
-        self.assertLessEqual(failed_count, 55, msg=failed_test_cases)
-        self.assertGreaterEqual(passed_count, 366, msg=passed_test_cases)
+        self.assertLessEqual(failed_count, 49, msg=failed_test_cases)
+        self.assertGreaterEqual(passed_count, 372, msg=passed_test_cases)

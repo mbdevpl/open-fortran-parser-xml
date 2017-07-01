@@ -38,13 +38,12 @@ install:
   - pip install .
 
 script:
-  - python -m unittest discover
+  - TEST_PACKAGING=1 TEST_DEPENDENCIES=1 python -m coverage run --branch --source . -m unittest discover --verbose
+  - python -m coverage report --show-missing
+  - coveralls
 
 after_success:
   - python -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y --output-format colorized  --reports y $(find . -name "*.py")
-  - python -m coverage run --branch --source . -m unittest discover --verbose
-  - python -m coverage report --show-missing
-  - coveralls
 
 notifications:
   slack:

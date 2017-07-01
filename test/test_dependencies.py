@@ -1,5 +1,6 @@
 """Tests for dependencies downloader scripts."""
 
+import os
 import pathlib
 import runpy
 import shutil
@@ -21,6 +22,7 @@ class Tests(unittest.TestCase):
         sys.argv = ['{}.py'.format(module.replace('.', '/'))] + list(args)
         runpy.run_module(module, run_name='__main__')
 
+    @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
     def test_dev_deps(self):
         # as script
         self.execute_module('open_fortran_parser.dev_dependencies')
@@ -34,6 +36,7 @@ class Tests(unittest.TestCase):
         shutil.rmtree(str(self.test_root_path), ignore_errors=True)
         ensure_dependencies(DEV_DEPENDENCIES, self.test_root_path)
 
+    @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
     def test_deps(self):
         # as script
         with self.assertRaises(urllib.error.HTTPError):
