@@ -74,8 +74,6 @@ class AstTransformer:
     def _specification(self, node: ET.Element) -> t.List[typed_ast3.AST]:
         declarations = self.transform_all_subnodes(node, warn=False, skip_empty=True)
         return declarations
-        #_LOG.warning('%s', ET.tostring(node).decode().rstrip())
-        #raise NotImplementedError()
 
     def _declaration(self, node: ET.Element) -> typed_ast3.AnnAssign:
         if node.attrib['type'] == 'implicit':
@@ -85,9 +83,15 @@ class AstTransformer:
             else:
                 annotation = typed_ast3.Str(s=node.attrib['subtype'])
             return typed_ast3.AnnAssign(
-                target=typed_ast3.Name(id='implicit'), annotation=annotation, value=None, simple=True)
-        #elif node.attrib['type'] == 'variable':
-        #    return typed_ast3.AnnAssign()
+                target=typed_ast3.Name(id='implicit'), annotation=annotation, value=None,
+                simple=True)
+        elif node.attrib['type'] == 'variable':
+            variables = self.transform_all_subnodes(
+                node.find('./variables'), warn=False, skip_empty=True)
+            annotation = typed_ast3.NameConstant(value=None)
+            value = typed_ast3.NameConstant(value=None)
+            return typed_ast3.AnnAssign(
+                target=variables[0], annotation=annotation, value=value, simple=True)
         return typed_ast3.Expr(value=typed_ast3.Call(
             func=typed_ast3.Name(id='print'),
             args=[typed_ast3.Str(s='declaration'), typed_ast3.Str(s=node.attrib['type'])],
@@ -269,6 +273,12 @@ class AstTransformer:
             # In
             # NotIn
             }[operator]
+
+    def _variable(self, node: ET.Element) -> t.Union[
+            typed_ast3.Name, typed_ast3.Assign, typed_ast3.AnnAssign]:
+        return typed_ast3.Name(id=node.attrib['name'])
+        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+        raise NotImplementedError()
 
     def _name(self, node: ET.Element) -> typed_ast3.AST:
         name = typed_ast3.Name(id=node.attrib['id'], ctx=typed_ast3.Load())

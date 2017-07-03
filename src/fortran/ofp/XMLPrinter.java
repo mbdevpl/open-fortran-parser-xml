@@ -481,31 +481,53 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.type_declaration_stmt(label, numAttributes, eos);
 	}
 
+	public void declaration_type_spec(Token udtKeyword, int type) {
+		Element outerContext = context;
+		ArrayList<Element> typeDeclarations = contextNodes();
+		contextOpen("initial-value");
+		for (Element declaration : typeDeclarations) {
+			outerContext.removeChild(declaration);
+			context.appendChild(declaration);
+		}
+		contextOpen("type");
+		super.declaration_type_spec(udtKeyword, type);
+		contextClose("type");
+	}
+
 	public void entity_decl(Token id, boolean hasArraySpec, boolean hasCoarraySpec, boolean hasCharLength,
 			boolean hasInitialization) {
-		/*
-		if (context.getTagName() != "entry") {
-			contextOpen("entry");
-			setAttribute("type", "scalar");
-		}
-		*/
+		contextCloseAllInner("variable");
 		super.entity_decl(id, hasArraySpec, hasCoarraySpec, hasCharLength, hasInitialization);
-		// contextClose("entry");
+		setAttribute("name", id);
+		setAttribute("hasInitialValue", hasInitialization);
+		contextClose("variable");
+		contextOpen("variable");
 	}
 
 	public void entity_decl_list__begin() {
 		contextOpen("variables");
 		if (verbosity >= 100)
 			super.entity_decl_list__begin();
+		contextOpen("variable");
 	}
 
 	public void entity_decl_list(int count) {
-		// cleanUpAfterError();
+		contextClose("variable");
 		contextCloseAllInner("variables");
 		if (verbosity >= 100)
 			super.entity_decl_list(count);
 		setAttribute("count", count);
 		contextClose("variables");
+	}
+
+	public void initialization(boolean hasExpr, boolean hasNullInit) {
+		Element outerContext = context;
+		Element initialValue = contextNode(-1);
+		contextOpen("initial-value");
+		outerContext.removeChild(initialValue);
+		context.appendChild(initialValue);
+		super.initialization(hasExpr, hasNullInit);
+		contextClose("initial-value");
 	}
 
 	public void access_spec(Token keyword, int type) {
