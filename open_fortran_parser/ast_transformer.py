@@ -4,6 +4,7 @@ import logging
 import typing as t
 import xml.etree.ElementTree as ET
 
+import numpy as np
 import typed_ast.ast3 as typed_ast3
 import typed_astunparse
 
@@ -86,16 +87,57 @@ class AstTransformer:
                 target=typed_ast3.Name(id='implicit'), annotation=annotation, value=None,
                 simple=True)
         elif node.attrib['type'] == 'variable':
-            variables = self.transform_all_subnodes(
-                node.find('./variables'), warn=False, skip_empty=True)
-            annotation = typed_ast3.NameConstant(value=None)
-            value = typed_ast3.NameConstant(value=None)
-            return typed_ast3.AnnAssign(
-                target=variables[0], annotation=annotation, value=value, simple=True)
+            return self._declaration_variable(node)
+        elif node.attrib['type'] == 'include':
+            return self._declaration_include(node)
         return typed_ast3.Expr(value=typed_ast3.Call(
             func=typed_ast3.Name(id='print'),
             args=[typed_ast3.Str(s='declaration'), typed_ast3.Str(s=node.attrib['type'])],
             keywords=[]))
+
+    def _declaration_variable(
+            self, node: ET.Element) -> t.Union[typed_ast3.Assign, typed_ast3.AnnAssign]:
+        variables_node = node.find('./variables')
+        if variables_node is None:
+            _LOG.error('%s', ET.tostring(node).decode().rstrip())
+            raise SyntaxError('"variables" node not present')
+        variables = self.transform_all_subnodes(variables_node, warn=False, skip_empty=True)
+        if not variables:
+            _LOG.error('%s', ET.tostring(node).decode().rstrip())
+            raise SyntaxError('at least one variable expected in variables list')
+        if len(variables) == 1:
+            target = variables[0][0]
+        else:
+            target = typed_ast3.Tuple(elts=[var[0] for var in variables])
+
+        type_node = node.find('./type')
+        if type_node is None:
+            _LOG.error('%s', ET.tostring(node).decode().rstrip())
+            raise SyntaxError('"type" node not present')
+        annotation = self.transform(type_node)
+        #print(typed_astunparse.dump(annotation))
+        #annotation = typed_ast3.NameConstant(value=None)
+
+        dimensions_node = node.find('./dimensions')
+        if dimensions_node is not None:
+            dimensions = self.transform(dimensions_node)
+            # TODO: modify annotation accordingly
+            raise NotImplementedError()
+
+        value = typed_ast3.NameConstant(value=None)
+
+        if len(variables) == 1:
+            return typed_ast3.AnnAssign(
+                target=target, annotation=annotation, value=value, simple=True)
+        else:
+            return typed_ast3.Assign(
+                targets=[target], value=value, type_comment=typed_astunparse.unparse(
+                    typed_ast3.Tuple(elts=[annotation for _ in range(len(variables))])).strip())
+
+    def _declaration_include(self, node: ET.Element):
+        file_node = node.find('./file')
+        path_attrib = file_node.attrib['path']
+        return typed_ast3.Import(names=[typed_ast3.alias(name=path_attrib,asname=None)])
         #_LOG.warning('%s', ET.tostring(node).decode().rstrip())
         #raise NotImplementedError()
 
@@ -274,11 +316,36 @@ class AstTransformer:
             # NotIn
             }[operator]
 
-    def _variable(self, node: ET.Element) -> t.Union[
-            typed_ast3.Name, typed_ast3.Assign, typed_ast3.AnnAssign]:
-        return typed_ast3.Name(id=node.attrib['name'])
+    def _type(self, node: ET.Element) -> type:
+        name = node.attrib['name']
+        length = self.transform(node.find('./length')) if node.attrib['hasLength'] == "true" else None
+        kind = self.transform(node.find('./kind')) if node.attrib['hasKind'] == "true" else None
+        if name == 'character':
+            if length is not None:
+                pass
+            return typed_ast3.parse('str', mode='eval')
+        elif length is not None:
+            return typed_ast3.parse({
+                ('integer', 4): 'np.int32',
+                ('integer', 8): 'np.int64',
+                ('real', 4): 'np.float32',
+                ('real', 8): 'np.float64'}[name, length], mode='eval')
+        else:
+            return typed_ast3.parse({
+                'integer': 'int',
+                'real': 'float'}[name], mode='eval')
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
+
+    def _variable(self, node: ET.Element) -> t.Tuple[
+            typed_ast3.Name, t.Any]:
+        value_node = node.find('./initial-value')
+        value = None
+        if value_node is not None:
+            values = self.transform_all_subnodes(value_node, warn=False)
+            assert len(values) == 1, values
+            value = values[0]
+        return typed_ast3.Name(id=node.attrib['name']), value
 
     def _name(self, node: ET.Element) -> typed_ast3.AST:
         name = typed_ast3.Name(id=node.attrib['id'], ctx=typed_ast3.Load())

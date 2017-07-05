@@ -419,6 +419,18 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.real_literal_constant(realConstant, kindParam);
 	}
 
+	/*
+	public void char_length(boolean hasTypeParamValue) {
+		Element outerContext = context;
+		Element value = contextNode(-1);
+		contextOpen("length");
+		outerContext.removeChild(value);
+		context.appendChild(value);
+		super.char_length(hasTypeParamValue);
+		contextClose("length");
+	}
+	*/
+
 	public void scalar_int_literal_constant() {
 		if (verbosity >= 100)
 			super.scalar_int_literal_constant();
@@ -485,8 +497,27 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element outerContext = context;
 		ArrayList<Element> typeDeclarations = contextNodes();
 		contextOpen("type");
+		setAttribute("hasLength", false);
+		setAttribute("hasKind", false);
+		setAttribute("hasDimensions", false);
 		for (Element declaration : typeDeclarations) {
 			outerContext.removeChild(declaration);
+			switch (declaration.getTagName()) {
+			case "intrinsic-type-spec":
+				setAttribute("name", declaration.getAttribute("keyword1"));
+				break;
+			case "length":
+				setAttribute("hasLength", true);
+				break;
+			case "kind":
+				setAttribute("hasKind", true);
+				break;
+			case "dimensions":
+				setAttribute("hasDimensions", true);
+				break;
+			default:
+				break;
+			}
 			context.appendChild(declaration);
 		}
 		super.declaration_type_spec(udtKeyword, type);
@@ -541,9 +572,27 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.language_binding_spec(keyword, id, hasName);
 	}
 
-	public void array_spec_element(int type) {
-		super.array_spec_element(type);
+	/*
+	public void array_spec(int count) {
+		contextCloseAllInner("dimensions");
+		if (verbosity >= 100)
+			super.array_spec(count);
+		setAttribute("count", count);
+		contextClose("dimensions");
 	}
+
+	public void array_spec_element(int type) {
+		Element outerContext = context;
+		Element value = contextNode(-1);
+		if (!context.getTagName().equals("dimensions"))
+			contextOpen("dimensions");
+		contextOpen("dimension");
+		outerContext.removeChild(value);
+		context.appendChild(value);
+		super.array_spec_element(type);
+		contextClose("dimension");
+	}
+	*/
 
 	public void access_id_list__begin() {
 		// contextOpen("access-list");
