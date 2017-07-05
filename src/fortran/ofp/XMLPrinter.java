@@ -484,12 +484,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void declaration_type_spec(Token udtKeyword, int type) {
 		Element outerContext = context;
 		ArrayList<Element> typeDeclarations = contextNodes();
-		contextOpen("initial-value");
+		contextOpen("type");
 		for (Element declaration : typeDeclarations) {
 			outerContext.removeChild(declaration);
 			context.appendChild(declaration);
 		}
-		contextOpen("type");
 		super.declaration_type_spec(udtKeyword, type);
 		contextClose("type");
 	}
@@ -543,12 +542,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void array_spec_element(int type) {
-		/*
-		if (context.getTagName() != "entry") {
-			contextOpen("entry");
-			setAttribute("type", "array");
-		}
-		*/
 		super.array_spec_element(type);
 	}
 
