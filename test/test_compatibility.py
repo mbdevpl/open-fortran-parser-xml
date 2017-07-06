@@ -80,11 +80,14 @@ class Tests(unittest.TestCase):
             failure_report_path = failure_reports_path.joinpath(report_filename)
             filtered_report_path = failure_reports_path.joinpath('filtered', report_filename)
             success_report_path = success_reports_path.joinpath(report_filename)
+            old_success_report_path = success_reports_path.joinpath('old_' + report_filename)
 
             if isinstance(result, ET.Element):
                 passed_test_cases.append(input_path)
                 if not success_report_path.exists():
                     new_passed_cases.append(input_path)
+                if old_success_report_path.exists():
+                    old_success_report_path.unlink()
                 if failure_report_path.exists():
                     failure_report_path.unlink()
                 if filtered_report_path.exists():
@@ -95,7 +98,7 @@ class Tests(unittest.TestCase):
                 if not failure_report_path.exists() and not filtered_report_path.exists():
                     new_failed_cases.append(input_path)
                 if success_report_path.exists():
-                    success_report_path.unlink()
+                    success_report_path.rename(old_success_report_path)
                 if b'XMLPrinter' in result.stderr:
                     if filtered_report_path.exists():
                         filtered_report_path.unlink()

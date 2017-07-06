@@ -581,7 +581,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.language_binding_spec(keyword, id, hasName);
 	}
 
-	/*
 	public void array_spec(int count) {
 		contextCloseAllInner("dimensions");
 		if (verbosity >= 100)
@@ -592,16 +591,51 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void array_spec_element(int type) {
 		Element outerContext = context;
-		Element value = contextNode(-1);
 		if (!context.getTagName().equals("dimensions"))
 			contextOpen("dimensions");
 		contextOpen("dimension");
-		outerContext.removeChild(value);
-		context.appendChild(value);
+		switch (type) {
+		case 700:
+			setAttribute("type", "concrete"); // (a)
+			Element value = contextNode(outerContext, -1);
+			outerContext.removeChild(value);
+			context.appendChild(value);
+			break;
+		case 701:
+			setAttribute("type", "upper-bound-assumed-shape"); // (a:)
+		case 702:
+			setAttribute("type", "range"); // (a:b)
+			Element lowerBound = contextNode(outerContext, -2);
+			Element upperBound = contextNode(outerContext, -1);
+			contextOpen("range");
+			contextOpen("lower-bound");
+			outerContext.removeChild(lowerBound);
+			context.appendChild(lowerBound);
+			contextClose();
+			contextOpen("upper-bound");
+			outerContext.removeChild(upperBound);
+			context.appendChild(upperBound);
+			contextClose();
+			contextClose();
+			break;
+		case 703:
+			setAttribute("type", "upper-bound-assumed-size"); // (a:*)
+			Element value = contextNode(outerContext, -1);
+			outerContext.removeChild(value);
+			context.appendChild(value);
+			break;
+		case 704:
+			setAttribute("type", "assumed-size"); // (*)
+			break;
+		case 705:
+			setAttribute("type", "assumed-shape"); // (:)
+			break;
+		default:
+			throw new IllegalArgumentException(Integer.toString(type));
+		}
 		super.array_spec_element(type);
 		contextClose("dimension");
 	}
-	*/
 
 	public void access_id_list__begin() {
 		// contextOpen("access-list");
