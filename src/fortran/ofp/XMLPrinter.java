@@ -582,47 +582,64 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void array_spec(int count) {
-		contextCloseAllInner("dimensions");
+		// contextCloseAllInner("dimensions");
 		if (verbosity >= 100)
 			super.array_spec(count);
+		/*
 		setAttribute("count", count);
 		contextClose("dimensions");
+		*/
 	}
 
 	public void array_spec_element(int type) {
 		Element outerContext = context;
+		/*
 		if (!context.getTagName().equals("dimensions"))
 			contextOpen("dimensions");
+		*/
 		contextOpen("dimension");
+		Element value = null;
 		switch (type) {
 		case 700:
 			setAttribute("type", "concrete"); // (a)
-			Element value = contextNode(outerContext, -1);
+			value = contextNode(outerContext, -1);
+			/*
 			outerContext.removeChild(value);
 			context.appendChild(value);
+			*/
 			break;
 		case 701:
 			setAttribute("type", "upper-bound-assumed-shape"); // (a:)
+			value = contextNode(outerContext, -1);
+			/*
+			outerContext.removeChild(value);
+			context.appendChild(value);
+			*/
+			break;
 		case 702:
 			setAttribute("type", "range"); // (a:b)
-			Element lowerBound = contextNode(outerContext, -2);
-			Element upperBound = contextNode(outerContext, -1);
+			/*
 			contextOpen("range");
 			contextOpen("lower-bound");
-			outerContext.removeChild(lowerBound);
-			context.appendChild(lowerBound);
+			value = contextNode(outerContext, -2);
+			outerContext.removeChild(value);
+			context.appendChild(value);
 			contextClose();
 			contextOpen("upper-bound");
-			outerContext.removeChild(upperBound);
-			context.appendChild(upperBound);
+			value = contextNode(outerContext, -1);
+			outerContext.removeChild(value);
+			context.appendChild(value);
 			contextClose();
 			contextClose();
+			*/
 			break;
 		case 703:
 			setAttribute("type", "upper-bound-assumed-size"); // (a:*)
-			Element value = contextNode(outerContext, -1);
+			value = contextNode(outerContext, -1);
+			/*
 			outerContext.removeChild(value);
 			context.appendChild(value);
+			*/
 			break;
 		case 704:
 			setAttribute("type", "assumed-size"); // (*)
