@@ -431,7 +431,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.real_literal_constant(realConstant, kindParam);
 	}
 
-	/*
 	public void char_length(boolean hasTypeParamValue) {
 		Element outerContext = context;
 		Element value = contextNode(-1);
@@ -441,7 +440,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.char_length(hasTypeParamValue);
 		contextClose("length");
 	}
-	*/
 
 	public void scalar_int_literal_constant() {
 		if (verbosity >= 100)
@@ -511,7 +509,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("type");
 		setAttribute("hasLength", false);
 		setAttribute("hasKind", false);
-		setAttribute("hasDimensions", false);
 		for (Element declaration : typeDeclarations) {
 			outerContext.removeChild(declaration);
 			switch (declaration.getTagName()) {
@@ -523,9 +520,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 				break;
 			case "kind":
 				setAttribute("hasKind", true);
-				break;
-			case "dimensions":
-				setAttribute("hasDimensions", true);
 				break;
 			default:
 				break;
@@ -1244,8 +1238,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element condition = contextNode(-1);
 		Element outerContext = context;
 		contextClose("body");
-		// contextOpen("else");
-		// contextOpen("if");
 		contextOpen("header");
 		setAttribute("type", "else-if");
 		outerContext.removeChild(condition);
