@@ -398,17 +398,20 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.intrinsic_type_spec(keyword1, keyword2, type, hasKindSelector);
 	}
 
-	/*
 	public void kind_selector(Token token1, Token token2, boolean hasExpression) {
-		Element outerContext = context;
-		Element value = contextNode(-1);
-		contextOpen("kind");
-		outerContext.removeChild(value);
-		context.appendChild(value);
+		if (hasExpression) {
+			Element outerContext = context;
+			Element value = contextNode(-1);
+			contextOpen("kind");
+			outerContext.removeChild(value);
+			context.appendChild(value);
+		} else {
+			contextOpen("kind");
+			setAttribute("value", token2);
+		}
 		super.kind_selector(token1, token2, hasExpression);
 		contextClose("kind");
 	}
-	*/
 
 	public void int_literal_constant(Token digitString, Token kindParam) {
 		contextOpen("literal");
