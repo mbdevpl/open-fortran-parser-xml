@@ -118,9 +118,10 @@ class AstTransformer:
 
         dimensions_node = node.find('./dimensions')
         if dimensions_node is not None:
-            dimensions = self.transform(dimensions_node)
-            # TODO: modify annotation accordingly
-            raise NotImplementedError()
+            dimensions = self.transform_all_subnodes(dimensions_node)
+            assert len(dimensions) >= 1
+            slice_ = dimensions[0] if len(dimensions) == 1 else typed_ast3.ExtSlice(dims=dimensions)
+            annotation = typed_ast3.Subscript(value=annotation, slice=slice_, ctx=typed_ast3.Load())
 
         value = typed_ast3.NameConstant(value=None)
 
@@ -312,6 +313,16 @@ class AstTransformer:
             # NotIn
             }[operator]
 
+    def _dimension(self, node: ET.Element) -> t.Union[typed_ast3.Num, typed_ast3.Index]:
+        dim_type = node.attrib['type']
+        if dim_type == 'simple':
+            values = self.transform_all_subnodes(node)
+            if len(values) == 1:
+                return typed_ast3.Index(value=values[0])
+            _LOG.error('simple dimension should have exactly one value, but it has %i', len(values))
+        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+        raise NotImplementedError()
+
     def _type(self, node: ET.Element) -> type:
         name = node.attrib['name']
         length = self.transform(node.find('./length')) if node.attrib['hasLength'] == "true" else None
@@ -330,6 +341,20 @@ class AstTransformer:
             return typed_ast3.parse({
                 'integer': 'int',
                 'real': 'float'}[name], mode='eval')
+        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+        raise NotImplementedError()
+
+    def _length(self, node):
+        values = self.transform_all_subnodes(node)
+        if len(values) == 1:
+            return values[0]
+        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+        raise NotImplementedError()
+
+    def _kind(self, node):
+        values = self.transform_all_subnodes(node)
+        if len(values) == 1:
+            return values[0]
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
 
