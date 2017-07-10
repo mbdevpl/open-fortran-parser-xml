@@ -15,8 +15,10 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.antlr.runtime.Token;
 import org.apache.commons.cli.CommandLine;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import fortran.ofp.parser.java.FortranParserActionPrint;
@@ -180,6 +182,25 @@ public class XMLPrinter extends FortranParserActionPrint {
 	protected void contextCloseAllInner(String... names) {
 		context = contextFind(names);
 	}
+
+	/*
+	System.err.println(outerContext);
+	System.err.println(context);
+	System.err.println(value);
+	*/
+	/*
+	System.err.println(outerContext);
+	System.err.println(contextNodes(outerContext));
+	System.err.println(context);
+	System.err.println(contextNodes());
+	System.err.println(value);
+	NamedNodeMap attributesMap = value.getAttributes();
+	ArrayList<Attr> attributes = new ArrayList<Attr>();
+	for (int i = 0; i < attributesMap.getLength(); i++)
+		attributes.add((Attr) attributesMap.item(i));
+	System.err.println(attributes);
+	System.err.println(contextNodes(value));
+	*/
 
 	/**
 	 * Collection of children nodes of given XML context.
