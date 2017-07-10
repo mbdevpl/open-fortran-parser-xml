@@ -115,8 +115,6 @@ class AstTransformer:
             _LOG.error('%s', ET.tostring(node).decode().rstrip())
             raise SyntaxError('"type" node not present')
         annotation = self.transform(type_node)
-        #print(typed_astunparse.dump(annotation))
-        #annotation = typed_ast3.NameConstant(value=None)
 
         dimensions_node = node.find('./dimensions')
         if dimensions_node is not None:
@@ -130,16 +128,14 @@ class AstTransformer:
             return typed_ast3.AnnAssign(
                 target=target, annotation=annotation, value=value, simple=True)
         else:
-            return typed_ast3.Assign(
-                targets=[target], value=value, type_comment=typed_astunparse.unparse(
-                    typed_ast3.Tuple(elts=[annotation for _ in range(len(variables))])).strip())
+            type_comment = typed_astunparse.unparse(
+                    typed_ast3.Tuple(elts=[annotation for _ in range(len(variables))])).strip()
+            return typed_ast3.Assign(targets=[target], value=value, type_comment=type_comment)
 
     def _declaration_include(self, node: ET.Element):
         file_node = node.find('./file')
         path_attrib = file_node.attrib['path']
         return typed_ast3.Import(names=[typed_ast3.alias(name=path_attrib,asname=None)])
-        #_LOG.warning('%s', ET.tostring(node).decode().rstrip())
-        #raise NotImplementedError()
 
     def _loop(self, node: ET.Element):
         if node.attrib['type'] == 'do':

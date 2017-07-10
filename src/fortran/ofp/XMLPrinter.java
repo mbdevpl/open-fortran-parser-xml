@@ -618,29 +618,37 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element value2 = null;
 		switch (type) {
 		case 700:
+		case 701:
+		case 703:
 			value = contextNode(outerContext, -1);
-			if (!context.getTagName().equals("dimensions"))
-				contextOpen("dimensions");
-			contextOpen("dimension");
-			setAttribute("type", "concrete"); // (a)
+			break;
+		case 702:
+			value = contextNode(outerContext, -2);
+			value2 = contextNode(outerContext, -1);
+			break;
+		case 704:
+		case 705:
+			break;
+		default:
+			throw new IllegalArgumentException(Integer.toString(type));
+		}
+
+		if (!context.getTagName().equals("dimensions"))
+			contextOpen("dimensions");
+		contextOpen("dimension");
+
+		switch (type) {
+		case 700:
+			setAttribute("type", "simple"); // (a)
 			outerContext.removeChild(value);
 			context.appendChild(value);
 			break;
 		case 701:
-			value = contextNode(outerContext, -1);
-			if (!context.getTagName().equals("dimensions"))
-				contextOpen("dimensions");
-			contextOpen("dimension");
 			setAttribute("type", "upper-bound-assumed-shape"); // (a:)
 			outerContext.removeChild(value);
 			context.appendChild(value);
 			break;
 		case 702:
-			value = contextNode(outerContext, -2);
-			value2 = contextNode(outerContext, -1);
-			if (!context.getTagName().equals("dimensions"))
-				contextOpen("dimensions");
-			contextOpen("dimension");
 			setAttribute("type", "range"); // (a:b)
 			contextOpen("range");
 			contextOpen("lower-bound");
@@ -654,24 +662,14 @@ public class XMLPrinter extends FortranParserActionPrint {
 			contextClose();
 			break;
 		case 703:
-			value = contextNode(outerContext, -1);
-			if (!context.getTagName().equals("dimensions"))
-				contextOpen("dimensions");
-			contextOpen("dimension");
 			setAttribute("type", "upper-bound-assumed-size"); // (a:*)
 			outerContext.removeChild(value);
 			context.appendChild(value);
 			break;
 		case 704:
-			if (!context.getTagName().equals("dimensions"))
-				contextOpen("dimensions");
-			contextOpen("dimension");
 			setAttribute("type", "assumed-size"); // (*)
 			break;
 		case 705:
-			if (!context.getTagName().equals("dimensions"))
-				contextOpen("dimensions");
-			contextOpen("dimension");
 			setAttribute("type", "assumed-shape"); // (:)
 			break;
 		default:
