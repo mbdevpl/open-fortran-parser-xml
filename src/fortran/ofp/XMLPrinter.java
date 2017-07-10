@@ -193,6 +193,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		NodeList nodeList = context.getChildNodes();
 		ArrayList<Element> nodes = new ArrayList<Element>();
 		// System.err.println("contextNodes of " + context + " " + beginIndex + " " + count);
+		if (count == 0 && nodeList.getLength() == 0)
+			return nodes;
 		if (beginIndex < 0)
 			beginIndex = nodeList.getLength() + beginIndex;
 		if (beginIndex < 0 || beginIndex >= nodeList.getLength())
@@ -582,69 +584,73 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void array_spec(int count) {
-		// contextCloseAllInner("dimensions");
+		contextCloseAllInner("dimensions");
 		if (verbosity >= 100)
 			super.array_spec(count);
-		/*
 		setAttribute("count", count);
 		contextClose("dimensions");
-		*/
 	}
 
 	public void array_spec_element(int type) {
 		Element outerContext = context;
-		/*
-		if (!context.getTagName().equals("dimensions"))
-			contextOpen("dimensions");
-		*/
-		contextOpen("dimension");
 		Element value = null;
+		Element value2 = null;
 		switch (type) {
 		case 700:
-			setAttribute("type", "concrete"); // (a)
 			value = contextNode(outerContext, -1);
-			/*
+			if (!context.getTagName().equals("dimensions"))
+				contextOpen("dimensions");
+			contextOpen("dimension");
+			setAttribute("type", "concrete"); // (a)
 			outerContext.removeChild(value);
 			context.appendChild(value);
-			*/
 			break;
 		case 701:
-			setAttribute("type", "upper-bound-assumed-shape"); // (a:)
 			value = contextNode(outerContext, -1);
-			/*
+			if (!context.getTagName().equals("dimensions"))
+				contextOpen("dimensions");
+			contextOpen("dimension");
+			setAttribute("type", "upper-bound-assumed-shape"); // (a:)
 			outerContext.removeChild(value);
 			context.appendChild(value);
-			*/
 			break;
 		case 702:
+			value = contextNode(outerContext, -2);
+			value2 = contextNode(outerContext, -1);
+			if (!context.getTagName().equals("dimensions"))
+				contextOpen("dimensions");
+			contextOpen("dimension");
 			setAttribute("type", "range"); // (a:b)
-			/*
 			contextOpen("range");
 			contextOpen("lower-bound");
-			value = contextNode(outerContext, -2);
 			outerContext.removeChild(value);
 			context.appendChild(value);
 			contextClose();
 			contextOpen("upper-bound");
-			value = contextNode(outerContext, -1);
-			outerContext.removeChild(value);
-			context.appendChild(value);
+			outerContext.removeChild(value2);
+			context.appendChild(value2);
 			contextClose();
 			contextClose();
-			*/
 			break;
 		case 703:
-			setAttribute("type", "upper-bound-assumed-size"); // (a:*)
 			value = contextNode(outerContext, -1);
-			/*
+			if (!context.getTagName().equals("dimensions"))
+				contextOpen("dimensions");
+			contextOpen("dimension");
+			setAttribute("type", "upper-bound-assumed-size"); // (a:*)
 			outerContext.removeChild(value);
 			context.appendChild(value);
-			*/
 			break;
 		case 704:
+			if (!context.getTagName().equals("dimensions"))
+				contextOpen("dimensions");
+			contextOpen("dimension");
 			setAttribute("type", "assumed-size"); // (*)
 			break;
 		case 705:
+			if (!context.getTagName().equals("dimensions"))
+				contextOpen("dimensions");
+			contextOpen("dimension");
 			setAttribute("type", "assumed-shape"); // (:)
 			break;
 		default:

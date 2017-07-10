@@ -38,12 +38,14 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
-    def test_ofp_test_file(self):
+    def test_ofp_required_cases(self):
         input_paths = [pathlib.Path(_) for _ in [
-            '../open-fortran-parser/tests/annex_c/c_5_3_7.f03',
-            '../open-fortran-parser/tests/rule-tests/R802.f03',
-            '../open-fortran-parser/tests/bug-reports/bug-1759956.f90']]
+            'annex_c/c_5_3_7.f03',
+            'rule-tests/R802.f03',
+            'bug-reports/bug-1759956.f90',
+            'rule-tests/R510.f03']]
         for input_path in input_paths:
+            input_path = _OFP_TESTS_DIR.joinpath(input_path).resolve()
             try:
                 root_node = parse(input_path, verbosity=100, raise_on_error=True)
                 self.assertIsNotNone(root_node)
@@ -51,7 +53,7 @@ class Tests(unittest.TestCase):
                 _LOG.exception(err.stdout.decode().rstrip())
                 self.fail('failed to parse "{}"'.format(input_path))
 
-    def test_ofp_test_files(self):
+    def test_ofp_all_cases(self):
         tests_absolute_path = _OFP_TESTS_DIR.resolve()
         failure_reports_path = _HERE.joinpath('compatibility_failure')
         failure_reports_path.mkdir(exist_ok=True)
