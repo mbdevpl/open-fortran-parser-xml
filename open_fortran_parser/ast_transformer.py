@@ -1,5 +1,6 @@
 """Transformer of Fortran AST into Python AST."""
 
+import collections.abc
 import itertools
 import logging
 import typing as t
@@ -11,6 +12,14 @@ import typed_astunparse
 
 _LOG = logging.getLogger(__name__)
 
+
+def flatten_sequence(sequence: t.MutableSequence[t.Any]) -> None:
+    assert isinstance(sequence, collections.abc.MutableSequence)
+    for i, elem in enumerate(sequence):
+        if isinstance(elem, collections.abc.Sequence):
+            for value in reversed(elem):
+                sequence.insert(i, value)
+            del sequence[i + len(elem)]
 
 class AstTransformer:
 
@@ -66,7 +75,7 @@ class AstTransformer:
             transformed.append(_transform(subnode))
         return transformed
 
-    def _file(self, node: ET.Element) -> typed_ast3.AST:
+    def _file(self, node: ET.Element) -> t.Union[typed_ast3.Module, typed_ast3.Expr]:
         if not self._now_parsing_file:
             self._now_parsing_file = True
             body = self.transform_all_subnodes(node, warn=False)
@@ -273,22 +282,23 @@ class AstTransformer:
         return typed_ast3.If(test=test, body=body, orelse=[])
 
     def _statement(self, node: ET.Element):
-        details = self.transform_all_subnodes(node, warn=False)
-        if len(details) == 1:
-            if isinstance(details[0], typed_ast3.Assign):
-                return details[0]
-            return typed_ast3.Expr(value=details[0])
-        #else:
-        #    print(details)
-        #    exit(1)
-        args = []
-        #args.append(typed_ast3.Str(s=ET.tostring(node).decode().rstrip())
-        args.append(typed_ast3.Num(n=len(node)))
-        return typed_ast3.Expr(value=typed_ast3.Call(
-            func=typed_ast3.Name(id='print', ctx=typed_ast3.Load()),
-            args=args, keywords=[]))
+        details = self.transform_all_subnodes(node)
+        flatten_sequence(details)
+        if len(details) == 0:
+            args = [
+                typed_ast3.Str(s=ET.tostring(node).decode().rstrip()),
+                typed_ast3.Num(n=len(node))]
+            return [
+                typed_ast3.Expr(value=typed_ast3.Call(
+                    func=typed_ast3.Name(id='print', ctx=typed_ast3.Load()),
+                    args=args, keywords=[])),
+                typed_ast3.Pass()]
+        return [
+            detail if isinstance(detail, (typed_ast3.Assign, typed_ast3.AnnAssign))
+            else typed_ast3.Expr(value=detail)
+            for detail in details]
 
-    def _call(self, node: ET.Element):
+    def _call(self, node: ET.Element) -> t.Union[typed_ast3.Call, typed_ast3.Assign]:
         called = self.transform_all_subnodes(node, warn=False)
         if len(called) != 1:
             _LOG.warning('%s', ET.tostring(node).decode().rstrip())
@@ -305,13 +315,35 @@ class AstTransformer:
             #args = node.findall('./name/subscripts/subscript') if isinstance(name, typed_ast3.Subscript) else []
             call = typed_ast3.Call(func=func, args=args, keywords=[])
         if isinstance(call.func, typed_ast3.Name) and call.func.id.startswith('MPI_'):
-            # TODO: implement MPI call translation
-            pass #call = self._transform_mpi_call(call)
+            call = self._transform_mpi_call(call)
         return call
 
     def _transform_mpi_call(self, tree: typed_ast3.Call) -> t.Union[typed_ast3.Call, typed_ast3.Assign]:
-        _LOG.error('%s', typed_astunparse.unparse(tree).rstrip())
-        raise NotImplementedError()
+        assert isinstance(tree, typed_ast3.Call)
+        assert tree.func.id.startswith('MPI_')
+        assert len(tree.func.id) > 4
+        core_name = typed_ast3.Name(id='MPI')
+        mpi_function_name = tree.func.id[4] + tree.func.id[5:].lower()
+        assert len(tree.args) > 0
+        # extract last arg -- it's error var
+        error_var = tree.args.pop(-1)
+        assert isinstance(error_var, typed_ast3.Name), (type(error_var), error_var)
+        if mpi_function_name in ['Comm_size', 'Comm_rank', 'Barrier']:
+            # extract 1st arg - in some cases it's the MPI scope
+            mpi_comm = tree.args.pop(0)
+            assert isinstance(mpi_comm, typed_ast3.Name)
+            assert mpi_comm.id.startswith('MPI_')
+            assert len(mpi_comm.id) > 4
+            core_name = typed_ast3.Attribute(value=core_name, attr=mpi_comm.id[4:], ctx=typed_ast3.Load())
+        tree.func = typed_ast3.Attribute(value=core_name, attr=mpi_function_name, ctx=typed_ast3.Load())
+        # create assignment of call result to its current 1st var
+        if tree.args:
+            var = tree.args.pop(0)
+            tree = typed_ast3.Assign(targets=[var], value=tree, type_comment=None)
+        return [tree, typed_ast3.AnnAssign(
+            target=error_var, value=None, annotation=typed_ast3.Str(s='MPI error code'), simple=1)]
+        #_LOG.error('%s', typed_astunparse.unparse(tree).rstrip())
+        #raise NotImplementedError()
 
     def _assignment(self, node: ET.Element):
         target = self.transform_all_subnodes(node.find('./target'))
@@ -320,7 +352,7 @@ class AstTransformer:
         assert len(target) == 1, target
         assert len(value) == 1, value
         #raise NotImplementedError()
-        return typed_ast3.Assign(targets=[target], value=value)
+        return typed_ast3.Assign(targets=[target], value=value, type_comment=None)
 
     def _operation(self, node: ET.Element) -> typed_ast3.AST:
         if node.attrib['type'] == 'binary':
