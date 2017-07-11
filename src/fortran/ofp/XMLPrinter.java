@@ -183,29 +183,28 @@ public class XMLPrinter extends FortranParserActionPrint {
 		context = contextFind(names);
 	}
 
-	/*
-	System.err.println(outerContext);
-	System.err.println(context);
-	System.err.println(value);
-	*/
-	/*
-	System.err.println(outerContext);
-	System.err.println(contextNodes(outerContext));
-	System.err.println(context);
-	System.err.println(contextNodes());
-	System.err.println(value);
-	NamedNodeMap attributesMap = value.getAttributes();
-	ArrayList<Attr> attributes = new ArrayList<Attr>();
-	for (int i = 0; i < attributesMap.getLength(); i++)
-		attributes.add((Attr) attributesMap.item(i));
-	System.err.println(attributes);
-	System.err.println(contextNodes(value));
-	*/
+	/**
+	 * Collection of attributes of given XML context.
+	 *
+	 * @param context the XML context to be queried
+	 * @return list of attributes
+	 */
+	protected ArrayList<Attr> contextAttributes(Element context) {
+		NamedNodeMap attributesMap = context.getAttributes();
+		ArrayList<Attr> attributes = new ArrayList<Attr>();
+		for (int i = 0; i < attributesMap.getLength(); i++)
+			attributes.add((Attr) attributesMap.item(i));
+		return attributes;
+	}
+
+	protected ArrayList<Attr> contextAttributes() {
+		return contextAttributes(context);
+	}
 
 	/**
 	 * Collection of children nodes of given XML context.
 	 *
-	 * @param context
+	 * @param context the XML context to be queried
 	 * @param begin_index the index will be chosen from the end if negative number is given
 	 * @param count number of results to return, return all results if zero is given
 	 * @return list of nodes
@@ -253,6 +252,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	protected Element contextNode(int index) {
 		return contextNode(context, index);
+	}
+
+	protected void contextPrint(Element context) {
+		System.err.println(context);
+		System.err.println(contextAttributes(context));
+		System.err.println(contextNodes(context));
 	}
 
 	/**
@@ -1009,7 +1014,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.power_operand(hasPowerOperand);
 		if (!hasPowerOperand)
 			return;
-		// contextClose("operand");
 		contextClose("operation");
 	}
 
@@ -1029,7 +1033,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.mult_operand(numMultOps);
 		if (numMultOps == 0)
 			return;
-		// contextClose("operand");
 		contextClose("operation");
 	}
 
