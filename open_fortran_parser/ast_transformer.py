@@ -1,10 +1,11 @@
 """Transformer of Fortran AST into Python AST."""
 
+import itertools
 import logging
 import typing as t
 import xml.etree.ElementTree as ET
 
-import numpy as np
+#import numpy as np
 import typed_ast.ast3 as typed_ast3
 import typed_astunparse
 
@@ -20,11 +21,30 @@ class AstTransformer:
     Typed Python AST is provided by typed-ast package.
     """
 
-    def __init__(self):
-        self.transforms = [f for f in dir(self) if not f.startswith('__')]
+    def __init__(self, split_declarations: bool = True):
+        self._split_declarations = split_declarations
+
+        self._now_parsing_file = False
+        self._top_level_imports = dict()
+        self._transforms = [f for f in dir(self) if not f.startswith('__')]
+
+    def _ensure_top_level_import(self, canonical_name: str, alias: t.Optional[str]=None):
+        if (canonical_name, alias) not in self._top_level_imports:
+            if canonical_name in ('mpif.h', '?'): # TODO: other ways to include MPI?
+                self._ensure_mpi_import(canonical_name, alias)
+            else:
+                self._top_level_imports[canonical_name, alias] = [typed_ast3.Import(
+                    names=[typed_ast3.alias(name=canonical_name, asname=alias)])]
+
+    def _ensure_mpi_import(self, canonical_name, alias):
+        #if ('mpi4py', None) not in self._top_level_imports:
+        self._top_level_imports[canonical_name, alias] = [
+            typed_ast3.ImportFrom(module='mpi4py', names=[typed_ast3.alias(name='MPI', asname=None)], level=0),
+            #typed_ast3.parse('mpi4py.config = no_auto_init', mode='eval') # TODO: this may be needed
+            ]
 
     def transform(self, node: ET.Element, warn: bool = True):
-        if f'_{node.tag}' not in self.transforms:
+        if f'_{node.tag}' not in self._transforms:
             if warn:
                 _LOG.warning('no transformer available for node "%s"', node.tag)
                 _LOG.debug('%s', ET.tostring(node).decode().rstrip())
@@ -37,7 +57,7 @@ class AstTransformer:
         for subnode in node:
             if skip_empty and not subnode.attrib and len(subnode) == 0:
                 continue
-            if f'_{subnode.tag}' not in self.transforms:
+            if f'_{subnode.tag}' not in self._transforms:
                 if warn:
                     _LOG.warning('no transformer available for node "%s"', subnode.tag)
                     _LOG.debug('%s', ET.tostring(subnode).decode().rstrip())
@@ -47,7 +67,18 @@ class AstTransformer:
         return transformed
 
     def _file(self, node: ET.Element) -> typed_ast3.AST:
-        body = self.transform_all_subnodes(node, warn=False)
+        if not self._now_parsing_file:
+            self._now_parsing_file = True
+            body = self.transform_all_subnodes(node, warn=False)
+            self._now_parsing_file = False
+            import_statements = list(itertools.chain(
+                *[statements for _, statements in self._top_level_imports.items()]))
+            body = import_statements + body
+        else:
+            return typed_ast3.Expr(value=typed_ast3.Call(
+                func=typed_ast3.Name(id='print'),
+                args=[typed_ast3.Str(s='file'), typed_ast3.Str(s=node.attrib['path'])],
+                keywords=[]))
         return typed_ast3.Module(body=body, type_ignores=[])
 
     def _module(self, node):
@@ -96,7 +127,9 @@ class AstTransformer:
             keywords=[]))
 
     def _declaration_variable(
-            self, node: ET.Element) -> t.Union[typed_ast3.Assign, typed_ast3.AnnAssign]:
+            self, node: ET.Element) -> t.Union[
+                typed_ast3.Assign, typed_ast3.AnnAssign, t.List[typed_ast3.Assign],
+                t.List[typed_ast3.AnnAssign]]:
         variables_node = node.find('./variables')
         if variables_node is None:
             _LOG.error('%s', ET.tostring(node).decode().rstrip())
@@ -106,9 +139,10 @@ class AstTransformer:
             _LOG.error('%s', ET.tostring(node).decode().rstrip())
             raise SyntaxError('at least one variable expected in variables list')
         if len(variables) == 1:
-            target = variables[0][0]
+            target, value = variables[0]
         else:
-            target = typed_ast3.Tuple(elts=[var[0] for var in variables])
+            target = typed_ast3.Tuple(elts=[var for var, _ in variables])
+            value = [val for _, val in variables]
 
         type_node = node.find('./type')
         if type_node is None:
@@ -117,25 +151,55 @@ class AstTransformer:
         annotation = self.transform(type_node)
 
         dimensions_node = node.find('./dimensions')
+        dimensions = None
         if dimensions_node is not None:
             dimensions = self.transform_all_subnodes(dimensions_node)
             assert len(dimensions) >= 1
-            slice_ = dimensions[0] if len(dimensions) == 1 else typed_ast3.ExtSlice(dims=dimensions)
-            annotation = typed_ast3.Subscript(value=annotation, slice=slice_, ctx=typed_ast3.Load())
-
-        value = typed_ast3.NameConstant(value=None)
+            #slice_ = dimensions[0] if len(dimensions) == 1 else typed_ast3.ExtSlice(dims=dimensions)
+            #annotation = typed_ast3.Subscript(value=annotation, slice=slice_, ctx=typed_ast3.Load())
+            data_type = annotation
+            self._ensure_top_level_import('static_typing', 'st')
+            annotation = typed_ast3.Subscript(
+                value=typed_ast3.Attribute(
+                    value=typed_ast3.Name(id='st', ctx=typed_ast3.Load()),
+                    attr='ndarray', ctx=typed_ast3.Load()),
+                slice=typed_ast3.ExtSlice(dims=[typed_ast3.Num(n=len(dimensions)), data_type]),
+                ctx=typed_ast3.Load())
+            if isinstance(value, list) and not all([_ is None for _ in value]):
+                _LOG.warning('%s', value)
+                _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+                raise NotImplementedError()
+            elif not isinstance(value, list) and value is not None:
+                _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+                raise NotImplementedError()
+            else:
+                self._ensure_top_level_import('numpy', 'np')
+                for i, (var, val) in enumerate(variables):
+                    val = typed_ast3.Call(
+                        func=typed_ast3.Attribute(value=typed_ast3.Name(id='np'), attr='ndarray', ctx=typed_ast3.Load()),
+                        args=[typed_ast3.Tuple(elts=dimensions)], keywords=[typed_ast3.keyword(arg='dtype', value=data_type)])
+                    variables[i] = (var, val)
+                #value = [ for _ in variables]
+                value = [val for _, val in variables]
 
         if len(variables) == 1:
             return typed_ast3.AnnAssign(
                 target=target, annotation=annotation, value=value, simple=True)
         else:
-            type_comment = typed_astunparse.unparse(
-                    typed_ast3.Tuple(elts=[annotation for _ in range(len(variables))])).strip()
-            return typed_ast3.Assign(targets=[target], value=value, type_comment=type_comment)
+            assert len(variables) == len(value)
+            if not self._split_declarations:
+                value = typed_ast3.Tuple(elts=[typed_ast3.NameConstant(value=None) if v is None else v for v in value])
+                type_comment = typed_astunparse.unparse(
+                        typed_ast3.Tuple(elts=[annotation for _ in range(len(variables))])).strip()
+                return typed_ast3.Assign(targets=[target], value=value, type_comment=type_comment)
+            return [
+                typed_ast3.AnnAssign(target=var, annotation=annotation, value=val, simple=True)
+                for var, val in variables]
 
     def _declaration_include(self, node: ET.Element):
         file_node = node.find('./file')
         path_attrib = file_node.attrib['path']
+        self._ensure_top_level_import(path_attrib)
         return typed_ast3.Import(names=[typed_ast3.alias(name=path_attrib,asname=None)])
 
     def _loop(self, node: ET.Element):
@@ -228,16 +292,26 @@ class AstTransformer:
         called = self.transform_all_subnodes(node, warn=False)
         if len(called) != 1:
             _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-            _LOG.error([typed_astunparse.unparse(_).rstrip() for _ in called])
+            _LOG.error('%s', [typed_astunparse.unparse(_).rstrip() for _ in called])
             raise SyntaxError("call statement must contain a single called object")
         if isinstance(called[0], typed_ast3.Call):
-            return called[0]
-        func = called[0]
-        #assert name.tag == 'name' or name.
-        args = []
-        #args = node.findall('./name/subscripts/subscript') if isinstance(name, typed_ast3.Subscript) else []
-        #exit(1)
-        return typed_ast3.Call(func=func, args=args, keywords=[])
+            call = called[0]
+        else:
+            _LOG.warning('called an ambiguous node')
+            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+            func = called[0]
+            #assert name.tag == 'name' or name.
+            args = []
+            #args = node.findall('./name/subscripts/subscript') if isinstance(name, typed_ast3.Subscript) else []
+            call = typed_ast3.Call(func=func, args=args, keywords=[])
+        if isinstance(call.func, typed_ast3.Name) and call.func.id.startswith('MPI_'):
+            # TODO: implement MPI call translation
+            pass #call = self._transform_mpi_call(call)
+        return call
+
+    def _transform_mpi_call(self, tree: typed_ast3.Call) -> t.Union[typed_ast3.Call, typed_ast3.Assign]:
+        _LOG.error('%s', typed_astunparse.unparse(tree).rstrip())
+        raise NotImplementedError()
 
     def _assignment(self, node: ET.Element):
         target = self.transform_all_subnodes(node.find('./target'))
@@ -332,6 +406,7 @@ class AstTransformer:
                 pass
             return typed_ast3.parse('str', mode='eval')
         elif length is not None:
+            self._ensure_top_level_import('numpy', 'np')
             return typed_ast3.parse({
                 ('integer', 4): 'np.int32',
                 ('integer', 8): 'np.int64',
