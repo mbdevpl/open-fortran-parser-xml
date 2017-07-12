@@ -48,7 +48,8 @@ class AstTransformer:
     def _ensure_mpi_import(self, canonical_name, alias):
         #if ('mpi4py', None) not in self._top_level_imports:
         self._top_level_imports[canonical_name, alias] = [
-            typed_ast3.ImportFrom(module='mpi4py', names=[typed_ast3.alias(name='MPI', asname=None)], level=0),
+            typed_ast3.ImportFrom(
+                module='mpi4py', names=[typed_ast3.alias(name='MPI', asname=None)], level=0),
             #typed_ast3.parse('mpi4py.config = no_auto_init', mode='eval') # TODO: this may be needed
             ]
 
@@ -61,16 +62,22 @@ class AstTransformer:
         _transform = getattr(self, f'_{node.tag}')
         return _transform(node)
 
-    def transform_all_subnodes(self, node: ET.Element, warn: bool = True, skip_empty: bool = False):
+    def transform_all_subnodes(
+            self, node: ET.Element, warn: bool = True, skip_empty: bool = False,
+            ignored: t.Set[str] = None):
         transformed = []
         for subnode in node:
             if skip_empty and not subnode.attrib and len(subnode) == 0:
                 continue
             if f'_{subnode.tag}' not in self._transforms:
+                if ignored and subnode.tag in ignored:
+                    continue
                 if warn:
-                    _LOG.warning('no transformer available for node "%s"', subnode.tag)
+                    _LOG.warning('no transformer available for node "%s" while transforming subnodes of "%s"', subnode.tag, node.tag)
                     _LOG.debug('%s', ET.tostring(subnode).decode().rstrip())
-                continue
+                    continue
+                raise NotImplementedError(
+                    'no transformer available for node "{}" while transforming subnodes of "{}"'.format(subnode.tag, node.tag))
             _transform = getattr(self, f'_{subnode.tag}')
             transformed.append(_transform(subnode))
         return transformed
@@ -78,7 +85,7 @@ class AstTransformer:
     def _file(self, node: ET.Element) -> t.Union[typed_ast3.Module, typed_ast3.Expr]:
         if not self._now_parsing_file:
             self._now_parsing_file = True
-            body = self.transform_all_subnodes(node, warn=False)
+            body = self.transform_all_subnodes(node, warn=False, ignored={'start-of-file', 'end-of-file'})
             self._now_parsing_file = False
             import_statements = list(itertools.chain(
                 *[statements for _, statements in self._top_level_imports.items()]))
@@ -113,7 +120,7 @@ class AstTransformer:
         return conditional
 
     def _specification(self, node: ET.Element) -> t.List[typed_ast3.AST]:
-        declarations = self.transform_all_subnodes(node, warn=False, skip_empty=True)
+        declarations = self.transform_all_subnodes(node, warn=False, skip_empty=True, ignored={'declaration-construct', 'specification-part'})
         return declarations
 
     def _declaration(self, node: ET.Element) -> typed_ast3.AnnAssign:
@@ -143,7 +150,7 @@ class AstTransformer:
         if variables_node is None:
             _LOG.error('%s', ET.tostring(node).decode().rstrip())
             raise SyntaxError('"variables" node not present')
-        variables = self.transform_all_subnodes(variables_node, warn=False, skip_empty=True)
+        variables = self.transform_all_subnodes(variables_node, warn=False, skip_empty=True, ignored={'entity-decl-list__begin', 'entity-decl-list'})
         if not variables:
             _LOG.error('%s', ET.tostring(node).decode().rstrip())
             raise SyntaxError('at least one variable expected in variables list')
@@ -162,7 +169,7 @@ class AstTransformer:
         dimensions_node = node.find('./dimensions')
         dimensions = None
         if dimensions_node is not None:
-            dimensions = self.transform_all_subnodes(dimensions_node)
+            dimensions = self.transform_all_subnodes(dimensions_node, ignored={'array-spec'})
             assert len(dimensions) >= 1
             #slice_ = dimensions[0] if len(dimensions) == 1 else typed_ast3.ExtSlice(dims=dimensions)
             #annotation = typed_ast3.Subscript(value=annotation, slice=slice_, ctx=typed_ast3.Load())
@@ -222,7 +229,7 @@ class AstTransformer:
     def _loop_do(self, node: ET.Element) -> typed_ast3.For:
         index_variable = node.find('./header/index-variable')
         target, iter_ = self._index_variable(index_variable)
-        body = self.transform_all_subnodes(node.find('./body'))
+        body = self.transform_all_subnodes(node.find('./body'), ignored={'block'})
         return typed_ast3.For(target=target, iter=iter_, body=body, orelse=[])
 
     def _loop_forall(self, node: ET.Element) -> typed_ast3.For:
@@ -268,7 +275,7 @@ class AstTransformer:
 
     def _if(self, node: ET.Element):
         #_LOG.warning('if header:')
-        header = self.transform_all_subnodes(node.find('./header'), warn=False)
+        header = self.transform_all_subnodes(node.find('./header'), warn=False, ignored={'executable-construct', 'execution-part-construct'})
         if len(header) != 1:
             _LOG.warning('%s', ET.tostring(node).decode().rstrip())
             _LOG.error([typed_astunparse.unparse(_).rstrip() for _ in header])
@@ -277,12 +284,12 @@ class AstTransformer:
         #    test = typed_ast3.NameConstant(True)
         test = header[0]
 
-        body = self.transform_all_subnodes(node.find('./body'))
+        body = self.transform_all_subnodes(node.find('./body'), ignored={'block'})
 
         return typed_ast3.If(test=test, body=body, orelse=[])
 
     def _statement(self, node: ET.Element):
-        details = self.transform_all_subnodes(node)
+        details = self.transform_all_subnodes(node, ignored={'action-stmt', 'executable-construct', 'execution-part-construct'})#, 'execution-part'
         flatten_sequence(details)
         if len(details) == 0:
             args = [
@@ -299,7 +306,7 @@ class AstTransformer:
             for detail in details]
 
     def _call(self, node: ET.Element) -> t.Union[typed_ast3.Call, typed_ast3.Assign]:
-        called = self.transform_all_subnodes(node, warn=False)
+        called = self.transform_all_subnodes(node, warn=False, ignored={'call-stmt'})
         if len(called) != 1:
             _LOG.warning('%s', ET.tostring(node).decode().rstrip())
             _LOG.error('%s', [typed_astunparse.unparse(_).rstrip() for _ in called])
@@ -422,7 +429,7 @@ class AstTransformer:
     def _dimension(self, node: ET.Element) -> t.Union[typed_ast3.Num, typed_ast3.Index]:
         dim_type = node.attrib['type']
         if dim_type == 'simple':
-            values = self.transform_all_subnodes(node)
+            values = self.transform_all_subnodes(node, ignored={'array-spec-element'})
             if len(values) == 1:
                 return typed_ast3.Index(value=values[0])
             _LOG.error('simple dimension should have exactly one value, but it has %i', len(values))
@@ -452,14 +459,14 @@ class AstTransformer:
         raise NotImplementedError()
 
     def _length(self, node):
-        values = self.transform_all_subnodes(node)
+        values = self.transform_all_subnodes(node, ignored={'char-length'})
         if len(values) == 1:
             return values[0]
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
 
     def _kind(self, node):
-        values = self.transform_all_subnodes(node)
+        values = self.transform_all_subnodes(node, ignored={'kind-selector'})
         if len(values) == 1:
             return values[0]
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
@@ -470,7 +477,7 @@ class AstTransformer:
         value_node = node.find('./initial-value')
         value = None
         if value_node is not None:
-            values = self.transform_all_subnodes(value_node, warn=False)
+            values = self.transform_all_subnodes(value_node, warn=False, ignored={'initialization'})
             assert len(values) == 1, values
             value = values[0]
         return typed_ast3.Name(id=node.attrib['name']), value
@@ -490,7 +497,7 @@ class AstTransformer:
     def _args(self, node: ET.Element, arg_node_name: str = 'subscript') -> t.List[typed_ast3.AST]:
         args = []
         for arg_node in node.findall(f'./{arg_node_name}'):
-            new_args = self.transform_all_subnodes(arg_node, warn=False)
+            new_args = self.transform_all_subnodes(arg_node, warn=False, ignored={'section-subscript', 'actual-arg', 'actual-arg-spec', 'argument'})
             if not new_args:
                 continue
             if len(new_args) != 1:
@@ -503,7 +510,7 @@ class AstTransformer:
     def _subscripts(self, node: ET.Element) -> t.Union[typed_ast3.Index, typed_ast3.Slice]:
         subscripts = []
         for subscript in node.findall('./subscript'):
-            new_subscripts = self.transform_all_subnodes(subscript, warn=False)
+            new_subscripts = self.transform_all_subnodes(subscript, warn=False, ignored={'section-subscript'})
             if not new_subscripts:
                 continue
             if len(new_subscripts) == 1:
