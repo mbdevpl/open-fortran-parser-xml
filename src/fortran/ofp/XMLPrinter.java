@@ -1348,12 +1348,29 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void if_stmt__begin() {
+		contextRename("statement", "if");
 		if (verbosity >= 100)
 			super.if_stmt__begin();
+		contextOpen("header"); // will be filled by if_stmt()
+		contextClose();
+		contextOpen("body");
+		contextOpen("statement");
 	}
 
 	public void if_stmt(Token label, Token ifKeyword) {
+		contextClose("body");
+		Element ifHeader = contextNode(-2);
+		Element ifBody = contextNode(-1);
+		Element statementToBeFixed = contextNode(ifBody, 0);
+		Element ifCondition = contextNode(statementToBeFixed, 0);
+		if (!ifBody.getTagName().equals("body"))
+			throw new IllegalArgumentException();
+		statementToBeFixed.removeChild(ifCondition);
+		ifHeader.appendChild(ifCondition);
+		contextCloseAllInner("if");
 		super.if_stmt(label, ifKeyword);
+		contextClose("if");
+		contextOpen("statement");
 	}
 
 	public void block_construct() {

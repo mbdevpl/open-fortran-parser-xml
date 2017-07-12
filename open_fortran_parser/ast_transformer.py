@@ -284,7 +284,7 @@ class AstTransformer:
         #    test = typed_ast3.NameConstant(True)
         test = header[0]
 
-        body = self.transform_all_subnodes(node.find('./body'), ignored={'block'})
+        body = self.transform_all_subnodes(node.find('./body'), skip_empty=True, ignored={'block'})
 
         return typed_ast3.If(test=test, body=body, orelse=[])
 
