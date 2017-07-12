@@ -1438,6 +1438,42 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.continue_stmt(label, continueKeyword, eos);
 	}
 
+	public void connect_spec_list__begin() {
+		contextOpen("keyword-arguments");
+		if (verbosity >= 100)
+			super.connect_spec_list__begin();
+	}
+
+	public void connect_spec_list(int count) {
+		contextCloseAllInner("keyword-arguments");
+		if (verbosity >= 100)
+			super.connect_spec_list(count);
+		setAttribute("count", count);
+		contextClose("keyword-arguments");
+	}
+
+	public void io_control_spec(boolean hasExpression, Token keyword, boolean hasAsterisk) {
+		contextClose("io-control");
+		super.io_control_spec(hasExpression, keyword, hasAsterisk);
+		contextOpen("io-control");
+	}
+
+	public void io_control_spec_list__begin() {
+		contextOpen("io-controls");
+		if (verbosity >= 100)
+			super.io_control_spec_list__begin();
+		contextOpen("io-control");
+	}
+
+	public void io_control_spec_list(int count) {
+		contextClose("io-control");
+		contextCloseAllInner("io-controls");
+		if (verbosity >= 100)
+			super.io_control_spec_list(count);
+		setAttribute("count", count);
+		contextClose("io-controls");
+	}
+
 	public void input_item() {
 		contextClose("input");
 		if (verbosity >= 100)
