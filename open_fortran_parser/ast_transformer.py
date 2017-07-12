@@ -289,7 +289,7 @@ class AstTransformer:
         return typed_ast3.If(test=test, body=body, orelse=[])
 
     def _statement(self, node: ET.Element):
-        details = self.transform_all_subnodes(node, ignored={'action-stmt', 'executable-construct', 'execution-part-construct'})#, 'execution-part'
+        details = self.transform_all_subnodes(node, ignored={'action-stmt', 'executable-construct', 'execution-part-construct', 'execution-part'})
         flatten_sequence(details)
         if len(details) == 0:
             args = [
@@ -301,7 +301,7 @@ class AstTransformer:
                     args=args, keywords=[])),
                 typed_ast3.Pass()]
         return [
-            detail if isinstance(detail, (typed_ast3.Assign, typed_ast3.AnnAssign))
+            detail if isinstance(detail, (typed_ast3.Expr, typed_ast3.Assign, typed_ast3.AnnAssign))
             else typed_ast3.Expr(value=detail)
             for detail in details]
 
@@ -324,6 +324,22 @@ class AstTransformer:
         if isinstance(call.func, typed_ast3.Name) and call.func.id.startswith('MPI_'):
             call = self._transform_mpi_call(call)
         return call
+
+    def _print(self, node):
+        outputs_node = node.find('./outputs')
+        args = []
+        if outputs_node is not None:
+            args = self.transform_all_subnodes(outputs_node, skip_empty=True, ignored={'output-item-list__begin', 'output-item', 'output-item-list'})
+        return typed_ast3.Expr(value=typed_ast3.Call(
+            func=typed_ast3.Name(id='print', ctx=typed_ast3.Load()),
+            args=args, keywords=[]))
+
+    def _output(self, node):
+        output = self.transform_all_subnodes(node)
+        if len(output) != 1:
+            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+            raise NotImplementedError()
+        return output[0]
 
     def _transform_mpi_call(self, tree: typed_ast3.Call) -> t.Union[typed_ast3.Call, typed_ast3.Assign]:
         assert isinstance(tree, typed_ast3.Call)

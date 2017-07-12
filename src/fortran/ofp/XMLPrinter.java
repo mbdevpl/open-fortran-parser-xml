@@ -1469,6 +1469,20 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("keyword-arguments");
 	}
 
+	public void print_stmt(Token label, Token printKeyword, Token eos, boolean hasOutputItemList) {
+		Element outerContext = context;
+		Element outputs = null;
+		if(hasOutputItemList)
+			outputs = contextNode(-1);
+		contextOpen("print");
+		if(hasOutputItemList) {
+			outerContext.removeChild(outputs);
+			context.appendChild(outputs);
+		}
+		super.print_stmt(label, printKeyword, eos, hasOutputItemList);
+		contextClose("print");
+	}
+
 	public void io_control_spec(boolean hasExpression, Token keyword, boolean hasAsterisk) {
 		contextClose("io-control");
 		super.io_control_spec(hasExpression, keyword, hasAsterisk);
