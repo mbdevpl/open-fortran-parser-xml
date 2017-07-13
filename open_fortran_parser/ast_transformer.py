@@ -389,7 +389,7 @@ class AstTransformer:
         assert len(operand_nodes) >= 2, operand_nodes
         operands = []
         for operand in operand_nodes:
-            new_operands = self.transform_all_subnodes(operand)
+            new_operands = self.transform_all_subnodes(operand, ignored={'power-operand'})
             if len(new_operands) != 1:
                 _LOG.warning('%s', ET.tostring(operand).decode().rstrip())
                 #_LOG.error("%s", operand)
