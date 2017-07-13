@@ -745,6 +745,36 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.hollerith_literal_constant(hollerithConstant);
 	}
 
+	public void dimension_stmt(Token label, Token keyword, Token eos, int count) {
+		contextCloseAllInner("variables");
+		setAttribute("count", count);
+		super.dimension_stmt(label, keyword, eos, count);
+		contextClose("variables");
+		setAttribute("type", "variable-dimensions");
+	}
+
+	public void dimension_decl(Token id) {
+		Element outerContext = context;
+		Element value = contextNode(-1);
+		if (!context.getTagName().equals("variables")) {
+			if (!context.getTagName().equals("declaration"))
+				contextOpen("declaration");
+			contextOpen("variables");
+		}
+		contextOpen("variable");
+		setAttribute("name", id);
+		outerContext.removeChild(value);
+		context.appendChild(value);
+		/*
+		if (contextTryFind("declaration") == null) {
+			contextOpen("declaration");
+			setAttribute("type", "dimension");
+		}
+		*/
+		super.dimension_decl(id);
+		contextClose("variable");
+	}
+
 	public void named_constant_def_list__begin() {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
@@ -771,6 +801,23 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("type", "targets");
 		if (verbosity >= 100)
 			super.target_decl_list__begin();
+	}
+
+	public void target_decl_list(int count) {
+		// TODO Auto-generated method stub
+		super.target_decl_list(count);
+	}
+
+	public void value_stmt(Token label, Token keyword, Token eos) {
+		Element outerContext = context;
+		// TODO: get also label node if there is one
+		Element value = contextNode(-1);
+		if (!context.getTagName().equals("declaration"))
+			contextOpen("declaration");
+		setAttribute("type", "value");
+		outerContext.removeChild(value);
+		context.appendChild(value);
+		super.value_stmt(label, keyword, eos);
 	}
 
 	public void volatile_stmt(Token label, Token keyword, Token eos) {
@@ -1472,10 +1519,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void print_stmt(Token label, Token printKeyword, Token eos, boolean hasOutputItemList) {
 		Element outerContext = context;
 		Element outputs = null;
-		if(hasOutputItemList)
+		if (hasOutputItemList)
 			outputs = contextNode(-1);
 		contextOpen("print");
-		if(hasOutputItemList) {
+		if (hasOutputItemList) {
 			outerContext.removeChild(outputs);
 			context.appendChild(outputs);
 		}

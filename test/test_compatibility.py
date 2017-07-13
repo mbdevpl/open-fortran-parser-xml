@@ -143,5 +143,5 @@ class Tests(unittest.TestCase):
         if new_passed_cases:
             _LOG.warning(
                 "new passed OFP test cases (%i): %s", len(new_passed_cases), new_passed_cases)
-        self.assertLessEqual(failed_count, 48, msg=failed_test_cases)
-        self.assertGreaterEqual(passed_count, 373, msg=passed_test_cases)
+        self.assertLessEqual(failed_count, 46, msg=failed_test_cases)
+        self.assertGreaterEqual(passed_count, 375, msg=passed_test_cases)
