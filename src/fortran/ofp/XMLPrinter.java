@@ -1154,26 +1154,33 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void level_2_expr(int numConcatOps) {
-		if (numConcatOps > 0)
+		if (numConcatOps > 0) {
 			contextClose("operand");
+			contextCloseAllInner("operation");
+		}
 		if (verbosity >= 100)
 			super.level_2_expr(numConcatOps);
-		if (numConcatOps > 0)
+		if (numConcatOps > 0) {
+			setAttribute("operators", numConcatOps);
 			contextClose("operation");
+		}
 	}
 
 	public void power_op(Token powerKeyword) {
 		Element previousContext = contextNode(-1);
 		Element outerContext = context;
 		contextOpen("operation");
-		setAttribute("type", "binary");
-		setAttribute("operator", powerKeyword);
+		setAttribute("type", "multiary");
+		// setAttribute("operator", powerKeyword);
 		contextOpen("operand");
 		outerContext.removeChild(previousContext);
 		context.appendChild(previousContext);
 		contextClose("operand");
+		contextOpen("operator");
+		setAttribute("operator", powerKeyword);
 		if (verbosity >= 100)
 			super.power_op(powerKeyword);
+		contextClose("operator");
 		contextOpen("operand");
 	}
 
@@ -1181,32 +1188,44 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element previousContext = contextNode(-1);
 		Element outerContext = context;
 		contextOpen("operation");
-		setAttribute("type", "binary");
+		setAttribute("type", "multiary");
 		contextOpen("operand");
 		outerContext.removeChild(previousContext);
 		context.appendChild(previousContext);
 		contextClose("operand");
+		contextOpen("operator");
+		setAttribute("operator", multKeyword);
 		if (verbosity >= 100)
 			super.mult_op(multKeyword);
+		contextClose("operator");
 		contextOpen("operand");
 	}
 
 	public void add_op(Token addKeyword) {
-		if (context.getTagName() == "operation") {
+		if (context.getTagName().equals("operation")) {
 			// TODO
 		} else {
-			Element previousContext = contextNode(-1);
-			Element outerContext = context;
-			contextOpen("operation");
-			setAttribute("type", "binary");
-			contextOpen("operand");
-			outerContext.removeChild(previousContext);
-			context.appendChild(previousContext);
+			ArrayList<Element> allPreviousContext = contextNodes();
+			if (allPreviousContext.isEmpty()) {
+				contextOpen("operation");
+				setAttribute("type", "unary");
+			} else {
+				Element previousContext = contextNode(-1);
+				Element outerContext = context;
+				contextOpen("operation");
+				setAttribute("type", "multiary");
+				contextOpen("operand");
+				outerContext.removeChild(previousContext);
+				context.appendChild(previousContext);
+			}
 		}
 		if (context.getTagName().equals("operand"))
 			contextClose("operand");
+		contextOpen("operator");
+		setAttribute("operator", addKeyword);
 		if (verbosity >= 100)
 			super.add_op(addKeyword);
+		contextClose("operator");
 		contextOpen("operand");
 	}
 
@@ -1216,7 +1235,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 80)
 			super.level_3_expr(relOp);
 		if (relOp != null) {
-			setAttribute("operator", relOp);
+			// setAttribute("operator", relOp);
+			setAttribute("operators", 1);
 			contextClose("operation");
 		}
 	}
@@ -1224,21 +1244,23 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void concat_op(Token concatKeyword) {
 		if (context.getTagName().equals("operand"))
 			contextClose("operand");
-		if (context.getTagName() == "operation") {
+		if (context.getTagName().equals("operation")) {
 			// TODO
 		} else {
 			Element previousContext = contextNode(-1);
 			Element outerContext = context;
 			contextOpen("operation");
-			setAttribute("type", "binary");
+			setAttribute("type", "multiary");
 			contextOpen("operand");
 			outerContext.removeChild(previousContext);
 			context.appendChild(previousContext);
 			contextClose("operand");
 		}
+		contextOpen("operator");
 		if (verbosity >= 100)
 			super.concat_op(concatKeyword);
 		setAttribute("operator", "//");
+		contextClose("operator");
 		contextOpen("operand");
 	}
 
@@ -1246,13 +1268,16 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element previousContext = contextNode(-1);
 		Element outerContext = context;
 		contextOpen("operation");
-		setAttribute("type", "binary");
+		setAttribute("type", "multiary");
 		contextOpen("operand");
 		outerContext.removeChild(previousContext);
 		context.appendChild(previousContext);
 		contextClose("operand");
+		contextOpen("operator");
+		setAttribute("operator", relOp);
 		if (verbosity >= 100)
 			super.rel_op(relOp);
+		contextClose("operator");
 		contextOpen("operand");
 	}
 

@@ -378,10 +378,53 @@ class AstTransformer:
         return typed_ast3.Assign(targets=[target], value=value, type_comment=None)
 
     def _operation(self, node: ET.Element) -> typed_ast3.AST:
-        if node.attrib['type'] == 'binary':
-            return self._operation_binary(node)
+        if node.attrib['type'] == 'multiary':
+            return self._operation_multiary(node)
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
+
+    def _operation_multiary(self, node: ET.Element):
+        operators_and_operands = self.transform_all_subnodes(node, skip_empty=True, ignored={})
+        for operator_or_operand in operators_and_operands:
+            pass
+        return [operators_and_operands]
+
+    def _operand(self, node: ET.Element):
+        operand = self.transform_all_subnodes(node) #, ignored={'power-operand'})
+        if len(operand) != 1:
+            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+            #_LOG.error("%s", operand)
+            _LOG.error([typed_astunparse.unparse(_).rstrip() for _ in operand])
+            raise SyntaxError()
+        return operand[0]
+
+    def _operator(self, node: ET.Element) -> t.Tuple[t.Type[typed_ast3.AST], t.Type[typed_ast3.AST]]:
+        return {
+            '+': (typed_ast3.BinOp, typed_ast3.Add),
+            '-': (typed_ast3.BinOp, typed_ast3.Sub),
+            '*': (typed_ast3.BinOp, typed_ast3.Mult),
+            # missing: MatMult
+            '/': (typed_ast3.BinOp, typed_ast3.Div),
+            '%': (typed_ast3.BinOp, typed_ast3.Mod),
+            '**': (typed_ast3.BinOp, typed_ast3.Pow),
+            '//': (typed_ast3.BinOp, typed_ast3.Add), # concatenation operator, only in Fortran
+            # LShift
+            # RShift
+            # BitOr
+            # BitXor
+            # BitAnd
+            # missing: FloorDiv
+            '==': (typed_ast3.Compare, typed_ast3.Eq),
+            '/=': (typed_ast3.Compare, typed_ast3.NotEq),
+            '<': (typed_ast3.Compare, typed_ast3.Lt),
+            '<=': (typed_ast3.Compare, typed_ast3.LtE),
+            '>': (typed_ast3.Compare, typed_ast3.Gt),
+            '>=': (typed_ast3.Compare, typed_ast3.GtE),
+            # Is
+            # IsNot
+            # In
+            # NotIn
+            }[node.attrib['operator']]
 
     def _operation_binary(self, node: ET.Element):
         operand_nodes = node.findall('./operand')
@@ -413,34 +456,6 @@ class AstTransformer:
             #return typed_ast3.BinOp(left=operands[0], op=operator_type(), right=operands[1])
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError(operation_type)
-
-    def _operator(self, operator: str) -> t.Tuple[t.Type[typed_ast3.AST], t.Type[typed_ast3.AST]]:
-        return {
-            '+': (typed_ast3.BinOp, typed_ast3.Add),
-            '-': (typed_ast3.BinOp, typed_ast3.Sub),
-            '*': (typed_ast3.BinOp, typed_ast3.Mult),
-            # missing: MatMult
-            '/': (typed_ast3.BinOp, typed_ast3.Div),
-            '%': (typed_ast3.BinOp, typed_ast3.Mod),
-            '**': (typed_ast3.BinOp, typed_ast3.Pow),
-            '//': (typed_ast3.BinOp, typed_ast3.Add), # concatenation operator, only in Fortran
-            # LShift
-            # RShift
-            # BitOr
-            # BitXor
-            # BitAnd
-            # missing: FloorDiv
-            '==': (typed_ast3.Compare, typed_ast3.Eq),
-            '/=': (typed_ast3.Compare, typed_ast3.NotEq),
-            '<': (typed_ast3.Compare, typed_ast3.Lt),
-            '<=': (typed_ast3.Compare, typed_ast3.LtE),
-            '>': (typed_ast3.Compare, typed_ast3.Gt),
-            '>=': (typed_ast3.Compare, typed_ast3.GtE),
-            # Is
-            # IsNot
-            # In
-            # NotIn
-            }[operator]
 
     def _dimension(self, node: ET.Element) -> t.Union[typed_ast3.Num, typed_ast3.Index]:
         dim_type = node.attrib['type']
