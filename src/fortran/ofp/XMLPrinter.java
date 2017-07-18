@@ -702,6 +702,21 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.allocatable_decl_list__begin();
 	}
 
+	public void asynchronous_stmt(Token label, Token keyword, Token eos) {
+		if (!context.getTagName().equals("declaration")) {
+			Element outerContext = context;
+			Element value = contextNode(-1);
+			if (value.getTagName() != "names") {
+				System.err.println("tag name is not 'names' but '" + value.getTagName() + "'");
+				cleanUpAfterError();
+			}
+			contextOpen("declaration");
+			outerContext.removeChild(value);
+			context.appendChild(value);
+		}
+		super.asynchronous_stmt(label, keyword, eos);
+	}
+
 	public void codimension_decl_list__begin() {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
