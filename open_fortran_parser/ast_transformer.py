@@ -383,11 +383,52 @@ class AstTransformer:
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
 
-    def _operation_multiary(self, node: ET.Element):
-        operators_and_operands = self.transform_all_subnodes(node, skip_empty=True, ignored={})
-        for operator_or_operand in operators_and_operands:
-            pass
-        return [operators_and_operands]
+    def _operation_multiary(
+            self, node: ET.Element) -> t.Union[typed_ast3.BinOp, typed_ast3.Compare]:
+        operators_and_operands = self.transform_all_subnodes(node, skip_empty=True, ignored={'add-operand__add-op', 'add-operand', 'mult-operand__mult-op', 'mult-operand', 'primary'})
+        assert isinstance(operators_and_operands, list), operators_and_operands
+        assert len(operators_and_operands) % 2 == 1, operators_and_operands
+
+        operation_type, _ = operators_and_operands[1]
+        if operation_type is typed_ast3.BinOp:
+            return self._operation_multiary_arithmetic(operators_and_operands)
+        if operation_type is typed_ast3.Compare:
+            return self._operation_multiary_comparison(operators_and_operands)
+
+    def _operation_multiary_arithmetic(
+            self, operators_and_operands: t.Sequence[t.Union[typed_ast3.AST, t.Tuple[
+                t.Type[typed_ast3.BinOp], t.Type[typed_ast3.AST]]]]) -> typed_ast3.BinOp:
+        operators_and_operands = list(reversed(operators_and_operands))
+        operators_and_operands += [(None, None)]
+
+        root_operation = None
+        root_operation_type = None
+        root_operator_type = None
+        for operand, (operation_type, operator_type) in zip(operators_and_operands[::2], operators_and_operands[1::2]):
+            if root_operation is None:
+                root_operation_type = operation_type
+                root_operator_type = operator_type
+                if root_operation_type is not typed_ast3.BinOp:
+                    raise NotImplementedError('root operation initialisation')
+                root_operation = typed_ast3.BinOp(left=None, op=root_operator_type(), right=operand)
+                operation = root_operation
+                continue
+            if operation_type is not None:
+                assert operation_type is root_operation_type, (operation_type, root_operation_type)
+                operation.left = typed_ast3.BinOp(left=None, op=operator_type(), right=operand)
+                operation = operation.left
+            else:
+                operation.left = operand
+
+        return root_operation
+
+    def _operation_multiary_comparison(
+            self, operators_and_operands: t.Sequence[t.Union[typed_ast3.AST, t.Tuple[
+                t.Type[typed_ast3.Compare], t.Type[typed_ast3.AST]]]]) -> typed_ast3.Compare:
+        assert len(operators_and_operands) == 3, operators_and_operands
+        left_operand, (operation_type, operator_type), right_operand = operators_and_operands
+        assert operation_type is typed_ast3.Compare
+        return typed_ast3.Compare(left=left_operand, ops=[operator_type()], comparators=[right_operand])
 
     def _operand(self, node: ET.Element):
         operand = self.transform_all_subnodes(node) #, ignored={'power-operand'})
