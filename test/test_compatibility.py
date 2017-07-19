@@ -1,5 +1,6 @@
 """Tests using the test cases from Open Fortran Parser."""
 
+import itertools
 import logging
 import os
 import pathlib
@@ -19,7 +20,7 @@ def all_fortran_paths(root_path: pathlib.Path):
     if not root_path.exists():
         return []
     all_input_paths = []
-    for extension in ('.f', '.f90', '.f03', '.f08', '.h'):
+    for extension in itertools.chain(*[(_, _.upper()) for _ in ('.f', '.f90', '.f03', '.f08', '.h')]):
         input_paths = root_path.glob(
             f'**/*{extension}')
         for input_path in input_paths:
@@ -28,7 +29,6 @@ def all_fortran_paths(root_path: pathlib.Path):
     return all_input_paths
 
 _OFP_RELATIVE_REPO_PATH = pathlib.Path('..', 'open-fortran-parser')
-
 _OFP_TESTS_DIR = _HERE.parent.joinpath(_OFP_RELATIVE_REPO_PATH, 'tests')
 
 ALL_OFP_TEST_PATHS = all_fortran_paths(_OFP_TESTS_DIR)
