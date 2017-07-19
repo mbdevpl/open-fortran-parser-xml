@@ -56,6 +56,12 @@ class Tests(unittest.TestCase):
             'rule-tests/R510.f03']]
         self._check_ofp_cases(input_paths)
 
+    def test_ofp_select_case(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'rule-tests/R808.f03',
+            'rule-tests/R814.f03']]
+        self._check_ofp_cases(input_paths)
+
     def test_ofp_all_cases(self):
         tests_absolute_path = _OFP_TESTS_DIR.resolve()
         failure_reports_path = _HERE.joinpath('compatibility_failure')
@@ -146,5 +152,5 @@ class Tests(unittest.TestCase):
         if new_passed_cases:
             _LOG.warning(
                 "new passed OFP test cases (%i): %s", len(new_passed_cases), new_passed_cases)
-        self.assertLessEqual(failed_count, 42, msg=failed_test_cases)
-        self.assertGreaterEqual(passed_count, 379, msg=passed_test_cases)
+        self.assertLessEqual(failed_count, 40, msg=failed_test_cases)
+        self.assertGreaterEqual(passed_count, 381, msg=passed_test_cases)

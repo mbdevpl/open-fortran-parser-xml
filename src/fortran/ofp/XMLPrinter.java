@@ -1466,6 +1466,96 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.block_construct();
 	}
 
+	public void case_construct() {
+		contextCloseAllInner("select");
+		if (verbosity >= 100)
+			super.case_construct();
+		contextClose("select");
+		contextOpen("statement");
+	}
+
+	public void select_case_stmt(Token label, Token id, Token selectKeyword, Token caseKeyword, Token eos) {
+		contextRename("statement", "select");
+		// setAttribute("type", "case");
+		Element outerContext = context;
+		ArrayList<Element> nodes = contextNodes();
+		contextOpen("header");
+		for (Element node : nodes) {
+			outerContext.removeChild(node);
+			context.appendChild(node);
+		}
+		contextClose();
+		super.select_case_stmt(label, id, selectKeyword, caseKeyword, eos);
+		contextOpen("body");
+	}
+
+	public void case_stmt(Token label, Token caseKeyword, Token id, Token eos) {
+		super.case_stmt(label, caseKeyword, id, eos);
+		contextOpen("body");
+		contextOpen("statement");
+	}
+
+	public void end_select_stmt(Token label, Token endKeyword, Token selectKeyword, Token id, Token eos) {
+		contextCloseAllInner("select");
+		super.end_select_stmt(label, endKeyword, selectKeyword, id, eos);
+	}
+
+	public void case_selector(Token defaultToken) {
+		if (!context.getTagName().equals("case") && contextTryFind("case") != null) {
+			contextClose("case");
+			contextOpen("case");
+			setAttribute("type", "default");
+			contextOpen("header");
+			contextClose();
+		}
+		super.case_selector(defaultToken);
+	}
+
+	public void case_value_range() {
+		contextClose("value-range");
+		if (verbosity >= 100)
+			super.case_value_range();
+		contextOpen("value-range");
+		contextOpen("value");
+	}
+
+	public void case_value_range_list__begin() {
+		if (context.getTagName().equals("body") && ((Element) context.getParentNode()).getTagName().equals("case")) {
+			contextClose("body");
+			contextClose("case");
+		}
+		contextOpen("case");
+		setAttribute("type", "specific");
+		contextOpen("header");
+		contextOpen("value-ranges");
+		if (verbosity >= 100)
+			super.case_value_range_list__begin();
+		contextOpen("value-range");
+		contextOpen("value");
+	}
+
+	public void case_value_range_list(int count) {
+		contextCloseAllInner("value-ranges");
+		if (verbosity >= 100)
+			super.case_value_range_list(count);
+		setAttribute("count", count);
+		contextClose("value-ranges");
+		contextClose("header");
+	}
+
+	public void case_value_range_suffix() {
+		contextCloseAllInner("value-range");
+		if (verbosity >= 100)
+			super.case_value_range_suffix();
+	}
+
+	public void case_value() {
+		contextClose("value");
+		if (verbosity >= 100)
+			super.case_value();
+		contextOpen("value");
+	}
+
 	public void do_construct() {
 		contextCloseAllInner("loop");
 		if (verbosity >= 100)
