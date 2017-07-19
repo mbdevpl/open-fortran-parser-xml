@@ -54,12 +54,13 @@ class AstTransformer:
             ]
 
     def transform(self, node: ET.Element, warn: bool = True):
-        if f'_{node.tag}' not in self._transforms:
+        transform_name = '_{}'.format(node.tag.replace('-', '_'))
+        if transform_name not in self._transforms:
             if warn:
                 _LOG.warning('no transformer available for node "%s"', node.tag)
                 _LOG.debug('%s', ET.tostring(node).decode().rstrip())
             return None
-        _transform = getattr(self, f'_{node.tag}')
+        _transform = getattr(self, transform_name)
         return _transform(node)
 
     def transform_all_subnodes(
@@ -69,7 +70,8 @@ class AstTransformer:
         for subnode in node:
             if skip_empty and not subnode.attrib and len(subnode) == 0:
                 continue
-            if f'_{subnode.tag}' not in self._transforms:
+            transform_name = '_{}'.format(subnode.tag.replace('-', '_'))
+            if transform_name not in self._transforms:
                 if ignored and subnode.tag in ignored:
                     continue
                 if warn:
@@ -78,7 +80,7 @@ class AstTransformer:
                     continue
                 raise NotImplementedError(
                     'no transformer available for node "{}" while transforming subnodes of "{}"'.format(subnode.tag, node.tag))
-            _transform = getattr(self, f'_{subnode.tag}')
+            _transform = getattr(self, transform_name)
             transformed.append(_transform(subnode))
         return transformed
 
@@ -324,6 +326,35 @@ class AstTransformer:
         if isinstance(call.func, typed_ast3.Name) and call.func.id.startswith('MPI_'):
             call = self._transform_mpi_call(call)
         return call
+
+    def _write(self, node) -> t.Union[typed_ast3.Expr, typed_ast3.Assign]:
+        args = []
+        written = []
+        io_controls_node = node.find('./io-controls')
+        if io_controls_node is not None:
+            args = self.transform_all_subnodes(io_controls_node, skip_empty=True, ignored={'io-control-spec-list__begin', 'io-control-spec-list'})
+        outputs_node = node.find('./outputs')
+        if outputs_node is not None:
+            written = self.transform_all_subnodes(outputs_node, skip_empty=True, ignored={'output-item-list__begin', 'output-item', 'output-item-list'})
+        if len(written) > 1 or len(args) > 1:
+            # file
+            pass
+        else:
+            # string
+            pass
+        args += written
+        return typed_ast3.Expr(value=typed_ast3.Call(
+            func=typed_ast3.Name(id='write', ctx=typed_ast3.Load()),
+            args=args, keywords=[]))
+
+    def _io_control(self, node) -> typed_ast3.AST:
+        io_control = self.transform_all_subnodes(node)
+        if len(io_control) != 1:
+            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+            raise NotImplementedError()
+        if node.attrib['argument-name']:
+            return typed_ast3.keyword(arg=node.attrib['argument-name'], value=io_control[0])
+        return io_control[0]
 
     def _print(self, node):
         outputs_node = node.find('./outputs')

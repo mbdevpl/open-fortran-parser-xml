@@ -38,12 +38,7 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
-    def test_ofp_required_cases(self):
-        input_paths = [pathlib.Path(_) for _ in [
-            'annex_c/c_5_3_7.f03',
-            'rule-tests/R802.f03',
-            'bug-reports/bug-1759956.f90',
-            'rule-tests/R510.f03']]
+    def _check_ofp_cases(self, input_paths):
         for input_path in input_paths:
             input_path = _OFP_TESTS_DIR.joinpath(input_path).resolve()
             try:
@@ -52,6 +47,14 @@ class Tests(unittest.TestCase):
             except subprocess.CalledProcessError as err:
                 _LOG.exception(err.stdout.decode().rstrip())
                 self.fail('failed to parse "{}"'.format(input_path))
+
+    def test_ofp_required_cases(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'annex_c/c_5_3_7.f03',
+            'rule-tests/R802.f03',
+            'bug-reports/bug-1759956.f90',
+            'rule-tests/R510.f03']]
+        self._check_ofp_cases(input_paths)
 
     def test_ofp_all_cases(self):
         tests_absolute_path = _OFP_TESTS_DIR.resolve()
@@ -143,5 +146,5 @@ class Tests(unittest.TestCase):
         if new_passed_cases:
             _LOG.warning(
                 "new passed OFP test cases (%i): %s", len(new_passed_cases), new_passed_cases)
-        self.assertLessEqual(failed_count, 46, msg=failed_test_cases)
-        self.assertGreaterEqual(passed_count, 375, msg=passed_test_cases)
+        self.assertLessEqual(failed_count, 42, msg=failed_test_cases)
+        self.assertGreaterEqual(passed_count, 379, msg=passed_test_cases)

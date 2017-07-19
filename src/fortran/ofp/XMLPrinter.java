@@ -1121,36 +1121,33 @@ public class XMLPrinter extends FortranParserActionPrint {
 				System.err.println("current context is not 'operand' but '" + context.getTagName() + "'");
 				cleanUpAfterError();
 			}
-			// ArrayList<Element> nodes = contextNodes();
-			// Element operand = nodes.get(nodes.size() - 1);
 			Element operandContext = context;
-			// contextOpen("operation");
-			setAttribute("type", "unary");
-			setAttribute("operator", addOp);
-			// contextOpen("operand");
-			// outerContext.removeChild(operand);
-			// context.appendChild(operand);
 			contextClose("operand");
 			operationContext = context;
-			ArrayList<Element> operationNodes = contextNodes();
-			operands = new ArrayList<Element>();
-			for (Element node : operationNodes)
-				if (node != operandContext && node.getTagName().equals("operand"))
-					operands.add(node);
-			if (operands.size() != 1) {
-				System.err.println("exactly 1 operand expected");
-				cleanUpAfterError();
+			if (context.getAttribute("type").equals("multiary")) {
+				// fix unary operation incorrectly classified as multiary
+				setAttribute("type", "unary");
+				ArrayList<Element> operationNodes = contextNodes();
+				operands = new ArrayList<Element>();
+				for (Element node : operationNodes)
+					if (node != operandContext && node.getTagName().equals("operand"))
+						operands.add(node);
+				if (operands.size() != 1) {
+					System.err.println("exactly 1 operand expected but " + operands.size() + " present");
+					cleanUpAfterError();
+				}
 			}
 		}
 		if (verbosity >= 100)
 			super.signed_operand(addOp);
 		if (addOp != null) {
 			contextClose("operation");
-			for (Element operand : operands) {
-				operationContext.removeChild(operand);
-				for (Element operandExpr : contextNodes(operand))
-					context.insertBefore(operandExpr, operationContext);
-			}
+			if (operands != null)
+				for (Element operand : operands) {
+					operationContext.removeChild(operand);
+					for (Element operandExpr : contextNodes(operand))
+						context.insertBefore(operandExpr, operationContext);
+				}
 		}
 	}
 
@@ -1296,13 +1293,17 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("operand");
 	}
 
+	public void equiv_op(Token equivOp) {
+		// TODO Auto-generated method stub
+		super.equiv_op(equivOp);
+	}
+
 	public void assignment_stmt(Token label, Token eos) {
-		/*
+		ArrayList<Element> nodes = contextNodes();
 		if (nodes.size() < 2) {
 			System.err.println("there should be at least 2 nodes for 'assignment' but " + nodes.size() + " found");
 			cleanUpAfterError();
 		}
-		*/
 		Element target = contextNode(-2);
 		Element value = contextNode(-1);
 		Element outerContext = context;
@@ -1542,18 +1543,52 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.continue_stmt(label, continueKeyword, eos);
 	}
 
+	public void connect_spec(Token id) {
+		contextCloseAllInner("keyword-argument");
+		setAttribute("argument-name", id);
+		contextClose("keyword-argument");
+		super.connect_spec(id);
+		contextOpen("keyword-argument");
+	}
+
 	public void connect_spec_list__begin() {
 		contextOpen("keyword-arguments");
 		if (verbosity >= 100)
 			super.connect_spec_list__begin();
+		contextOpen("keyword-argument");
 	}
 
 	public void connect_spec_list(int count) {
+		contextClose("keyword-argument");
 		contextCloseAllInner("keyword-arguments");
 		if (verbosity >= 100)
 			super.connect_spec_list(count);
 		setAttribute("count", count);
 		contextClose("keyword-arguments");
+	}
+
+	public void read_stmt(Token label, Token readKeyword, Token eos, boolean hasInputItemList) {
+		// TODO Auto-generated method stub
+		super.read_stmt(label, readKeyword, eos, hasInputItemList);
+	}
+
+	public void write_stmt(Token label, Token writeKeyword, Token eos, boolean hasOutputItemList) {
+		Element outerContext = context;
+		Element args = contextNode(-1);
+		Element outputs = null;
+		if (hasOutputItemList) {
+			outputs = args;
+			args = contextNode(-2);
+		}
+		contextOpen("write");
+		outerContext.removeChild(args);
+		context.appendChild(args);
+		if (hasOutputItemList) {
+			outerContext.removeChild(outputs);
+			context.appendChild(outputs);
+		}
+		super.write_stmt(label, writeKeyword, eos, hasOutputItemList);
+		contextClose();
 	}
 
 	public void print_stmt(Token label, Token printKeyword, Token eos, boolean hasOutputItemList) {
@@ -1571,6 +1606,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void io_control_spec(boolean hasExpression, Token keyword, boolean hasAsterisk) {
+		contextCloseAllInner("io-control");
+		setAttribute("argument-name", keyword == null ? "" : keyword);
 		contextClose("io-control");
 		super.io_control_spec(hasExpression, keyword, hasAsterisk);
 		contextOpen("io-control");
