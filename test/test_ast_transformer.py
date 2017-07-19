@@ -20,7 +20,7 @@ VERBOSITIES = (100,)
 class Tests(unittest.TestCase):
 
     maxDiff = None
-    
+
     def test_generate_xml(self):
         transformations_path = _HERE.joinpath('transformations')
         transformations_path.mkdir(exist_ok=True)

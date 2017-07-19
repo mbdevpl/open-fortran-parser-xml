@@ -1390,11 +1390,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void if_then_stmt(Token label, Token id, Token ifKeyword, Token thenKeyword, Token eos) {
 		contextRename("statement", "if");
 		ArrayList<Element> nodes = contextNodes();
-		Element outer_context = context;
+		Element outerContext = context;
 		contextOpen("header");
 		for (Element node : nodes) {
 			// System.err.println(" " + ((Element) node).getTagName());
-			outer_context.removeChild(node);
+			outerContext.removeChild(node);
 			context.appendChild(node);
 		}
 		contextClose("header");
