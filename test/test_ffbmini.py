@@ -16,9 +16,9 @@ _LOG = logging.getLogger(__name__)
 _HERE = pathlib.Path(__file__).resolve().parent
 
 _FFBMINI_RELATIVE_REPO_PATH = pathlib.Path('..', 'ffb-mini')
-_FFBMINI_SRC_DIR = _HERE.parent.joinpath(_FFBMINI_RELATIVE_REPO_PATH, 'src')
+_FFBMINI_SRC_DIR = _HERE.parent.joinpath(_FFBMINI_RELATIVE_REPO_PATH, 'src').resolve()
 
-#ALL_FFBMINI_SRC_PATHS = all_fortran_paths(_FFBMINI_SRC_DIR)
+ALL_FFBMINI_SRC_PATHS = all_fortran_paths(_FFBMINI_SRC_DIR)
 VERBOSITIES = (100,)
 
 
@@ -26,23 +26,20 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
-    @unittest.skip('not ready')
-    def test_generate_xml(self):
-        transformations_path = _HERE.joinpath('transformations', 'ffbmini')
-        transformations_path.mkdir(parents=True, exist_ok=True)
-        for input_path in ALL_FFBMINI_SRC_PATHS:
-            for verbosity in VERBOSITIES:
-                with self.subTest(input_path=input_path, verbosity=verbosity):
-                    output_path = transformations_path.joinpath(input_path.name + '.xml')
-                    root_node = execute_parser(input_path, output_path, verbosity)
-                    self.assertIsNotNone(root_node)
-                    self.assertTrue(output_path.exists())
+    def test_ffb_mini(self):
+        failure_reports_path = _HERE.joinpath('ffbmini_failure')
+        success_reports_path = _HERE.joinpath('ffbmini_success')
+
+        from .test_compatibility import Tests as CompTests
+        CompTests.check_cases_and_report(
+            self, 'FFB-MINI', failure_reports_path, success_reports_path, _FFBMINI_SRC_DIR,
+            ALL_FFBMINI_SRC_PATHS, 25)
 
     @unittest.skip('not ready')
     def test_transform(self):
         transformations_path = _HERE.joinpath('transformations', 'ffbmini')
         transformations_path.mkdir(exist_ok=True)
-        for input_path in INPUT_PATHS:
+        for input_path in ALL_FFBMINI_SRC_PATHS:
             for verbosity in VERBOSITIES:
                 with self.subTest(input_path=input_path, verbosity=verbosity):
                     root_node = parse(input_path, verbosity)

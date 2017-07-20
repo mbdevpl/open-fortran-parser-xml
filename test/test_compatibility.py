@@ -5,6 +5,7 @@ import logging
 import os
 import pathlib
 import subprocess
+import typing as t
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -38,7 +39,7 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
-    def _check_ofp_cases(self, input_paths):
+    def check_cases(self, input_paths):
         for input_path in input_paths:
             input_path = _OFP_TESTS_DIR.joinpath(input_path).resolve()
             try:
@@ -48,27 +49,13 @@ class Tests(unittest.TestCase):
                 _LOG.exception(err.stdout.decode().rstrip())
                 self.fail('failed to parse "{}"'.format(input_path))
 
-    def test_ofp_required_cases(self):
-        input_paths = [pathlib.Path(_) for _ in [
-            'annex_c/c_5_3_7.f03',
-            'rule-tests/R802.f03',
-            'bug-reports/bug-1759956.f90',
-            'rule-tests/R510.f03']]
-        self._check_ofp_cases(input_paths)
-
-    def test_ofp_select_case(self):
-        input_paths = [pathlib.Path(_) for _ in [
-            'rule-tests/R808.f03',
-            'rule-tests/R814.f03']]
-        self._check_ofp_cases(input_paths)
-
-    def test_ofp_all_cases(self):
-        tests_absolute_path = _OFP_TESTS_DIR.resolve()
-        failure_reports_path = _HERE.joinpath('compatibility_failure')
-        failure_reports_path.mkdir(exist_ok=True)
-        failure_reports_path.joinpath('filtered').mkdir(exist_ok=True)
-        success_reports_path = _HERE.joinpath('compatibility_success')
-        success_reports_path.mkdir(exist_ok=True)
+    def check_cases_and_report(
+            self, scenario_name: str, failure_reports_path: pathlib.Path,
+            success_reports_path: pathlib.Path, input_paths_root: pathlib.Path,
+            input_paths: t.Sequence[pathlib.Path], minimum_passed_cases: int = None):
+        failure_reports_path.mkdir(parents=True, exist_ok=True)
+        failure_reports_path.joinpath('filtered').mkdir(parents=True, exist_ok=True)
+        success_reports_path.mkdir(parents=True, exist_ok=True)
         passed_test_cases = []
         new_passed_cases = []
         failed_test_cases = []
@@ -77,7 +64,7 @@ class Tests(unittest.TestCase):
         logger_level = logging.getLogger('open_fortran_parser.parser_wrapper').level
         logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logging.CRITICAL)
 
-        for input_path in ALL_OFP_TEST_PATHS:
+        for input_path in input_paths:
             #with self.subTest(input_path=input_path):
             result = None
             try:
@@ -86,7 +73,7 @@ class Tests(unittest.TestCase):
             except subprocess.CalledProcessError as err:
                 result = err
 
-            relative_input_path = input_path.relative_to(tests_absolute_path)
+            relative_input_path = input_path.relative_to(input_paths_root)
             report_filename = str(relative_input_path).replace(os.sep, '_') + '.xml'
             failure_report_path = failure_reports_path.joinpath(report_filename)
             filtered_report_path = failure_reports_path.joinpath('filtered', report_filename)
@@ -138,19 +125,49 @@ class Tests(unittest.TestCase):
 
         logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logger_level)
 
+        all_count = len(input_paths)
         failed_count = len(failed_test_cases)
         passed_count = len(passed_test_cases)
-        self.assertEqual(passed_count + failed_count, len(ALL_OFP_TEST_PATHS))
+        self.assertEqual(passed_count + failed_count, all_count)
+        if minimum_passed_cases is None:
+            minimum_passed_cases = all_count
         _LOG.warning(
-            "OFP test case pass rate is %i of %i = %f", passed_count, len(ALL_OFP_TEST_PATHS),
-            passed_count / (passed_count + failed_count))
-        _LOG.info("failed OFP test cases (%i): %s", failed_count, failed_test_cases)
-        _LOG.debug("passed OFP test cases (%i): %s", passed_count, passed_test_cases)
+            '%s test case pass rate is %i of %i = %f', scenario_name, passed_count,
+            all_count, passed_count / (passed_count + failed_count))
+        _LOG.info('failed %s test cases (%i): %s', scenario_name, failed_count, failed_test_cases)
+        _LOG.debug('passed %s test cases (%i): %s', scenario_name, passed_count, passed_test_cases)
         if new_failed_cases:
             _LOG.warning(
-                "new failed OFP test cases (%i): %s", len(new_failed_cases), new_failed_cases)
+                'new failed %s test cases (%i): %s', scenario_name, len(new_failed_cases),
+                new_failed_cases)
         if new_passed_cases:
             _LOG.warning(
-                "new passed OFP test cases (%i): %s", len(new_passed_cases), new_passed_cases)
-        self.assertLessEqual(failed_count, 40, msg=failed_test_cases)
-        self.assertGreaterEqual(passed_count, 381, msg=passed_test_cases)
+                'new passed %s test cases (%i): %s', scenario_name, len(new_passed_cases),
+                new_passed_cases)
+        self.assertLessEqual(failed_count, all_count - minimum_passed_cases, msg=failed_test_cases)
+        self.assertGreaterEqual(passed_count, minimum_passed_cases, msg=passed_test_cases)
+
+        return passed_test_cases, new_passed_cases, failed_test_cases, new_failed_cases
+
+    def test_ofp_required_cases(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'annex_c/c_5_3_7.f03',
+            'rule-tests/R802.f03',
+            'bug-reports/bug-1759956.f90',
+            'rule-tests/R510.f03']]
+        self.check_cases(input_paths)
+
+    def test_ofp_select_case(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'rule-tests/R808.f03',
+            'rule-tests/R814.f03']]
+        self.check_cases(input_paths)
+
+    def test_ofp_all_cases(self):
+        tests_absolute_path = _OFP_TESTS_DIR.resolve()
+        failure_reports_path = _HERE.joinpath('compatibility_failure')
+        success_reports_path = _HERE.joinpath('compatibility_success')
+
+        self.check_cases_and_report(
+            'OFP', failure_reports_path, success_reports_path, tests_absolute_path,
+            ALL_OFP_TEST_PATHS, 381)
