@@ -1100,6 +1100,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void mult_operand__mult_op(Token multOp) {
 		contextClose("operand");
+		// contextOpen("operator");
 		if (verbosity >= 100)
 			super.mult_operand__mult_op(multOp);
 		if (!context.getTagName().equals("operation")) {
@@ -1110,7 +1111,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 			throw new NullPointerException();
 		if (context.hasAttribute("operator") && !context.getAttribute("operator").equals(multOp.getText()))
 			throw new RuntimeException("blah blah" + context.getAttribute("operator"));
-		setAttribute("operator", multOp);
+		// setAttribute("operator", multOp);
 	}
 
 	public void signed_operand(Token addOp) {
@@ -1160,9 +1161,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void add_operand__add_op(Token addOp) {
 		contextClose("operand");
+		// contextOpen("operator");
 		if (verbosity >= 100)
 			super.add_operand__add_op(addOp);
-		setAttribute("operator", addOp, "operation");
+		// setAttribute("operator", addOp, "operation");
 	}
 
 	public void level_2_expr(int numConcatOps) {
@@ -1197,14 +1199,25 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void mult_op(Token multKeyword) {
-		Element previousContext = contextNode(-1);
-		Element outerContext = context;
-		contextOpen("operation");
-		setAttribute("type", "multiary");
-		contextOpen("operand");
-		outerContext.removeChild(previousContext);
-		context.appendChild(previousContext);
-		contextClose("operand");
+		if (context.getTagName().equals("operation")) {
+			// TODO
+		} else {
+			ArrayList<Element> allPreviousContext = contextNodes();
+			if (allPreviousContext.isEmpty()) {
+				contextOpen("operation");
+				setAttribute("type", "unary");
+			} else {
+				Element previousContext = contextNode(-1);
+				Element outerContext = context;
+				contextOpen("operation");
+				setAttribute("type", "multiary");
+				contextOpen("operand");
+				outerContext.removeChild(previousContext);
+				context.appendChild(previousContext);
+			}
+		}
+		if (context.getTagName().equals("operand"))
+			contextClose("operand");
 		contextOpen("operator");
 		setAttribute("operator", multKeyword);
 		if (verbosity >= 100)
