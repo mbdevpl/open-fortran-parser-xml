@@ -6,7 +6,7 @@ import unittest
 
 import typed_astunparse
 
-from open_fortran_parser.parser_wrapper import execute_parser, parse
+from open_fortran_parser.parser_wrapper import parse
 from open_fortran_parser.ast_transformer import transform
 
 from .test_compatibility import all_fortran_paths
