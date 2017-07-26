@@ -2,6 +2,7 @@
 
 import logging
 import pathlib
+import subprocess
 import unittest
 
 import typed_astunparse
@@ -26,7 +27,7 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
-    def test_ffb_mini(self):
+    def test_parse(self):
         failure_reports_path = _HERE.joinpath('ffbmini_failure')
         success_reports_path = _HERE.joinpath('ffbmini_success')
 
@@ -35,15 +36,22 @@ class Tests(unittest.TestCase):
             self, 'FFB-MINI', failure_reports_path, success_reports_path, _FFBMINI_SRC_DIR,
             ALL_FFBMINI_SRC_PATHS, 25)
 
-    @unittest.skip('not ready')
     def test_transform(self):
         transformations_path = _HERE.joinpath('transformations', 'ffbmini')
         transformations_path.mkdir(exist_ok=True)
         for input_path in ALL_FFBMINI_SRC_PATHS:
             for verbosity in VERBOSITIES:
                 with self.subTest(input_path=input_path, verbosity=verbosity):
-                    root_node = parse(input_path, verbosity)
+                    logger_level = logging.getLogger('open_fortran_parser.parser_wrapper').level
+                    logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logging.CRITICAL)
+                    root_node = None
+                    try:
+                        root_node = parse(input_path, verbosity, raise_on_error=True)
+                    except subprocess.CalledProcessError:
+                        continue
                     self.assertIsNotNone(root_node)
+                    logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logger_level)
+
                     typed_tree = transform(root_node)
                     code = typed_astunparse.unparse(typed_tree)
                     self.assertGreater(len(code), 0)

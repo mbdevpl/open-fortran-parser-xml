@@ -2103,7 +2103,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void dummy_arg_list(int count) {
-		super.dummy_arg_list(count);
+		contextCloseAllInner("arguments");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.dummy_arg_list(count);
 		contextClose("arguments");
 	}
 

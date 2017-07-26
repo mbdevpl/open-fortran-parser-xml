@@ -53,6 +53,12 @@ class Tests(unittest.TestCase):
             self, scenario_name: str, failure_reports_path: pathlib.Path,
             success_reports_path: pathlib.Path, input_paths_root: pathlib.Path,
             input_paths: t.Sequence[pathlib.Path], minimum_passed_cases: int = None):
+        all_count = len(input_paths)
+        if minimum_passed_cases is None:
+            minimum_passed_cases = all_count
+        else:
+            self.assertGreaterEqual(all_count, minimum_passed_cases, 'not enough cases to pass')
+
         failure_reports_path.mkdir(parents=True, exist_ok=True)
         failure_reports_path.joinpath('filtered').mkdir(parents=True, exist_ok=True)
         success_reports_path.mkdir(parents=True, exist_ok=True)
@@ -61,17 +67,18 @@ class Tests(unittest.TestCase):
         failed_test_cases = []
         new_failed_cases = []
 
-        logger_level = logging.getLogger('open_fortran_parser.parser_wrapper').level
-        logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logging.CRITICAL)
-
         for input_path in input_paths:
             #with self.subTest(input_path=input_path):
+
+            logger_level = logging.getLogger('open_fortran_parser.parser_wrapper').level
+            logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logging.CRITICAL)
             result = None
             try:
                 result = parse(input_path, verbosity=100, raise_on_error=True)
                 self.assertIsNotNone(result)
             except subprocess.CalledProcessError as err:
                 result = err
+            logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logger_level)
 
             relative_input_path = input_path.relative_to(input_paths_root)
             report_filename = str(relative_input_path).replace(os.sep, '_') + '.xml'
@@ -123,14 +130,9 @@ class Tests(unittest.TestCase):
                 if hasattr(result, 'stdout') and result.stdout:
                     print(result.stdout.decode().rstrip(), file=report_file)
 
-        logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logger_level)
-
-        all_count = len(input_paths)
         failed_count = len(failed_test_cases)
         passed_count = len(passed_test_cases)
         self.assertEqual(passed_count + failed_count, all_count)
-        if minimum_passed_cases is None:
-            minimum_passed_cases = all_count
         _LOG.warning(
             '%s test case pass rate is %i of %i = %f', scenario_name, passed_count,
             all_count, passed_count / (passed_count + failed_count))

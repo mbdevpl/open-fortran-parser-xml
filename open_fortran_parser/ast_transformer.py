@@ -103,14 +103,13 @@ class AstTransformer:
                 keywords=[]))
         return typed_ast3.Module(body=body, type_ignores=[])
 
-    def _module(self, node):
+    def _module(self, node: ET.Element):
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
 
     def _function(self, node: ET.Element):
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
-        #return typed_ast3.FunctionDef()
 
     def _program(self, node: ET.Element) -> typed_ast3.AST:
         module = typed_ast3.parse('''if __name__ == '__main__':\n    pass''')
@@ -491,13 +490,13 @@ class AstTransformer:
         return typed_ast3.Compare(
             left=left_operand, ops=[operator_type()], comparators=[right_operand])
 
-    def _operand(self, node: ET.Element):
+    def _operand(self, node: ET.Element) -> t.Any:
         operand = self.transform_all_subnodes(node) #, ignored={'power-operand'})
         if len(operand) != 1:
             _LOG.warning('%s', ET.tostring(node).decode().rstrip())
             #_LOG.error("%s", operand)
             _LOG.error([typed_astunparse.unparse(_).rstrip() for _ in operand])
-            raise SyntaxError()
+            raise SyntaxError('expected exactly one operand but got {}'.format(len(operand)))
         return operand[0]
 
     def _operator(
@@ -546,7 +545,9 @@ class AstTransformer:
         kind = self.transform(node.find('./kind')) if node.attrib['hasKind'] == "true" else None
         if name == 'character':
             if length is not None:
-                pass
+                _LOG.warning(
+                    'ignoring string length "%i" in:\n%s',
+                    length, ET.tostring(node).decode().rstrip())
             return typed_ast3.parse('str', mode='eval')
         elif length is not None:
             self._ensure_top_level_import('numpy', 'np')
@@ -634,7 +635,9 @@ class AstTransformer:
             return subscripts[0]
         elif len(subscripts) > 1:
             return typed_ast3.ExtSlice(dims=subscripts)
-        raise SyntaxError('subscripts node must contain at least one "subscript" node')
+        raise SyntaxError(
+            'subscripts node must contain at least one "subscript" node:\n{}'
+            .format(ET.tostring(node).decode().rstrip()))
 
     def _literal(self, node: ET.Element) -> t.Union[typed_ast3.Num, typed_ast3.Str]:
         if node.attrib['type'] == 'int':
