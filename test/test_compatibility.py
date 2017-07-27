@@ -159,6 +159,16 @@ class Tests(unittest.TestCase):
             'rule-tests/R510.f03']]
         self.check_cases(input_paths)
 
+    def test_ofp_module_contains(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'rule-f08-tests/R1101.f90',
+            'rule-f08-tests/R1104.f90',
+            'f08-tests/R1237-F08.f08',
+            'rule-tests/R455.f90',
+            'rule-tests/R1104.f90',
+            'bug-reports/bug-3053141.f90']]
+        self.check_cases(input_paths)
+
     def test_ofp_select_case(self):
         input_paths = [pathlib.Path(_) for _ in [
             'rule-tests/R808.f03',
@@ -172,4 +182,4 @@ class Tests(unittest.TestCase):
 
         self.check_cases_and_report(
             'OFP', failure_reports_path, success_reports_path, tests_absolute_path,
-            ALL_OFP_TEST_PATHS, 381)
+            ALL_OFP_TEST_PATHS, 382)

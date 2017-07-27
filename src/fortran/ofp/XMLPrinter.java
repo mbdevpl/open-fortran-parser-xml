@@ -93,6 +93,32 @@ public class XMLPrinter extends FortranParserActionPrint {
 		return context;
 	}
 
+	protected ArrayList<Element> contextHierarchy(Element context) {
+		ArrayList<Element> hierarchy = new ArrayList<Element>();
+		hierarchy.add(context);
+		Element found = context;
+		while (found != root) {
+			found = (Element) found.getParentNode();
+			hierarchy.add(found);
+		}
+		return hierarchy;
+	}
+
+	protected ArrayList<Element> contextHierarchy() {
+		return contextHierarchy(context);
+	}
+
+	protected ArrayList<String> contextNameHierarchy(Element context) {
+		ArrayList<String> names = new ArrayList<String>();
+		for (Element found : contextHierarchy(context))
+			names.add(found.getTagName());
+		return names;
+	}
+
+	protected ArrayList<String> contextNameHierarchy() {
+		return contextNameHierarchy(context);
+	}
+
 	/**
 	 * Try to find innermost open XML context with name equal to any of given names.
 	 *
@@ -120,11 +146,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 			return found;
 		System.err.println("Cannot find any context of " + Arrays.toString(names) + " among open contexts.");
 		System.err.println("Current context hierarchy (innermost first) is:");
-		found = context;
-		while (found != root) {
-			System.err.println("  " + found.getTagName());
-			found = (Element) found.getParentNode();
-		}
+		for (String name : contextNameHierarchy())
+			System.err.println("  " + name);
 		cleanUpAfterError();
 		return null;
 	}
@@ -983,11 +1006,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void part_ref(Token id, boolean hasSectionSubscriptList, boolean hasImageSelector) {
-		Element outer_context = context;
+		Element outerContext = context;
 		Element e = null;
 		if (hasSectionSubscriptList) {
 			e = contextNode(-1);
-			if (e.getTagName() != "subscripts") {
+			if (!e.getTagName().equals("subscripts")) {
 				System.err.println("tag name is not 'subscripts' but '" + e.getTagName() + "'");
 				cleanUpAfterError();
 			}
@@ -996,7 +1019,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("id", id);
 		setAttribute("hasSubscripts", hasSectionSubscriptList);
 		if (hasSectionSubscriptList) {
-			outer_context.removeChild(e);
+			outerContext.removeChild(e);
 			context.appendChild(e);
 		}
 		if (verbosity >= 60)
@@ -1797,7 +1820,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void ext_function_subprogram(boolean hasPrefix) {
 		super.ext_function_subprogram(hasPrefix);
-		contextClose("function");
 	}
 
 	public void main_program(boolean hasProgramStmt, boolean hasExecutionPart, boolean hasInternalSubprogramPart) {
@@ -1821,6 +1843,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void module() {
+		contextCloseAllInner("module");
 		if (verbosity >= 100)
 			super.module();
 		contextClose("module");
@@ -1843,13 +1866,26 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void end_module_stmt(Token label, Token endKeyword, Token moduleKeyword, Token id, Token eos) {
-		contextClose("body");
+		if (!context.getTagName().equals("members")) {
+			ArrayList<String> hierarchy = contextNameHierarchy();
+			String[] expected = { "body", "module" };
+			if (hierarchy.size() >= 2 && (Arrays.equals(hierarchy.subList(0, 2).toArray(), expected)
+					|| (hierarchy.size() >= 3 && Arrays.equals(hierarchy.subList(1, 3).toArray(), expected)))) {
+				contextClose("body");
+				contextOpen("members");
+			}
+		}
+		contextClose("members");
 		super.end_module_stmt(label, endKeyword, moduleKeyword, id, eos);
+	}
+
+	public void module_subprogram(boolean hasPrefix) {
+		super.module_subprogram(hasPrefix);
 	}
 
 	public void use_stmt(Token label, Token useKeyword, Token id, Token onlyKeyword, Token eos, boolean hasModuleNature,
 			boolean hasRenameList, boolean hasOnly) {
-		if (context.getTagName() != "use") {
+		if (!context.getTagName().equals("use")) {
 			contextOpen("use");
 		}
 		super.use_stmt(label, useKeyword, id, onlyKeyword, eos, hasModuleNature, hasRenameList, hasOnly);
@@ -1905,7 +1941,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void interface_stmt__begin() {
-		contextOpen("declaration");
+		if (!context.getTagName().equals("declaration"))
+			contextOpen("declaration");
 		contextOpen("interface");
 		if (verbosity >= 100)
 			super.interface_stmt__begin();
@@ -1942,7 +1979,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void import_stmt(Token label, Token importKeyword, Token eos, boolean hasGenericNameList) {
-		if (context.getTagName() != "declaration")
+		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "import");
 		super.import_stmt(label, importKeyword, eos, hasGenericNameList);
@@ -1950,7 +1987,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void external_stmt(Token label, Token externalKeyword, Token eos) {
-		if (context.getTagName() != "declaration")
+		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		if (verbosity >= 80)
 			super.external_stmt(label, externalKeyword, eos);
@@ -2057,6 +2094,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.actual_arg(hasExpr, label);
 	}
 
+	public void function_subprogram(boolean hasExePart, boolean hasIntSubProg) {
+		super.function_subprogram(hasExePart, hasIntSubProg);
+		if (context.getTagName().equals("function"))
+			contextClose("function");
+	}
+
 	public void function_stmt__begin() {
 		contextOpen("function");
 		contextOpen("header");
@@ -2072,6 +2115,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("body");
 		contextOpen("specification");
 		contextOpen("declaration");
+	}
+
+	public void prefix_spec(boolean isDecTypeSpec) {
+		super.prefix_spec(isDecTypeSpec);
+		if (isDecTypeSpec)
+			contextClose("declaration");
 	}
 
 	public void end_function_stmt(Token label, Token keyword1, Token keyword2, Token name, Token eos) {
@@ -2096,6 +2145,14 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("declaration");
 	}
 
+	public void dummy_arg(Token dummy) {
+		contextOpen("argument");
+		setAttribute("name", dummy);
+		if (verbosity >= 100)
+			super.dummy_arg(dummy);
+		contextClose("argument");
+	}
+
 	public void dummy_arg_list__begin() {
 		contextOpen("arguments");
 		if (verbosity >= 100)
@@ -2116,9 +2173,32 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("subroutine");
 	}
 
+	public void return_stmt(Token label, Token keyword, Token eos, boolean hasScalarIntExpr) {
+		Element outerContext = context;
+		Element e = null;
+		if (hasScalarIntExpr)
+			e = contextNode(-1);
+		contextOpen("return");
+		setAttribute("hasValue", hasScalarIntExpr);
+		if (hasScalarIntExpr) {
+			contextOpen("value");
+			outerContext.removeChild(e);
+			context.appendChild(e);
+			contextClose("value");
+		}
+		super.return_stmt(label, keyword, eos, hasScalarIntExpr);
+		contextClose("return");
+	}
+
 	public void contains_stmt(Token label, Token keyword, Token eos) {
-		// contextOpen("contains"); // TODO: is it needed?
+		ArrayList<String> hierarchy = contextNameHierarchy();
+		String[] expected = { "statement", "body", "module" };
+		boolean inModuleBody = hierarchy.size() >= 3 && Arrays.equals(hierarchy.subList(0, 3).toArray(), expected);
+		if (inModuleBody)
+			contextClose("body");
 		super.contains_stmt(label, keyword, eos);
+		if (inModuleBody)
+			contextOpen("members");
 	}
 
 	public void start_of_file(String filename, String path) {
