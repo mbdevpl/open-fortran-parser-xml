@@ -142,6 +142,9 @@ class AstTransformer:
             vararg=None, kwonlyargs=[], kwarg=None, defaults=[], kw_defaults=[])
 
     def _argument(self, node: ET.Element) -> typed_ast3.arg:
+        if 'name' not in node.attrib:
+            raise SyntaxError(
+                '"name" attribute not present in:\n{}'.format(ET.tostring(node).decode().rstrip()))
         self._ensure_top_level_import('typing', 't')
         return typed_ast3.arg(
             arg=node.attrib['name'], annotation=typed_ast3.Attribute(
@@ -625,6 +628,8 @@ class AstTransformer:
                 .format(length, kind, ET.tostring(node).decode().rstrip()))
         if name == 'character':
             if length is not None:
+                if isinstance(length, typed_ast3.Num):
+                    length = length.n
                 _LOG.warning(
                     'ignoring string length "%i" in:\n%s',
                     length, ET.tostring(node).decode().rstrip())
@@ -707,7 +712,7 @@ class AstTransformer:
         args = []
         for arg_node in node.findall(f'./{arg_node_name}'):
             new_args = self.transform_all_subnodes(
-                arg_node, warn=False,
+                arg_node, warn=False, skip_empty=True,
                 ignored={'section-subscript', 'actual-arg', 'actual-arg-spec', 'argument'})
             if not new_args:
                 continue

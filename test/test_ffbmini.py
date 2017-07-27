@@ -36,6 +36,7 @@ class Tests(unittest.TestCase):
             self, 'FFB-MINI', failure_reports_path, success_reports_path, _FFBMINI_SRC_DIR,
             ALL_FFBMINI_SRC_PATHS, 25)
 
+    @unittest.skip('not ready')
     def test_transform(self):
         transformations_path = _HERE.joinpath('transformations', 'ffbmini')
         transformations_path.mkdir(exist_ok=True)

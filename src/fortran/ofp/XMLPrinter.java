@@ -1329,6 +1329,16 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("operand");
 	}
 
+	public void and_op(Token andOp) {
+		// TODO Auto-generated method stub
+		super.and_op(andOp);
+	}
+
+	public void or_op(Token orOp) {
+		// TODO Auto-generated method stub
+		super.or_op(orOp);
+	}
+
 	public void equiv_op(Token equivOp) {
 		// TODO Auto-generated method stub
 		super.equiv_op(equivOp);
@@ -1874,6 +1884,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 				contextClose("body");
 				contextOpen("members");
 			}
+			/*
+			else
+				System.err.println("Context hierarchy for 'end module' statement: " + hierarchy);
+			*/
 		}
 		contextClose("members");
 		super.end_module_stmt(label, endKeyword, moduleKeyword, id, eos);
@@ -2196,9 +2210,35 @@ public class XMLPrinter extends FortranParserActionPrint {
 		boolean inModuleBody = hierarchy.size() >= 3 && Arrays.equals(hierarchy.subList(0, 3).toArray(), expected);
 		if (inModuleBody)
 			contextClose("body");
+		/*
+		else
+			System.err.println("Context hierarchy for 'contains' statement: " + hierarchy);
+		*/
 		super.contains_stmt(label, keyword, eos);
 		if (inModuleBody)
 			contextOpen("members");
+	}
+
+	public void separate_module_subprogram(boolean hasExecutionPart, boolean hasInternalSubprogramPart) {
+		// TODO Auto-generated method stub
+		super.separate_module_subprogram(hasExecutionPart, hasInternalSubprogramPart);
+		contextClose("subroutine");
+	}
+
+	public void separate_module_subprogram__begin() {
+		contextOpen("subroutine");
+		// TODO Auto-generated method stub
+		super.separate_module_subprogram__begin();
+	}
+
+	public void mp_subprogram_stmt(Token label, Token moduleKeyword, Token procedureKeyword, Token name, Token eos) {
+		// TODO Auto-generated method stub
+		super.mp_subprogram_stmt(label, moduleKeyword, procedureKeyword, name, eos);
+	}
+
+	public void end_mp_subprogram_stmt(Token label, Token keyword1, Token keyword2, Token name, Token eos) {
+		// TODO Auto-generated method stub
+		super.end_mp_subprogram_stmt(label, keyword1, keyword2, name, eos);
 	}
 
 	public void start_of_file(String filename, String path) {
