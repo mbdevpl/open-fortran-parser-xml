@@ -497,7 +497,8 @@ class AstTransformer:
         raise NotImplementedError()
 
     def _operation_multiary(
-            self, node: ET.Element) -> t.Union[typed_ast3.BinOp, typed_ast3.Compare]:
+            self, node: ET.Element) -> t.Union[
+                typed_ast3.BinOp, typed_ast3.BoolOp, typed_ast3.Compare]:
         operators_and_operands = self.transform_all_subnodes(
             node, skip_empty=True, ignored={
                 'add-operand__add-op', 'add-operand', 'mult-operand__mult-op', 'mult-operand',
@@ -508,6 +509,8 @@ class AstTransformer:
         operation_type, _ = operators_and_operands[1]
         if operation_type is typed_ast3.BinOp:
             return self._operation_multiary_arithmetic(operators_and_operands)
+        if operation_type is typed_ast3.BoolOp:
+            return self._operation_multiary_boolean(operators_and_operands)
         if operation_type is typed_ast3.Compare:
             return self._operation_multiary_comparison(operators_and_operands)
         raise NotImplementedError()
@@ -538,6 +541,29 @@ class AstTransformer:
                 operation = operation.left
             else:
                 operation.left = operand
+
+        return root_operation
+
+    def _operation_multiary_boolean(
+            self, operators_and_operands: t.Sequence[t.Union[typed_ast3.AST, t.Tuple[
+                t.Type[typed_ast3.BoolOp], t.Type[typed_ast3.AST]]]]) -> typed_ast3.BoolOp:
+        operators_and_operands += [(None, None)]
+
+        root_operation = None
+        root_operation_type = None
+        root_operator_type = None
+        zippped = zip(operators_and_operands[::2], operators_and_operands[1::2])
+        for operand, (operation_type, operator_type) in zippped:
+            if root_operation is None:
+                root_operation_type = operation_type
+                root_operator_type = operator_type
+                root_operation = typed_ast3.BoolOp(
+                    op=root_operator_type(), values=[operand])
+                continue
+            if operation_type is not None:
+                assert operation_type is root_operation_type, (operation_type, root_operation_type)
+                assert operator_type is root_operator_type, (operator_type, root_operator_type)
+                root_operation.values.append(operand)
 
         return root_operation
 
@@ -611,6 +637,8 @@ class AstTransformer:
             # IsNot
             # In
             # NotIn
+            '.and.': (typed_ast3.BoolOp, typed_ast3.And),
+            '.or.': (typed_ast3.BoolOp, typed_ast3.Or),
             # unary
             # '+': (typed_ast3.UnaryOp, typed_ast3.UAdd),
             # '-': (typed_ast3.UnaryOp, typed_ast3.USub),
