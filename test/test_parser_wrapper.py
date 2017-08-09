@@ -30,8 +30,8 @@ class Tests(unittest.TestCase):
         for input_path in INPUT_PATHS:
             for output_path in OUTPUT_PATHS:
                 for verbosity in VERBOSITIES:
-                    with self.subTest(input_path=input_path,
-                                      output_path=output_path, verbosity=verbosity):
+                    with self.subTest(input_path=input_path, output_path=output_path,
+                                      verbosity=verbosity):
                         execute_parser(input_path, output_path, verbosity)
 
     def test_parse(self):
@@ -40,9 +40,8 @@ class Tests(unittest.TestCase):
                 with self.subTest(input_path=input_path, verbosity=verbosity):
                     root_node = parse(input_path, verbosity)
                     self.assertIsNotNone(root_node)
-                    #root_node = tree.getroot()
                     self.assertEqual(root_node.tag, 'ofp')
                     self.assertEqual(len(root_node), 1)
                     file_node = root_node[0]
                     self.assertEqual(file_node.tag, 'file')
-                    self.assertGreaterEqual(len(file_node), 1)
+                    self.assertGreater(len(file_node), 0)

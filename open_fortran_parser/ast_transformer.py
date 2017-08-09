@@ -484,10 +484,8 @@ class AstTransformer:
     def _assignment(self, node: ET.Element):
         target = self.transform_all_subnodes(node.find('./target'))
         value = self.transform_all_subnodes(node.find('./value'))
-        #_LOG.warning('%s', ET.tostring(node).decode().rstrip())
-        assert len(target) == 1, target
-        assert len(value) == 1, value
-        #raise NotImplementedError()
+        assert len(target) == 1, (ET.tostring(node).decode().rstrip(), target)
+        assert len(value) == 1, (ET.tostring(node).decode().rstrip(), value)
         return typed_ast3.Assign(targets=[target], value=value, type_comment=None)
 
     def _operation(self, node: ET.Element) -> typed_ast3.AST:
@@ -512,6 +510,7 @@ class AstTransformer:
             return self._operation_multiary_arithmetic(operators_and_operands)
         if operation_type is typed_ast3.Compare:
             return self._operation_multiary_comparison(operators_and_operands)
+        raise NotImplementedError()
 
     def _operation_multiary_arithmetic(
             self, operators_and_operands: t.Sequence[t.Union[typed_ast3.AST, t.Tuple[

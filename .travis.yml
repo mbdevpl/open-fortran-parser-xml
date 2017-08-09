@@ -23,6 +23,10 @@ before_install:
   - python --version
   # Open Fortran Parser
   - git clone "https://github.com/OpenFortranProject/open-fortran-parser" "../open-fortran-parser"
+  # Open Fortran Compiler
+  - git clone "https://github.com/codethinklabs/ofc" "../open-fortran-compiler"
+  - cd "../open-fortran-compiler" && make && cd -
+  - export PATH="${PATH}:$(pwd)/../open-fortran-compiler"
   # FFB-MINI app
   - git clone "https://github.com/mbdevpl/ffb-mini" "../ffb-mini" --branch ofp_tests
 
