@@ -1328,9 +1328,49 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void and_operand(boolean hasNotOp, int numAndOps) {
+		if (hasNotOp) {
+			if (numAndOps == 0 && !context.getTagName().equals("operand")) {
+				Element previousContext = contextNode(-1);
+				Element outerContext = context;
+				contextOpen("operand");
+				outerContext.removeChild(previousContext);
+				context.appendChild(previousContext);
+			}
+			contextClose("operand");
+		}
+		if (numAndOps > 0 || hasNotOp)
+			contextCloseAllInner("operation");
 		if (verbosity >= 100)
 			super.and_operand(hasNotOp, numAndOps);
-		if (numAndOps > 0)
+		if (numAndOps > 0) {
+			ArrayList<Element> nodes = contextNodes();
+			ArrayList<Integer> operators = new ArrayList<Integer>();
+			int i = 0;
+			for (Element node : nodes) {
+				if (node.getTagName().equals("operator"))
+					operators.add(i);
+				i += 1;
+			}
+			if (numAndOps != operators.size()) {
+				int firstRelevantOp = operators.size() - numAndOps;
+				if (firstRelevantOp < 1) {
+					System.err
+							.println("sorry, numAndOps != operands.size()... " + numAndOps + " != " + operators.size());
+					cleanUpAfterError();
+				}
+				int startIndex = operators.get(firstRelevantOp).intValue() - 1;
+				Element outerContext = context;
+				contextOpen("operation");
+				for (int j = startIndex; j < nodes.size(); j++) {
+					Element node = nodes.get(j);
+					outerContext.removeChild(node);
+					context.appendChild(node);
+				}
+				// throw new IllegalArgumentException(
+				// "sorry, numAndOps != operands.size()... " + numAndOps + " != " + operators.size());
+			}
+		}
+		if (numAndOps > 0 || hasNotOp)
 			contextClose("operation");
 	}
 
@@ -1346,6 +1386,17 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.or_operand(numOrOps);
 		if (numOrOps > 0)
 			contextClose("operation");
+	}
+
+	public void not_op(Token notOp) {
+		contextOpen("operation");
+		setAttribute("type", "unary");
+		contextOpen("operator");
+		setAttribute("operator", notOp);
+		if (verbosity >= 100)
+			super.not_op(notOp);
+		contextClose("operator");
+		contextOpen("operand");
 	}
 
 	public void and_op(Token andOp) {

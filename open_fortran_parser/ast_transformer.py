@@ -615,7 +615,7 @@ class AstTransformer:
             # unary
             # '+': (typed_ast3.UnaryOp, typed_ast3.UAdd),
             # '-': (typed_ast3.UnaryOp, typed_ast3.USub),
-            # Not: (typed_ast3.UnaryOp, typed_ast3.Not),
+            '.not.': (typed_ast3.UnaryOp, typed_ast3.Not),
             # Invert: (typed_ast3.UnaryOp, typed_ast3.Invert)
             }[node.attrib['operator'].lower()]
 
