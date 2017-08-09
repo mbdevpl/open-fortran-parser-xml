@@ -20,6 +20,11 @@ class CodeForm(enum.IntEnum):
 def execute_compiler(
         input_path: pathlib.Path, output_path: t.Optional[pathlib.Path],
         indent: int = 4, form: t.Optional[CodeForm] = None) -> subprocess.CompletedProcess:
+    assert isinstance(input_path, pathlib.Path), type(input_path)
+    assert output_path is None or isinstance(output_path, pathlib.Path), type(output_path)
+    assert isinstance(indent, int), type(indent)
+    assert indent >= 0, indent
+    assert form is None or isinstance(form, CodeForm), type(form)
 
     if ofc_config['path'] is not None:
         command = [str(ofc_config['path'].joinpath(ofc_config['executable']))]
@@ -33,10 +38,32 @@ def execute_compiler(
     command.append(str(input_path))
 
     _LOG.debug('Executing %s...', command)
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if output_path is not None:
-        raise NotImplementedError()
+        with open(output_path, 'wb') as output_file:
+            output_file.write(result.stdout)
+
+    return result
 
 
-def transpile(input_path: pathlib.Path, output_path: t.Optional[pathlib.Path]):
-    pass
+def transpile(
+        input_path: pathlib.Path, indent: int = 4, form: t.Optional[CodeForm] = None,
+        raise_on_error: bool = False) -> str:
+    """Parse given (possibly non-standard) Fortran code and return standard-compliant code."""
+    assert isinstance(input_path, pathlib.Path), type(input_path)
+    assert isinstance(indent, int), type(indent)
+    assert indent >= 0, indent
+    assert form is None or isinstance(form, CodeForm), type(form)
+
+    process = execute_compiler(input_path, None, indent, form)
+    process_stdout = process.stdout.decode()
+    if process.returncode != 0:
+        _LOG.warning('%s', process_stdout)
+        _LOG.error('Open Fortran Compiler returned %i', process.returncode)
+    if process.stderr:
+        _LOG.warning(process.stderr.decode())
+    if raise_on_error:
+        process.check_returncode()
+
+    return process_stdout

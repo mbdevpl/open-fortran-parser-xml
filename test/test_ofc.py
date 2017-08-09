@@ -11,9 +11,9 @@ _LOG = logging.getLogger(__name__)
 _HERE = pathlib.Path(__file__).resolve().parent
 
 INPUT_PATHS = list(_HERE.joinpath('examples').glob('**/*.*'))
-OUTPUT_PATHS = ['/tmp/out.f', None]
-INDENTS = (0, 4, 8)
-FORMS = (CodeForm.Fixed, CodeForm.Free, None)
+OUTPUT_PATHS = [None] # [pathlib.Path('/tmp/out.f'), None]
+INDENTS = (4,) # (0, 4, 8)
+FORMS = (None,) # (CodeForm.Fixed, CodeForm.Free, None)
 
 
 class Tests(unittest.TestCase):
@@ -21,9 +21,20 @@ class Tests(unittest.TestCase):
     maxDiff = None
 
     def test_execute_compiler(self):
-        output_path = OUTPUT_PATHS[0]
+        for input_path in INPUT_PATHS:
+            for output_path in OUTPUT_PATHS:
+                for indent in INDENTS:
+                    for form in FORMS:
+                        with self.subTest(input_path=input_path, output_path=output_path,
+                                          indent=indent, form=form):
+                            execute_compiler(input_path, output_path, indent, form)
+
+    def test_transpile(self):
         for input_path in INPUT_PATHS:
             for indent in INDENTS:
                 for form in FORMS:
-                    with self.subTest(input_path=input_path):
-                        execute_compiler(input_path, output_path, indent, form)
+                    with self.subTest(input_path=input_path, indent=indent, form=form):
+                        code = transpile(input_path, indent, form)
+                        self.assertIsNotNone(code)
+                        self.assertIsInstance(code, str)
+                        self.assertGreater(len(code), 0)
