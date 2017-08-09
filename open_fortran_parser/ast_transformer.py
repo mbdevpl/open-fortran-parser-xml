@@ -81,8 +81,8 @@ class AstTransformer:
                     _LOG.debug('%s', ET.tostring(subnode).decode().rstrip())
                     continue
                 raise NotImplementedError(
-                    'no transformer available for node "{}", a subnode of "{}"'.format(
-                        subnode.tag, node.tag))
+                    'no transformer available for node "{}", a subnode of "{}":\n{}'.format(
+                        subnode.tag, node.tag, ET.tostring(node).decode().rstrip()))
             _transform = getattr(self, transform_name)
             transformed.append(_transform(subnode))
         return transformed
@@ -106,8 +106,15 @@ class AstTransformer:
     def _module(self, node: ET.Element):
         module = typed_ast3.parse('''if __name__ == '__main__':\n    pass''')
         body = self.transform_all_subnodes(node.find('./body'))
-        members = self.transform_all_subnodes(node.find('./members'))
         conditional = module.body[0]
+        conditional.body = body
+        members_node = node.find('./members')
+        if members_node is None:
+            return conditional
+        members = self.transform_all_subnodes(members_node)
+        #if not members:
+        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+        raise NotImplementedError()
         conditional.body = body + members
         return module
 
@@ -275,9 +282,12 @@ class AstTransformer:
     def _loop(self, node: ET.Element):
         if node.attrib['type'] == 'do':
             return self._loop_do(node)
+        #elif node.attrib['type'] == 'do-while':
+        #    return self._loop_do_while(node)
         elif node.attrib['type'] == 'forall':
             return self._loop_forall(node)
         else:
+            _LOG.error('%s', ET.tostring(node).decode().rstrip())
             raise NotImplementedError()
 
     def _loop_do(self, node: ET.Element) -> typed_ast3.For:
@@ -285,6 +295,9 @@ class AstTransformer:
         target, iter_ = self._index_variable(index_variable)
         body = self.transform_all_subnodes(node.find('./body'), ignored={'block'})
         return typed_ast3.For(target=target, iter=iter_, body=body, orelse=[])
+
+    def _loop_do_while(self, node: ET.Element) -> typed_ast3.While:
+        pass
 
     def _loop_forall(self, node: ET.Element) -> typed_ast3.For:
         index_variables = node.find('./header/index-variables')
@@ -610,11 +623,24 @@ class AstTransformer:
         dim_type = node.attrib['type']
         if dim_type == 'simple':
             values = self.transform_all_subnodes(node, ignored={'array-spec-element'})
-            if len(values) == 1:
-                return typed_ast3.Index(value=values[0])
-            _LOG.error('simple dimension should have exactly one value, but it has %i', len(values))
-        _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-        raise NotImplementedError()
+            if len(values) != 1:
+                _LOG.error('simple dimension should have exactly one value, but it has %i', len(values))
+            return typed_ast3.Index(value=values[0])
+        elif dim_type == 'assumed-shape':
+            return typed_ast3.Slice(lower=None, upper=None, step=None)
+        else:
+            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
+            raise NotImplementedError('dimension type "{}" not supported'.format(dim_type))
+
+    _basic_types = {
+        ('logical', None): 'bool',
+        ('integer', None): 'int',
+        ('real', None): 'float',
+        ('character', t.Any): 'str',
+        ('integer', 4): 'np.int32',
+        ('integer', 8): 'np.int64',
+        ('real', 4): 'np.float32',
+        ('real', 8): 'np.float64'}
 
     def _type(self, node: ET.Element) -> type:
         name = node.attrib['name'].lower()
@@ -633,30 +659,32 @@ class AstTransformer:
                 _LOG.warning(
                     'ignoring string length "%i" in:\n%s',
                     length, ET.tostring(node).decode().rstrip())
-            return typed_ast3.parse('str', mode='eval')
+            return typed_ast3.parse(self._basic_types[name, t.Any], mode='eval')
         elif length is not None:
             self._ensure_top_level_import('numpy', 'np')
-            return typed_ast3.parse({
-                ('integer', 4): 'np.int32',
-                ('integer', 8): 'np.int64',
-                ('real', 4): 'np.float32',
-                ('real', 8): 'np.float64'}[name, length], mode='eval')
+            return typed_ast3.parse(self._basic_types[name, length], mode='eval')
         elif kind is not None:
             self._ensure_top_level_import('numpy', 'np')
             if isinstance(kind, typed_ast3.Num):
                 kind = kind.n
             if not isinstance(kind, int):
-                _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-                raise NotImplementedError()
-            return typed_ast3.parse({
-                ('integer', 4): 'np.int32',
-                ('integer', 8): 'np.int64',
-                ('real', 4): 'np.float32',
-                ('real', 8): 'np.float64'}[name, kind], mode='eval')
+                #_LOG.warning('%s', ET.tostring(node).decode().rstrip())
+                #raise NotImplementedError('non-literal kinds are not supported')
+                python_type = typed_ast3.parse(self._basic_types[name, None], mode='eval')
+                self._ensure_top_level_import('static_typing', 'st')
+                static_type = typed_ast3.Attribute(
+                    value=typed_ast3.Name(id='st', ctx=typed_ast3.Load()),
+                    attr=python_type, ctx=typed_ast3.Load())
+                return typed_ast3.Subscript(
+                    value=static_type, slice=typed_ast3.Index(value=kind), ctx=typed_ast3.Load())
+                #typed_ast3.parse({
+                #    'integer': 'st.int[0]'.format(kind),
+                #    'real': lambda kind: 'st.float[0]'.format(kind)}[name](kind), mode='eval')
+                #custom_kind_type.
+                #return custom_kind_type
+            return typed_ast3.parse(self._basic_types[name, kind], mode='eval')
         else:
-            return typed_ast3.parse({
-                'integer': 'int',
-                'real': 'float'}[name], mode='eval')
+            return typed_ast3.parse(self._basic_types[name, None], mode='eval')
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
         raise NotImplementedError()
 
@@ -723,7 +751,9 @@ class AstTransformer:
             args += new_args
         return args
 
-    def _subscripts(self, node: ET.Element) -> t.Union[typed_ast3.Index, typed_ast3.Slice]:
+    def _subscripts(
+            self, node: ET.Element) -> t.Union[
+                typed_ast3.Index, typed_ast3.Slice, typed_ast3.ExtSlice]:
         subscripts = []
         for subscript in node.findall('./subscript'):
             new_subscripts = self.transform_all_subnodes(
@@ -750,21 +780,26 @@ class AstTransformer:
             .format(ET.tostring(node).decode().rstrip()))
 
     def _literal(self, node: ET.Element) -> t.Union[typed_ast3.Num, typed_ast3.Str]:
-        if node.attrib['type'] == 'int':
+        literal_type = node.attrib['type']
+        if literal_type == 'bool':
+            return typed_ast3.NameConstant(value={
+                'false': False,
+                'true': True}[node.attrib['value']])
+        if literal_type == 'int':
             return typed_ast3.Num(n=int(node.attrib['value']))
-        if node.attrib['type'] == 'real':
+        if literal_type == 'real':
             value = node.attrib['value']
             if 'D' in value:
                 value = value.replace('D', 'E', 1)
             return typed_ast3.Num(n=float(value))
-        if node.attrib['type'] == 'char':
+        if literal_type == 'char':
             assert len(node.attrib['value']) >= 2
             begin = node.attrib['value'][0]
             end = node.attrib['value'][-1]
             assert begin == end
             return typed_ast3.Str(s=node.attrib['value'][1:-1])
         _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-        raise NotImplementedError()
+        raise NotImplementedError('literal type "{}" not supported'.format(literal_type))
 
 
 def transform(root_node: ET.Element) -> typed_ast3.AST:
