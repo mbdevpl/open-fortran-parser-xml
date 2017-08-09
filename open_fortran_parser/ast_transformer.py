@@ -484,8 +484,14 @@ class AstTransformer:
     def _assignment(self, node: ET.Element):
         target = self.transform_all_subnodes(node.find('./target'))
         value = self.transform_all_subnodes(node.find('./value'))
-        assert len(target) == 1, (ET.tostring(node).decode().rstrip(), target)
-        assert len(value) == 1, (ET.tostring(node).decode().rstrip(), value)
+        if len(target) != 1: 
+            raise SyntaxError(
+                'exactly 1 target expected but {} given {} in:\n{}'
+                .format(len(target), target, ET.tostring(node).decode().rstrip()))
+        if len(value) != 1:
+            raise SyntaxError(
+                'exactly 1 value expected but {} given {} in:\n{}'
+                .format(len(value), value, ET.tostring(node).decode().rstrip()))
         return typed_ast3.Assign(targets=[target], value=value, type_comment=None)
 
     def _operation(self, node: ET.Element) -> typed_ast3.AST:
@@ -645,6 +651,31 @@ class AstTransformer:
             '.not.': (typed_ast3.UnaryOp, typed_ast3.Not),
             # Invert: (typed_ast3.UnaryOp, typed_ast3.Invert)
             }[node.attrib['operator'].lower()]
+
+    def _array_constructor(self, node: ET.Element) -> typed_ast3.ListComp:
+        values = node.findall('./value')
+        if len(values) != 2:
+            raise NotImplementedError('not implemented handling of:\n{}'.format(ET.tostring(node).decode().rstrip()))
+        value = values[0]
+        sub_values = value.find('./array-constructor-values')
+        header_node = value.find('./header')
+        header = self.transform_all_subnodes(header_node, warn=False)
+        assert len(header) == 1
+        comp_target, comp_iter = header[0]
+        return typed_ast3.ListComp(
+            elt=typed_ast3.Call(
+                func=typed_ast3.Name(id='do_nothing', ctx=typed_ast3.Load()),
+                args=[], keywords=[], starargs=None, kwargs=None),
+            generators=[
+                typed_ast3.comprehension(target=comp_target, iter=comp_iter, ifs=[], is_async=0)])
+
+        # "[ord(c) for line in file for c in line]"
+        #_(elt=Call(func=Name(id='ord', ctx=Load()), args=[
+        #  Name(id='c', ctx=Load()),
+        #], keywords=[], starargs=None, kwargs=None), generators=[
+        #  comprehension(target=Name(id='line', ctx=Store()), iter=Name(id='file', ctx=Load()), ifs=[], is_async=0),
+        #  comprehension(target=Name(id='c', ctx=Store()), iter=Name(id='line', ctx=Load()), ifs=[], is_async=0),
+        #])
 
     def _dimension(self, node: ET.Element) -> t.Union[typed_ast3.Num, typed_ast3.Index]:
         dim_type = node.attrib['type']

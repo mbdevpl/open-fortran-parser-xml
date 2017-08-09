@@ -530,6 +530,21 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.derived_type_spec(typeName, hasTypeParamSpecList);
 	}
 
+	public void array_constructor() {
+		context = contextNode(-1); // temporarily reopen previously-closed context
+		if (verbosity >= 100)
+			super.array_constructor();
+		contextRename("array-constructor-values", "array-constructor");
+		contextClose(); // re-close previously closed context
+	}
+
+	public void ac_spec() {
+		context = contextNode(-1); // temporarily reopen previously-closed context
+		if (verbosity >= 100)
+			super.ac_spec();
+		contextClose(); // re-close previously closed context
+	}
+
 	public void ac_value() {
 		contextClose("value");
 		if (verbosity >= 100)
