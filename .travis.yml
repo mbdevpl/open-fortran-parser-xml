@@ -21,7 +21,9 @@ before_install:
   - jdk_switcher use $JDK
   - java -version
   - python --version
+  # Open Fortran Parser
   - git clone "https://github.com/OpenFortranProject/open-fortran-parser" "../open-fortran-parser"
+  # FFB-MINI app
   - git clone "https://github.com/mbdevpl/ffb-mini" "../ffb-mini" --branch ofp_tests
 
 install:
