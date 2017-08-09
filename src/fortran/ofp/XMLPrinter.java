@@ -1184,10 +1184,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void add_operand__add_op(Token addOp) {
 		contextClose("operand");
-		// contextOpen("operator");
 		if (verbosity >= 100)
 			super.add_operand__add_op(addOp);
-		// setAttribute("operator", addOp, "operation");
 	}
 
 	public void level_2_expr(int numConcatOps) {
@@ -1329,14 +1327,71 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("operand");
 	}
 
+	public void and_operand(boolean hasNotOp, int numAndOps) {
+		if (verbosity >= 100)
+			super.and_operand(hasNotOp, numAndOps);
+		if (numAndOps > 0)
+			contextClose("operation");
+	}
+
+	public void and_operand__not_op(boolean hasNotOp) {
+		contextClose("operand");
+		super.and_operand__not_op(hasNotOp);
+	}
+
+	public void or_operand(int numOrOps) {
+		if (numOrOps > 0)
+			contextClose("operand");
+		if (verbosity >= 100)
+			super.or_operand(numOrOps);
+		if (numOrOps > 0)
+			contextClose("operation");
+	}
+
 	public void and_op(Token andOp) {
-		// TODO Auto-generated method stub
-		super.and_op(andOp);
+		if (context.getTagName().equals("operand"))
+			contextClose("operand");
+		if (context.getTagName().equals("operation")) {
+			// TODO
+		} else {
+			Element previousContext = contextNode(-1);
+			Element outerContext = context;
+			contextOpen("operation");
+			setAttribute("type", "multiary");
+			contextOpen("operand");
+			outerContext.removeChild(previousContext);
+			context.appendChild(previousContext);
+			contextClose("operand");
+		}
+		contextOpen("operator");
+		setAttribute("operator", andOp);
+		if (verbosity >= 100)
+			super.and_op(andOp);
+		contextClose("operator");
+		contextOpen("operand");
 	}
 
 	public void or_op(Token orOp) {
-		// TODO Auto-generated method stub
-		super.or_op(orOp);
+		if (context.getTagName().equals("operand"))
+			contextClose("operand");
+		if (context.getTagName().equals("operation")) {
+			// TODO
+		} else {
+			Element previousContext = contextNode(-1);
+			Element outerContext = context;
+			contextOpen("operation");
+			setAttribute("type", "multiary");
+			contextOpen("operand");
+			outerContext.removeChild(previousContext);
+			context.appendChild(previousContext);
+			contextClose("operand");
+		}
+		contextOpen("operator");
+		setAttribute("operator", orOp);
+		if (verbosity >= 100)
+			super.or_op(orOp);
+		contextClose("operator");
+		contextOpen("operand");
 	}
 
 	public void equiv_op(Token equivOp) {
@@ -1823,9 +1878,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void main_program__begin() {
 		contextOpen("program");
-		contextOpen("header");
 		if (verbosity >= 100)
 			super.main_program__begin();
+		contextOpen("header");
 	}
 
 	public void ext_function_subprogram(boolean hasPrefix) {
@@ -2220,24 +2275,25 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void separate_module_subprogram(boolean hasExecutionPart, boolean hasInternalSubprogramPart) {
-		// TODO Auto-generated method stub
 		super.separate_module_subprogram(hasExecutionPart, hasInternalSubprogramPart);
 		contextClose("subroutine");
 	}
 
 	public void separate_module_subprogram__begin() {
 		contextOpen("subroutine");
-		// TODO Auto-generated method stub
 		super.separate_module_subprogram__begin();
+		contextOpen("header");
 	}
 
 	public void mp_subprogram_stmt(Token label, Token moduleKeyword, Token procedureKeyword, Token name, Token eos) {
-		// TODO Auto-generated method stub
+		contextClose("header");
+		setAttribute("name", name);
 		super.mp_subprogram_stmt(label, moduleKeyword, procedureKeyword, name, eos);
+		contextOpen("body");
 	}
 
 	public void end_mp_subprogram_stmt(Token label, Token keyword1, Token keyword2, Token name, Token eos) {
-		// TODO Auto-generated method stub
+		contextCloseAllInner("subroutine");
 		super.end_mp_subprogram_stmt(label, keyword1, keyword2, name, eos);
 	}
 
