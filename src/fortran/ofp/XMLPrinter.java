@@ -1702,6 +1702,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.loop_control(whileKeyword, doConstructType, hasOptExpr);
 		String loopType = "";
 		switch (doConstructType) {
+		case 1700:
+			loopType = "do-concurrent";
+			break;
 		case 1701:
 			loopType = "do";
 			break;
