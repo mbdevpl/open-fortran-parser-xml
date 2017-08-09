@@ -1695,8 +1695,23 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void loop_control(Token whileKeyword, int doConstructType, boolean hasOptExpr) {
 		if (!context.getTagName().equals("statement"))
 			contextClose("index-variable");
+		else {
+			contextRename("statement", "loop");
+			// setAttribute("type", "do");
+		}
 		super.loop_control(whileKeyword, doConstructType, hasOptExpr);
-		setAttribute("subtype", doConstructType, "loop");
+		String loopType = "";
+		switch (doConstructType) {
+		case 1701:
+			loopType = "do";
+			break;
+		case 1702:
+			loopType = "do-while";
+			break;
+		default:
+			throw new IllegalArgumentException(Integer.toString(doConstructType));
+		}
+		setAttribute("type", loopType, "loop");
 	}
 
 	public void do_variable(Token id) {
