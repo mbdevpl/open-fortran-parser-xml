@@ -534,7 +534,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		context = contextNode(-1); // temporarily reopen previously-closed context
 		if (verbosity >= 100)
 			super.array_constructor();
-		contextRename("array-constructor-values", "array-constructor");
 		contextClose(); // re-close previously closed context
 	}
 
@@ -561,11 +560,30 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void ac_value_list(int count) {
 		contextClose("value");
-		contextCloseAllInner("array-constructor-values");
+		contextCloseAllInner("array-constructor-values", "array-constructor");
 		setAttribute("count", count);
 		if (verbosity >= 100)
 			super.ac_value_list(count);
-		contextClose("array-constructor-values");
+		contextClose("array-constructor-values", "array-constructor");
+	}
+
+	public void ac_implied_do() {
+		Element value = context;
+		contextClose();
+		Element innerContext = context;
+		contextClose("value");
+		innerContext.removeChild(value);
+		context.appendChild(value);
+		super.ac_implied_do();
+		contextRename("array-constructor-values", "array-constructor");
+		contextOpen("value");
+		// System.err.println("well...");
+		// cleanUpAfterError();
+	}
+
+	public void ac_implied_do_control(boolean hasStride) {
+		contextClose("index-variable");
+		super.ac_implied_do_control(hasStride);
 	}
 
 	public void type_declaration_stmt(Token label, int numAttributes, Token eos) {
@@ -1395,8 +1413,16 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void or_operand(int numOrOps) {
-		if (numOrOps > 0)
+		if (numOrOps > 0) {
+			if (!context.getTagName().equals("operand")) {
+				Element previousContext = contextNode(-1);
+				Element outerContext = context;
+				contextOpen("operand");
+				outerContext.removeChild(previousContext);
+				context.appendChild(previousContext);
+			}
 			contextClose("operand");
+		}
 		if (verbosity >= 100)
 			super.or_operand(numOrOps);
 		if (numOrOps > 0)
@@ -1737,8 +1763,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void do_stmt(Token label, Token id, Token doKeyword, Token digitString, Token eos, boolean hasLoopControl) {
-		if (context.getTagName() != "header") {
-			contextOpen("loop");
+		if (!context.getTagName().equals("header")) {
+			if (!context.getTagName().equals("loop"))
+				contextOpen("loop");
 			contextOpen("header");
 		}
 		contextClose("header");
@@ -1761,11 +1788,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void loop_control(Token whileKeyword, int doConstructType, boolean hasOptExpr) {
 		if (!context.getTagName().equals("statement"))
 			contextClose("index-variable");
-		else {
+		else
 			contextRename("statement", "loop");
-			// setAttribute("type", "do");
-		}
-		super.loop_control(whileKeyword, doConstructType, hasOptExpr);
 		String loopType = "";
 		switch (doConstructType) {
 		case 1700:
@@ -1775,11 +1799,18 @@ public class XMLPrinter extends FortranParserActionPrint {
 			loopType = "do";
 			break;
 		case 1702:
+			Element outerContext = context;
+			Element node = contextNode(-1);
+			contextOpen("header");
+			outerContext.removeChild(node);
+			context.appendChild(node);
+			contextClose("header");
 			loopType = "do-while";
 			break;
 		default:
 			throw new IllegalArgumentException(Integer.toString(doConstructType));
 		}
+		super.loop_control(whileKeyword, doConstructType, hasOptExpr);
 		setAttribute("type", loopType, "loop");
 	}
 

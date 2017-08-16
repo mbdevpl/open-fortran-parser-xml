@@ -282,8 +282,8 @@ class AstTransformer:
     def _loop(self, node: ET.Element):
         if node.attrib['type'] == 'do':
             return self._loop_do(node)
-        #elif node.attrib['type'] == 'do-while':
-        #    return self._loop_do_while(node)
+        elif node.attrib['type'] == 'do-while':
+            return self._loop_do_while(node)
         elif node.attrib['type'] == 'forall':
             return self._loop_forall(node)
         else:
@@ -297,7 +297,12 @@ class AstTransformer:
         return typed_ast3.For(target=target, iter=iter_, body=body, orelse=[])
 
     def _loop_do_while(self, node: ET.Element) -> typed_ast3.While:
-        pass
+        header_node = node.find('./header')
+        header = self.transform_all_subnodes(header_node, warn=False)
+        assert len(header) == 1
+        condition = header[0]
+        body = self.transform_all_subnodes(node.find('./body'), ignored={'block'})
+        return typed_ast3.While(test=condition, body=body, orelse=[])
 
     def _loop_forall(self, node: ET.Element) -> typed_ast3.For:
         index_variables = node.find('./header/index-variables')
@@ -508,7 +513,7 @@ class AstTransformer:
         operators_and_operands = self.transform_all_subnodes(
             node, skip_empty=True, ignored={
                 'add-operand__add-op', 'add-operand', 'mult-operand__mult-op', 'mult-operand',
-                'primary'})
+                'primary', 'level-3-expr'})
         assert isinstance(operators_and_operands, list), operators_and_operands
         assert len(operators_and_operands) % 2 == 1, operators_and_operands
 
@@ -653,42 +658,76 @@ class AstTransformer:
             }[node.attrib['operator'].lower()]
 
     def _array_constructor(self, node: ET.Element) -> typed_ast3.ListComp:
-        values = node.findall('./value')
-        if len(values) != 2:
-            raise NotImplementedError('not implemented handling of:\n{}'.format(ET.tostring(node).decode().rstrip()))
-        value = values[0]
-        sub_values = value.find('./array-constructor-values')
-        header_node = value.find('./header')
-        header = self.transform_all_subnodes(header_node, warn=False)
+        value_nodes = node.findall('./value')
+        values = []
+        for value_node in value_nodes:
+            value = self.transform_all_subnodes(value_node, warn=False)
+            if not value:
+                continue
+            assert len(value) == 1
+            values.append(value[0])
+
+        if len(values) != 1:
+            raise NotImplementedError(
+                'not implemented handling of {} in:\n{}'
+                .format(values, ET.tostring(node).decode().rstrip()))
+
+        header_node = node.find('./header')
+        header = self.transform_all_subnodes(header_node, warn=False, ignored={'ac-implied-do-control'})
         assert len(header) == 1
         comp_target, comp_iter = header[0]
         return typed_ast3.ListComp(
-            elt=typed_ast3.Call(
-                func=typed_ast3.Name(id='do_nothing', ctx=typed_ast3.Load()),
-                args=[], keywords=[], starargs=None, kwargs=None),
+            elt=values[0],
             generators=[
                 typed_ast3.comprehension(target=comp_target, iter=comp_iter, ifs=[], is_async=0)])
 
-        # "[ord(c) for line in file for c in line]"
-        #_(elt=Call(func=Name(id='ord', ctx=Load()), args=[
-        #  Name(id='c', ctx=Load()),
-        #], keywords=[], starargs=None, kwargs=None), generators=[
-        #  comprehension(target=Name(id='line', ctx=Store()), iter=Name(id='file', ctx=Load()), ifs=[], is_async=0),
-        #  comprehension(target=Name(id='c', ctx=Store()), iter=Name(id='line', ctx=Load()), ifs=[], is_async=0),
-        #])
+    def _array_constructor_values(self, node: ET.Element) -> typed_ast3.List:
+        value_nodes = node.findall('./value')
+        values = []
+        for value_node in value_nodes:
+            value = self.transform_all_subnodes(value_node, warn=False)
+            if not value:
+                continue
+            assert len(value) == 1
+            values.append(value[0])
 
-    def _dimension(self, node: ET.Element) -> t.Union[typed_ast3.Num, typed_ast3.Index]:
+        return typed_ast3.List(elts=values, ctx=typed_ast3.Load())
+
+    def _dimension(self, node: ET.Element) -> t.Union[typed_ast3.Index, typed_ast3.Slice]:
         dim_type = node.attrib['type']
         if dim_type == 'simple':
             values = self.transform_all_subnodes(node, ignored={'array-spec-element'})
             if len(values) != 1:
                 _LOG.error('simple dimension should have exactly one value, but it has %i', len(values))
             return typed_ast3.Index(value=values[0])
+        elif dim_type == 'range':
+            lower_bound = node.find('./lower-bound')
+            upper_bound = node.find('./upper-bound')
+            step = node.find('./step')
+            #range_args = []
+            if lower_bound is not None:
+                args = self.transform_all_subnodes(lower_bound)
+                assert len(args) == 1, args
+                #range_args.append(args[0])
+                lower_bound = args[0]
+            if upper_bound is not None:
+                args = self.transform_all_subnodes(upper_bound)
+                assert len(args) == 1, args
+                #range_args.append(typed_ast3.BinOp(
+                #    left=args[0], op=typed_ast3.Add(), right=typed_ast3.Num(n=1)))
+                upper_bound = args[0]
+            if step is not None:
+                args = self.transform_all_subnodes(step)
+                assert len(args) == 1, args
+                #range_args.append(args[0])
+                step = args[0]
+            return typed_ast3.Slice(lower=lower_bound, upper=upper_bound, step=step)
         elif dim_type == 'assumed-shape':
             return typed_ast3.Slice(lower=None, upper=None, step=None)
         else:
-            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-            raise NotImplementedError('dimension type "{}" not supported'.format(dim_type))
+            raise NotImplementedError(
+                'dimension type "{}" not supported in:\n{}'
+                .format(dim_type, ET.tostring(node).decode().rstrip()))
 
     _basic_types = {
         ('logical', None): 'bool',

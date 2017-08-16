@@ -10,7 +10,7 @@ _LOG = logging.getLogger(__name__)
 
 _HERE = pathlib.Path(__file__).resolve().parent
 
-INPUT_PATHS = list(_HERE.joinpath('examples').glob('**/*.*'))
+INPUT_PATHS = [_HERE.joinpath('examples', _) for _ in ['empty.f']]
 OUTPUT_PATHS = [None] # [pathlib.Path('/tmp/out.f'), None]
 INDENTS = (4,) # (0, 4, 8)
 FORMS = (None,) # (CodeForm.Fixed, CodeForm.Free, None)
