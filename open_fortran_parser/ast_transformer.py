@@ -365,19 +365,11 @@ class AstTransformer:
 
     def _statement(self, node: ET.Element):
         details = self.transform_all_subnodes(
-            node, ignored={
+            node, warn=False, ignored={
+                'format',
                 'action-stmt', 'executable-construct', 'execution-part-construct',
                 'execution-part'})
         flatten_sequence(details)
-        if len(details) == 0:
-            args = [
-                typed_ast3.Str(s=ET.tostring(node).decode().rstrip()),
-                typed_ast3.Num(n=len(node))]
-            return [
-                typed_ast3.Expr(value=typed_ast3.Call(
-                    func=typed_ast3.Name(id='print', ctx=typed_ast3.Load()),
-                    args=args, keywords=[])),
-                typed_ast3.Pass()]
         return [
             detail if isinstance(detail, (typed_ast3.Expr, typed_ast3.Assign, typed_ast3.AnnAssign))
             else typed_ast3.Expr(value=detail)
@@ -435,14 +427,10 @@ class AstTransformer:
         written = []
         io_controls_node = node.find('./io-controls')
         if io_controls_node is not None:
-            args = self.transform_all_subnodes(
-                io_controls_node, skip_empty=True,
-                ignored={'io-control-spec-list__begin', 'io-control-spec-list'})
+            args = self.transform(io_controls_node, warn=False)
         outputs_node = node.find('./outputs')
         if outputs_node is not None:
-            written = self.transform_all_subnodes(
-                outputs_node, skip_empty=True,
-                ignored={'output-item-list__begin', 'output-item', 'output-item-list'})
+            written = self.transform(outputs_node, warn=False)
         if len(written) > 1 or len(args) > 1:
             # file
             pass
@@ -454,34 +442,100 @@ class AstTransformer:
             func=typed_ast3.Name(id='write', ctx=typed_ast3.Load()),
             args=args, keywords=[]))
 
-    def _io_control(self, node) -> typed_ast3.AST:
-        io_control = self.transform_all_subnodes(node)
-        if len(node) == 0 and not node.attrib['argument-name']:
-            return [] # TODO: TMP
-        if len(io_control) != 1:
-            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-            raise NotImplementedError()
-        if node.attrib['argument-name']:
-            return typed_ast3.keyword(arg=node.attrib['argument-name'], value=io_control[0])
-        return io_control[0]
+    def _read(self, node: ET.Element):
+        io_controls = self.transform(node.find('./io-controls'), warn=False)
+        inputs = self.transform(node.find('./inputs'), warn=False)
+        raise NotImplementedError()
 
     def _print(self, node):
         outputs_node = node.find('./outputs')
         args = []
         if outputs_node is not None:
-            args = self.transform_all_subnodes(
-                outputs_node, skip_empty=True,
-                ignored={'output-item-list__begin', 'output-item', 'output-item-list'})
+            args = self.transform(outputs_node, warn=False)
         return typed_ast3.Expr(value=typed_ast3.Call(
             func=typed_ast3.Name(id='print', ctx=typed_ast3.Load()),
             args=args, keywords=[]))
 
+    def _io_controls(self, node: ET.Element):
+        return self.transform_all_subnodes(
+            node, warn=False, skip_empty=True,
+            ignored={'io-control-spec-list__begin', 'io-control-spec-list'})
+
+    def _io_control(self, node) -> typed_ast3.AST:
+        io_control = self.transform_all_subnodes(node)
+        if len(node) == 0 and not node.attrib['argument-name']:
+            return [] # TODO: TMP
+        if len(io_control) != 1:
+            raise NotImplementedError('exactly one I/O control expected but {} found in:/n{}'.format(
+                len(io_control), ET.tostring(node).decode().rstrip()))
+        if node.attrib['argument-name']:
+            return typed_ast3.keyword(arg=node.attrib['argument-name'], value=io_control[0])
+        return io_control[0]
+
+    def _outputs(self, node: ET.Element):
+        return self.transform_all_subnodes(
+            node, warn=False, skip_empty=True,
+            ignored={'output-item-list__begin', 'output-item', 'output-item-list'})
+
     def _output(self, node):
         output = self.transform_all_subnodes(node)
         if len(output) != 1:
-            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-            raise NotImplementedError()
+            raise NotImplementedError('exactly one output expected but {} found in:/n{}'.format(
+                len(output), ET.tostring(node).decode().rstrip()))
         return output[0]
+
+    def _inputs(self, node: ET.Element):
+        return self.transform_all_subnodes(
+            node, warn=False, skip_empty=True,
+            ignored={'input-item-list__begin', 'input-item', 'input-item-list'})
+
+    def _input(self, node):
+        input_ = self.transform_all_subnodes(node)
+        if len(input_) != 1:
+            raise NotImplementedError('exactly one input expected but {} found in:/n{}'.format(
+                len(input_), ET.tostring(node).decode().rstrip()))
+        return input_[0]
+
+    def _open(self, node: ET.Element) -> typed_ast3.AnnAssign:
+        file_handle = typed_ast3.Subscript(
+            value=typed_ast3.Attribute(value=typed_ast3.Name(id='Fortran', ctx=typed_ast3.Load()),
+                                       attr='file_handles', ctx=typed_ast3.Load()),
+            slice=typed_ast3.Index(value=None), ctx=typed_ast3.Load())
+
+        kwargs = self.transform(node.find('./keyword-arguments'), warn=False)
+        file_handle.slice.value = kwargs.pop(0)
+        self._ensure_top_level_import('typing', 't')
+        return typed_ast3.AnnAssign(
+            target=file_handle, value=typed_ast3.Call(
+                func=typed_ast3.Name(id='open', ctx=typed_ast3.Load()),
+                args=[], keywords=kwargs),
+            annotation=typed_ast3.parse('t.IO[bytes]', mode='eval'), simple=1)
+
+    def _close(self, node: ET.Element) -> typed_ast3.AnnAssign:
+        file_handle = typed_ast3.Subscript(
+            value=typed_ast3.Attribute(value=typed_ast3.Name(id='Fortran', ctx=typed_ast3.Load()),
+                                       attr='file_handles', ctx=typed_ast3.Load()),
+            slice=typed_ast3.Index(value=None), ctx=typed_ast3.Load())
+
+        kwargs = self.transform(node.find('./keyword-arguments'), warn=False)
+        file_handle.slice.value = kwargs.pop(0)
+        self._ensure_top_level_import('typing', 't')
+        return typed_ast3.Call(
+            func=typed_ast3.Attribute(value=file_handle, attr='close', ctx=typed_ast3.Load()),
+            args=[], keywords=kwargs)
+
+    def _keyword_arguments(self, node: ET.Element):
+        kwargs = self.transform_all_subnodes(
+            node, warn=False, skip_empty=True, ignored={
+                'connect-spec-list__begin', 'equiv-op', 'connect-spec-list',
+                'close-spec-list__begin', 'close-spec-list'})
+        return kwargs
+
+    def _keyword_argument(self, node: ET.Element):
+        name = node.attrib['argument-name']
+        value = self.transform_all_subnodes(node, warn=False, skip_empty=True, ignored={})
+        assert len(value) == 1, value
+        return typed_ast3.keyword(arg=name, value=value[0])
 
     def _transform_mpi_call(
             self, tree: typed_ast3.Call) -> t.Union[typed_ast3.Call, typed_ast3.Assign]:
@@ -494,7 +548,7 @@ class AstTransformer:
         # extract last arg -- it's error var
         error_var = tree.args.pop(-1)
         assert isinstance(error_var, typed_ast3.Name), (type(error_var), error_var)
-        if mpi_function_name in ['Comm_size', 'Comm_rank', 'Barrier']:
+        if mpi_function_name in ('Comm_size', 'Comm_rank', 'Barrier'):
             # extract 1st arg - in some cases it's the MPI scope
             mpi_comm = tree.args.pop(0)
             assert isinstance(mpi_comm, typed_ast3.Name)
@@ -504,9 +558,12 @@ class AstTransformer:
                 value=core_name, attr=mpi_comm.id[4:], ctx=typed_ast3.Load())
         tree.func = typed_ast3.Attribute(
             value=core_name, attr=mpi_function_name, ctx=typed_ast3.Load())
-        # create assignment of call result to its current 1st var
+        # create assignment of call result to its current 1st var (or 2nd var in some cases)
         if tree.args:
-            var = tree.args.pop(0)
+            arg_num = 0
+            if mpi_function_name in ('Allreduce',):
+                arg_num = 1
+            var = tree.args.pop(arg_num)
             tree = typed_ast3.Assign(targets=[var], value=tree, type_comment=None)
         return [tree, typed_ast3.AnnAssign(
             target=error_var, value=None, annotation=typed_ast3.Str(s='MPI error code'), simple=1)]

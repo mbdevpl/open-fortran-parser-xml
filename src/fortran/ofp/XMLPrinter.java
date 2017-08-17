@@ -1622,6 +1622,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("index-variables");
 	}
 
+	public void forall_assignment_stmt(boolean isPointerAssignment) {
+		context = contextNode(-1); // temporarily reopen previously-closed context
+		if (verbosity >= 100)
+			super.forall_assignment_stmt(isPointerAssignment);
+		contextClose(); // re-close previously closed context
+	}
+
 	public void forall_stmt__begin() {
 		contextRename("statement", "loop");
 		setAttribute("type", "forall");
@@ -1920,11 +1927,22 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.continue_stmt(label, continueKeyword, eos);
 	}
 
+	public void open_stmt(Token label, Token openKeyword, Token eos) {
+		Element outerContext = context;
+		Element args = contextNode(-1);
+		contextOpen("open");
+		outerContext.removeChild(args);
+		context.appendChild(args);
+		super.open_stmt(label, openKeyword, eos);
+		contextClose();
+	}
+
 	public void connect_spec(Token id) {
 		contextCloseAllInner("keyword-argument");
 		setAttribute("argument-name", id);
 		contextClose("keyword-argument");
-		super.connect_spec(id);
+		if (verbosity >= 100)
+			super.connect_spec(id);
 		contextOpen("keyword-argument");
 	}
 
@@ -1944,9 +1962,55 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("keyword-arguments");
 	}
 
+	public void close_stmt(Token label, Token closeKeyword, Token eos) {
+		Element outerContext = context;
+		Element args = contextNode(-1);
+		contextOpen("close");
+		outerContext.removeChild(args);
+		context.appendChild(args);
+		super.close_stmt(label, closeKeyword, eos);
+		contextClose();
+	}
+
+	public void close_spec(Token closeSpec) {
+		contextCloseAllInner("keyword-argument");
+		setAttribute("argument-name", closeSpec);
+		contextClose("keyword-argument");
+		if (verbosity >= 100)
+			super.close_spec(closeSpec);
+		contextOpen("keyword-argument");
+	}
+
+	public void close_spec_list__begin() {
+		contextOpen("keyword-arguments");
+		if (verbosity >= 100)
+			super.close_spec_list__begin();
+		contextOpen("keyword-argument");
+	}
+
+	public void close_spec_list(int count) {
+		contextClose("keyword-argument");
+		contextCloseAllInner("keyword-arguments");
+		if (verbosity >= 100)
+			super.close_spec_list(count);
+		setAttribute("count", count);
+		contextClose("keyword-arguments");
+	}
+
 	public void read_stmt(Token label, Token readKeyword, Token eos, boolean hasInputItemList) {
-		// TODO Auto-generated method stub
+		Element outerContext = context;
+		contextOpen("read");
+		Element value = null;
+		if (hasInputItemList) {
+			value = contextNode(outerContext, -3);
+			outerContext.removeChild(value);
+			context.appendChild(value);
+		}
+		value = contextNode(outerContext, -2);
+		outerContext.removeChild(value);
+		context.appendChild(value);
 		super.read_stmt(label, readKeyword, eos, hasInputItemList);
+		contextClose();
 	}
 
 	public void write_stmt(Token label, Token writeKeyword, Token eos, boolean hasOutputItemList) {
