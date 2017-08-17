@@ -1061,9 +1061,53 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void section_subscript(boolean hasLowerBound, boolean hasUpperBound, boolean hasStride,
 			boolean isAmbiguous) {
+		contextCloseAllInner("subscript");
+		if (!hasLowerBound && !hasUpperBound && !hasStride)
+			setAttribute("type", "empty");
+		else if (hasLowerBound && !hasUpperBound && !hasStride)
+			setAttribute("type", "simple");
+		else {
+			setAttribute("type", "range");
+			Element outerContext = context;
+			Element lowerBound = null;
+			Element upperBound = null;
+			Element step = null;
+			contextOpen("range");
+			if (hasLowerBound) {
+				contextOpen("lower-bound");
+				lowerBound = context;
+				contextClose();
+			}
+			if (hasUpperBound) {
+				contextOpen("upper-bound");
+				upperBound = context;
+				contextClose();
+			}
+			if (hasStride) {
+				contextOpen("step");
+				step = context;
+				contextClose();
+			}
+			contextClose();
+			if (hasStride) {
+				Element value = contextNode(outerContext, -2);
+				outerContext.removeChild(value);
+				step.appendChild(value);
+			}
+			if (hasUpperBound) {
+				Element value = contextNode(outerContext, -2);
+				outerContext.removeChild(value);
+				upperBound.appendChild(value);
+			}
+			if (hasLowerBound) {
+				Element value = contextNode(outerContext, -2);
+				outerContext.removeChild(value);
+				lowerBound.appendChild(value);
+			}
+		}
+		contextClose("subscript");
 		if (verbosity >= 80)
 			super.section_subscript(hasLowerBound, hasUpperBound, hasStride, isAmbiguous);
-		contextClose("subscript");
 		contextOpen("subscript");
 	}
 
@@ -1080,6 +1124,33 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.section_subscript_list(count);
 		setAttribute("count", count);
 		contextClose("subscripts");
+	}
+
+	public void allocation(boolean hasAllocateShapeSpecList, boolean hasAllocateCoarraySpec) {
+		contextClose("allocation");
+		super.allocation(hasAllocateShapeSpecList, hasAllocateCoarraySpec);
+		contextOpen("allocation");
+	}
+
+	public void allocation_list__begin() {
+		contextOpen("allocations");
+		if (verbosity >= 100)
+			super.allocation_list__begin();
+		contextOpen("allocation");
+	}
+
+	public void allocation_list(int count) {
+		contextCloseAllInner("allocations");
+		if (verbosity >= 100)
+			super.allocation_list(count);
+		setAttribute("count", count);
+		contextClose("allocations");
+	}
+
+	public void allocate_object() {
+		if (verbosity >= 100)
+			super.allocate_object();
+		setAttribute("type", "variable");
 	}
 
 	public void primary() {
@@ -2251,9 +2322,14 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void actual_arg_spec(Token keyword) {
+		boolean inArgumentContext = contextTryFind("argument") != null;
+		if (!inArgumentContext)
+			contextOpen("argument");
+		setAttribute("name", keyword);
 		if (verbosity >= 100)
 			super.actual_arg_spec(keyword);
-		contextOpen("argument");
+		if (inArgumentContext)
+			contextClose("argument");
 	}
 
 	public void actual_arg_spec_list__begin() {
@@ -2272,10 +2348,24 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void actual_arg(boolean hasExpr, Token label) {
-		if (contextTryFind("argument") != null)
-			contextClose("argument");
+		boolean inArgumentContext = contextTryFind("argument") != null;
+		if (!inArgumentContext) {
+			Element outerContext = null;
+			Element e = null;
+			if (hasExpr) {
+				outerContext = context;
+				e = contextNode(-1);
+			}
+			contextOpen("argument");
+			if (hasExpr) {
+				outerContext.removeChild(e);
+				context.appendChild(e);
+			}
+		}
 		if (verbosity >= 60)
 			super.actual_arg(hasExpr, label);
+		if (inArgumentContext)
+			contextClose("argument");
 	}
 
 	public void function_subprogram(boolean hasExePart, boolean hasIntSubProg) {

@@ -152,11 +152,13 @@ class AstTransformer:
         if 'name' not in node.attrib:
             raise SyntaxError(
                 '"name" attribute not present in:\n{}'.format(ET.tostring(node).decode().rstrip()))
-        self._ensure_top_level_import('typing', 't')
-        return typed_ast3.arg(
-            arg=node.attrib['name'], annotation=typed_ast3.Attribute(
-                value=typed_ast3.Name(id='t', ctx=typed_ast3.Load()),
-                attr='Any', ctx=typed_ast3.Load()))
+        values = self.transform_all_subnodes(
+            node, warn=False, skip_empty=False,
+            ignored={'actual-arg', 'actual-arg-spec', 'dummy-arg'})
+        if values:
+            assert len(values) == 1
+            return typed_ast3.keyword(arg=node.attrib['name'], value=values[0])
+        return typed_ast3.arg(arg=node.attrib['name'], annotation=None)
 
     def _program(self, node: ET.Element) -> typed_ast3.AST:
         module = typed_ast3.parse('''if __name__ == '__main__':\n    pass''')
@@ -251,7 +253,7 @@ class AstTransformer:
                 for i, (var, val) in enumerate(variables):
                     val = typed_ast3.Call(
                         func=typed_ast3.Attribute(
-                            value=typed_ast3.Name(id='np'), attr='ndarray', ctx=typed_ast3.Load()),
+                            value=typed_ast3.Name(id='np'), attr='zeros', ctx=typed_ast3.Load()),
                         args=[typed_ast3.Tuple(elts=dimensions)],
                         keywords=[typed_ast3.keyword(arg='dtype', value=data_type)])
                     variables[i] = (var, val)
@@ -287,8 +289,8 @@ class AstTransformer:
         elif node.attrib['type'] == 'forall':
             return self._loop_forall(node)
         else:
-            _LOG.error('%s', ET.tostring(node).decode().rstrip())
-            raise NotImplementedError()
+            raise NotImplementedError(
+                'not implemented handling of:\n{}'.format(ET.tostring(node).decode().rstrip()))
 
     def _loop_do(self, node: ET.Element) -> typed_ast3.For:
         index_variable = node.find('./header/index-variable')
@@ -346,7 +348,6 @@ class AstTransformer:
         return target, iter_
 
     def _if(self, node: ET.Element):
-        #_LOG.warning('if header:')
         header = self.transform_all_subnodes(
             node.find('./header'), warn=False,
             ignored={'executable-construct', 'execution-part-construct'})
@@ -382,23 +383,49 @@ class AstTransformer:
             else typed_ast3.Expr(value=detail)
             for detail in details]
 
+    def _allocations(self, node: ET.Element) -> typed_ast3.Assign:
+        allocation_nodes = node.findall('./allocation')
+        allocations = []
+        for allocation_node in allocation_nodes:
+            if not allocation_node:
+                continue
+            allocation = self.transform_all_subnodes(allocation_node, warn=False)
+            assert len(allocation) == 1
+            allocations.append(allocation[0])
+        assert len(allocations) == int(node.attrib['count']), (len(allocations), node.attrib['count'])
+        assignments = []
+        for allocation in allocations:
+            assert isinstance(allocation, typed_ast3.Subscript)
+            var = allocation.value
+            if isinstance(allocation.slice, typed_ast3.Index):
+                sizes = [allocation.slice.value]
+            elif isinstance(allocation.slice, typed_ast3.ExtSlice):
+                sizes = allocation.slice.dims
+            else:
+                raise NotImplementedError('unrecognized slice type: "{}"'.format(type(allocation.slice)))
+            val = typed_ast3.Call(
+                func=typed_ast3.Attribute(
+                    value=typed_ast3.Name(id='np'), attr='zeros', ctx=typed_ast3.Load()),
+                args=[typed_ast3.Tuple(elts=sizes)], keywords=[typed_ast3.keyword(arg='dtype', value='t.Any')])
+            assignments.append(
+                typed_ast3.Assign(targets=[var], value=val, type_comment=None))
+        return assignments
+
     def _call(self, node: ET.Element) -> t.Union[typed_ast3.Call, typed_ast3.Assign]:
         called = self.transform_all_subnodes(node, warn=False, ignored={'call-stmt'})
         if len(called) != 1:
-            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-            _LOG.error('%s', [typed_astunparse.unparse(_).rstrip() for _ in called])
-            raise SyntaxError("call statement must contain a single called object")
-        if isinstance(called[0], typed_ast3.Call):
-            call = called[0]
-        else:
-            _LOG.warning('called an ambiguous node')
-            _LOG.warning('%s', ET.tostring(node).decode().rstrip())
-            func = called[0]
-            #assert name.tag == 'name' or name.
-            args = []
-            #if isinstance(name, typed_ast3.Subscript):
-            #args = node.findall('./name/subscripts/subscript')
-            call = typed_ast3.Call(func=func, args=args, keywords=[])
+            raise SyntaxError(
+                'call statement must contain a single called object, not {}, like in:\n{}'.format(
+                    [typed_astunparse.unparse(_).rstrip() for _ in called],
+                    ET.tostring(node).decode().rstrip()))
+        call = called[0]
+        if not isinstance(call, typed_ast3.Call):
+            name_node = node.find('./name')
+            is_intrinsic = name_node.attrib['id'] in self._intrinsics_converters if name_node is not None else False
+            if is_intrinsic:
+                return call
+            _LOG.warning('called an ambiguous node:\n%s', ET.tostring(node).decode().rstrip())
+            call = typed_ast3.Call(func=call, args=[], keywords=[])
         if isinstance(call.func, typed_ast3.Name) and call.func.id.startswith('MPI_'):
             call = self._transform_mpi_call(call)
         return call
@@ -693,6 +720,24 @@ class AstTransformer:
 
         return typed_ast3.List(elts=values, ctx=typed_ast3.Load())
 
+    def _range(self, node: ET.Element) -> typed_ast3.Slice:
+        lower_bound = node.find('./lower-bound')
+        upper_bound = node.find('./upper-bound')
+        step = node.find('./step')
+        if lower_bound is not None:
+            args = self.transform_all_subnodes(lower_bound)
+            assert len(args) == 1, args
+            lower_bound = args[0]
+        if upper_bound is not None:
+            args = self.transform_all_subnodes(upper_bound)
+            assert len(args) == 1, args
+            upper_bound = args[0]
+        if step is not None:
+            args = self.transform_all_subnodes(step)
+            assert len(args) == 1, args
+            step = args[0]
+        return typed_ast3.Slice(lower=lower_bound, upper=upper_bound, step=step)
+
     def _dimension(self, node: ET.Element) -> t.Union[typed_ast3.Index, typed_ast3.Slice]:
         dim_type = node.attrib['type']
         if dim_type == 'simple':
@@ -701,27 +746,7 @@ class AstTransformer:
                 _LOG.error('simple dimension should have exactly one value, but it has %i', len(values))
             return typed_ast3.Index(value=values[0])
         elif dim_type == 'range':
-            lower_bound = node.find('./lower-bound')
-            upper_bound = node.find('./upper-bound')
-            step = node.find('./step')
-            #range_args = []
-            if lower_bound is not None:
-                args = self.transform_all_subnodes(lower_bound)
-                assert len(args) == 1, args
-                #range_args.append(args[0])
-                lower_bound = args[0]
-            if upper_bound is not None:
-                args = self.transform_all_subnodes(upper_bound)
-                assert len(args) == 1, args
-                #range_args.append(typed_ast3.BinOp(
-                #    left=args[0], op=typed_ast3.Add(), right=typed_ast3.Num(n=1)))
-                upper_bound = args[0]
-            if step is not None:
-                args = self.transform_all_subnodes(step)
-                assert len(args) == 1, args
-                #range_args.append(args[0])
-                step = args[0]
-            return typed_ast3.Slice(lower=lower_bound, upper=upper_bound, step=step)
+            return self._range(node)
         elif dim_type == 'assumed-shape':
             return typed_ast3.Slice(lower=None, upper=None, step=None)
         else:
@@ -753,7 +778,7 @@ class AstTransformer:
             if length is not None:
                 if isinstance(length, typed_ast3.Num):
                     length = length.n
-                _LOG.warning(
+                _LOG.info(
                     'ignoring string length "%i" in:\n%s',
                     length, ET.tostring(node).decode().rstrip())
             return typed_ast3.parse(self._basic_types[name, t.Any], mode='eval')
@@ -814,37 +839,180 @@ class AstTransformer:
     def _names(self, node: ET.Element) -> typed_ast3.arguments:
         return self._arguments(node)
 
+    def _intrinsic_identity(self, call):
+        return call
+
+    def _intrinsic_getenv(self, call):
+        assert isinstance(call, typed_ast3.Call), type(call)
+        assert len(call.args) == 2, call.args
+        self._ensure_top_level_import('os')
+        target = call.args[1]
+        if isinstance(target, typed_ast3.keyword):
+            target = target.value
+        return typed_ast3.Assign(
+            targets=[target],
+            value=typed_ast3.Subscript(
+                value=typed_ast3.Attribute(value=typed_ast3.Name(id='os', ctx=typed_ast3.Load()),
+                                           attr='environ', ctx=typed_ast3.Load()),
+                slice=typed_ast3.Index(value=call.args[0]), ctx=typed_ast3.Load())
+            , type_comment=None)
+
+    def _intrinsic_count(self, call):
+        assert isinstance(call, typed_ast3.Call), type(call)
+        assert len(call.args) == 1, call.args
+        return typed_ast3.Call(
+            func=typed_ast3.Attribute(value=call.args[0], attr='sum', ctx=typed_ast3.Load()),
+            args=[], keywords=[])
+
+    def _intrinsic_converter_not_implemented(self, call):
+        raise NotImplementedError(
+            "cannot convert intrinsic call from raw AST:\n{}"
+            .format(typed_astunparse.unparse(call)))
+
+    _intrinsics_converters = {
+        # Fortran 77
+        'abs': _intrinsic_identity, # np.absolute
+        'acos': _intrinsic_converter_not_implemented,
+        'aimag': _intrinsic_converter_not_implemented,
+        'aint': _intrinsic_converter_not_implemented,
+        'anint': _intrinsic_converter_not_implemented,
+        'asin': _intrinsic_converter_not_implemented,
+        'atan': _intrinsic_converter_not_implemented,
+        'atan2': _intrinsic_converter_not_implemented,
+        'char': _intrinsic_converter_not_implemented,
+        'cmplx': _intrinsic_converter_not_implemented,
+        'conjg': _intrinsic_converter_not_implemented,
+        'cos': _intrinsic_converter_not_implemented,
+        'cosh': _intrinsic_converter_not_implemented,
+        'dble': _intrinsic_converter_not_implemented,
+        'dim': _intrinsic_converter_not_implemented,
+        'dprod': _intrinsic_converter_not_implemented,
+        'exp': _intrinsic_converter_not_implemented,
+        'ichar': _intrinsic_converter_not_implemented,
+        'index': _intrinsic_converter_not_implemented,
+        'int': _intrinsic_identity,
+        'len': _intrinsic_converter_not_implemented,
+        'lge': _intrinsic_converter_not_implemented,
+        'lgt': _intrinsic_converter_not_implemented,
+        'lle': _intrinsic_converter_not_implemented,
+        'llt': _intrinsic_converter_not_implemented,
+        'log': _intrinsic_converter_not_implemented,
+        'log10': _intrinsic_converter_not_implemented,
+        'max': _intrinsic_converter_not_implemented,
+        'min': _intrinsic_converter_not_implemented,
+        'mod': _intrinsic_converter_not_implemented,
+        'nint': _intrinsic_converter_not_implemented,
+        'real': _intrinsic_converter_not_implemented,
+        'sign': _intrinsic_converter_not_implemented,
+        'sin': _intrinsic_converter_not_implemented,
+        'sinh': _intrinsic_converter_not_implemented,
+        'sqrt': _intrinsic_converter_not_implemented,
+        'tan': _intrinsic_converter_not_implemented,
+        'tanh': _intrinsic_converter_not_implemented,
+        # non-standard Fortran 77
+        'getenv': _intrinsic_getenv,
+        # Fortran 90
+        # Character string functions
+        'achar': _intrinsic_converter_not_implemented,
+        'adjustl': _intrinsic_converter_not_implemented,
+        'adjustr': _intrinsic_converter_not_implemented,
+        'iachar': _intrinsic_converter_not_implemented,
+        'len_trim': _intrinsic_converter_not_implemented,
+        'repeat': _intrinsic_converter_not_implemented,
+        'scan': _intrinsic_converter_not_implemented,
+        'trim': lambda self, call: typed_ast3.Call(
+            func=typed_ast3.Attribute(value=call.args[0], attr='rstrip', ctx=typed_ast3.Load()),
+            args=call.args[1:], keywords=[]),
+        'verify': _intrinsic_converter_not_implemented,
+        # Logical function
+        'logical': _intrinsic_converter_not_implemented,
+        # Numerical inquiry functions
+        'digits': _intrinsic_converter_not_implemented,
+        'epsilon': _intrinsic_converter_not_implemented,
+        'huge': _intrinsic_converter_not_implemented,
+        'maxexponent': _intrinsic_converter_not_implemented,
+        'minexponent': _intrinsic_converter_not_implemented,
+        'precision': _intrinsic_converter_not_implemented,
+        'radix': _intrinsic_converter_not_implemented,
+        'range': _intrinsic_converter_not_implemented,
+        'tiny': _intrinsic_converter_not_implemented,
+        # Bit inquiry function
+        'bit_size': _intrinsic_converter_not_implemented,
+        # Vector- and matrix-multiplication functions
+        'dot_product': _intrinsic_converter_not_implemented,
+        'matmul': _intrinsic_converter_not_implemented,
+        # Array functions
+        'all': _intrinsic_converter_not_implemented,
+        'any': _intrinsic_converter_not_implemented,
+        'count': _intrinsic_count,
+        'maxval': _intrinsic_converter_not_implemented,
+        'minval': _intrinsic_converter_not_implemented,
+        'product': _intrinsic_converter_not_implemented,
+        'sum': _intrinsic_identity,
+        # Array location functions
+        'maxloc': lambda self, call: typed_ast3.Call(
+            func=typed_ast3.Attribute(value=typed_ast3.Name(id='np', ctx=typed_ast3.Load()),
+                                      attr='argmax', ctx=typed_ast3.Load()),
+            args=call.args, keywords=call.keywords),
+        'minloc':  lambda self, call: typed_ast3.Call(
+            func=typed_ast3.Attribute(value=typed_ast3.Name(id='np', ctx=typed_ast3.Load()),
+                                      attr='argmin', ctx=typed_ast3.Load()),
+            args=call.args, keywords=call.keywords),
+        # Fortran 95
+        'cpu_time': _intrinsic_converter_not_implemented,
+        'present': _intrinsic_converter_not_implemented,
+        'set_exponent': _intrinsic_converter_not_implemented,
+        # Fortran 2003
+        # Fortran 2008
+        }
+
     def _name(self, node: ET.Element) -> typed_ast3.AST:
-        name = typed_ast3.Name(id=node.attrib['id'], ctx=typed_ast3.Load())
-        if 'type' in node.attrib:
-            name_type = node.attrib['type']
-        else:
-            name_type = None
-            #_LOG.warning('%s', ET.tostring(node).decode().rstrip())
-            #raise NotImplementedError()
+        name_str = node.attrib['id']
+        name = typed_ast3.Name(id=name_str, ctx=typed_ast3.Load())
+        name_str = name_str.lower()
+        name_type = node.attrib['type'] if 'type' in node.attrib else None
+        is_intrinsic = name_str in self._intrinsics_converters
+
         subscripts_node = node.find('./subscripts')
-        if name_type == "procedure":
+        try:
             args = self._args(subscripts_node) if subscripts_node else []
-            return typed_ast3.Call(func=name, args=args, keywords=[])
-        if not subscripts_node:
+            call = typed_ast3.Call(func=name, args=args, keywords=[])
+            if is_intrinsic:
+                name_type = "function"
+                call = self._intrinsics_converters[name_str](self, call)
+        except SyntaxError:
+            _LOG.info('transforming name to call failed as below (continuing despite that)', exc_info=True)
+
+        slice_ = self._subscripts(subscripts_node) if subscripts_node else None
+        subscript = typed_ast3.Subscript(value=name, slice=slice_, ctx=typed_ast3.Load())
+
+        if name_type in ("procedure", "function"):
+            return call
+        elif not subscripts_node:
             return name
-        slice_ = self._subscripts(subscripts_node)
-        if not slice_:
-            return typed_ast3.Call(func=name, args=[], keywords=[])
-        return typed_ast3.Subscript(value=name, slice=slice_, ctx=typed_ast3.Load())
+        elif name_type in ("variable",):
+            return subscript
+        elif not slice_:
+            return call
+        elif name_type in ("ambiguous",):
+            return subscript
+        elif name_type is not None:
+            raise NotImplementedError('unrecognized name type "{}" in:\n{}'.format(name_type, ET.tostring(node).decode().rstrip()))
+        elif name_type is None:
+            raise NotImplementedError('no name type in:\n{}'.format(ET.tostring(node).decode().rstrip()))
+        raise NotImplementedError()
 
     def _args(self, node: ET.Element, arg_node_name: str = 'subscript') -> t.List[typed_ast3.AST]:
         args = []
         for arg_node in node.findall(f'./{arg_node_name}'):
-            new_args = self.transform_all_subnodes(
-                arg_node, warn=False, skip_empty=True,
-                ignored={'section-subscript', 'actual-arg', 'actual-arg-spec', 'argument'})
+            new_args = self.transform_all_subnodes(arg_node, warn=False, skip_empty=True)
             if not new_args:
                 continue
             if len(new_args) != 1:
-                _LOG.error('%s', ET.tostring(arg_node).decode().rstrip())
-                _LOG.error('%s', [typed_astunparse.unparse(_) for _ in new_args])
-                raise SyntaxError('args must be specified one new arg at a time')
+                raise SyntaxError(
+                    'args must be specified one new arg at a time, not like {} in:\n{}'.format(
+                        [typed_astunparse.unparse(_) for _ in new_args],
+                        ET.tostring(arg_node).decode().rstrip()))
             args += new_args
         return args
 
@@ -853,8 +1021,7 @@ class AstTransformer:
                 typed_ast3.Index, typed_ast3.Slice, typed_ast3.ExtSlice]:
         subscripts = []
         for subscript in node.findall('./subscript'):
-            new_subscripts = self.transform_all_subnodes(
-                subscript, warn=False, ignored={'section-subscript'})
+            new_subscripts = self.transform_all_subnodes(subscript, warn=False)
             if not new_subscripts:
                 continue
             if len(new_subscripts) == 1:
