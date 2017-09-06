@@ -2134,7 +2134,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void ext_function_subprogram(boolean hasPrefix) {
-		super.ext_function_subprogram(hasPrefix);
+		context = contextNode(-1); // temporarily reopen previously-closed context
+		if (verbosity >= 100)
+			super.ext_function_subprogram(hasPrefix);
+		contextClose(); // re-close previously closed context
 	}
 
 	public void main_program(boolean hasProgramStmt, boolean hasExecutionPart, boolean hasInternalSubprogramPart) {
