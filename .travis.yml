@@ -1,9 +1,7 @@
-dist: trusty
 sudo: false
 language: python
 os:
   - linux
-#  - osx
 python:
   - "3.6"
   - "3.6-dev"
@@ -46,10 +44,10 @@ install:
 
 script:
   - TEST_PACKAGING=1 TEST_DEPENDENCIES=1 python -m coverage run --branch --source . -m unittest discover --verbose
-  - python -m coverage report --show-missing
-  - coveralls
 
 after_success:
+  - python -m coverage report --show-missing
+  - coveralls
   - python -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y --output-format colorized  --reports y $(find . -name "*.py")
 
 notifications:
