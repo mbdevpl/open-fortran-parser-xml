@@ -19,6 +19,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import fortran.ofp.parser.java.FortranParserActionPrint;
@@ -1925,6 +1926,24 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void continue_stmt(Token label, Token continueKeyword, Token eos) {
 		contextOpen("statement");
 		super.continue_stmt(label, continueKeyword, eos);
+	}
+
+	public void stop_stmt(Token label, Token stopKeyword, Token eos, boolean hasStopCode) {
+		if (hasStopCode) {
+			Element outerContext = context;
+			Element value = contextNode(-1);
+			contextOpen("stop");
+			outerContext.removeChild(value);
+			context.appendChild(value);
+			Node stopCode = value.getAttributes().getNamedItem("digitString");
+			setAttribute("code", stopCode.getNodeValue());
+		} else {
+			contextOpen("stop");
+			setAttribute("code", "");
+		}
+		if (verbosity >= 60)
+			super.stop_stmt(label, stopKeyword, eos, hasStopCode);
+		contextClose("stop");
 	}
 
 	public void open_stmt(Token label, Token openKeyword, Token eos) {
