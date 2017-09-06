@@ -26,6 +26,17 @@ class Tests(unittest.TestCase):
                 with self.subTest(input_path=input_path, verbosity=verbosity):
                     execute_parser(input_path, output_path, verbosity)
 
+    def test_generate_xml(self):
+        transformations_path = _HERE.joinpath('transformations')
+        transformations_path.mkdir(exist_ok=True)
+        for input_path in INPUT_PATHS:
+            for verbosity in VERBOSITIES:
+                with self.subTest(input_path=input_path, verbosity=verbosity):
+                    output_path = transformations_path.joinpath(input_path.name + '.xml')
+                    root_node = execute_parser(input_path, output_path, verbosity)
+                    self.assertIsNotNone(root_node)
+                    self.assertTrue(output_path.exists())
+
     def test_execute_parser_stdout(self):
         for input_path in INPUT_PATHS:
             for output_path in OUTPUT_PATHS:
