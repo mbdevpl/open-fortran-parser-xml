@@ -2178,21 +2178,23 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void output_item() {
-		contextClose("output");
+		Element element = contextNode(-1);
+		contextOpen("output");
+		moveHere(element);
 		if (verbosity >= 100)
 			super.output_item();
-		contextOpen("output");
+		contextClose("output");
 	}
 
 	public void output_item_list__begin() {
 		contextOpen("outputs");
 		if (verbosity >= 100)
 			super.output_item_list__begin();
-		contextOpen("output");
+		// contextOpen("output");
 	}
 
 	public void output_item_list(int count) {
-		contextClose("output");
+		// contextClose("output");
 		if (verbosity >= 100)
 			super.output_item_list(count);
 		setAttribute("count", count);
