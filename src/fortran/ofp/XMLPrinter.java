@@ -311,13 +311,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	protected void moveHere(Element element) {
-		/*
-		Element currentContext = context;
-		contextClose();
-		if (index < 0)
-			index -= 1;
-		Element value = contextNode(index);
-		 */
 		element.getParentNode().removeChild(element);
 		context.appendChild(element);
 	}
@@ -1448,13 +1441,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (hasNotOp) {
 			if (numAndOps == 0 && !context.getTagName().equals("operand")) {
 				Element previousContext = contextNode(-1);
-				// Element outerContext = context; // unused
 				contextOpen("operand");
 				moveHere(previousContext);
-				/* duplicate
-				outerContext.removeChild(previousContext);
-				context.appendChild(previousContext);
-				*/
 			}
 			contextClose("operand");
 		}
@@ -1479,15 +1467,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 					cleanUpAfterError();
 				}
 				int startIndex = operators.get(firstRelevantOp).intValue() - 1;
-				// Element outerContext = context; // unused
 				contextOpen("operation");
 				for (int j = startIndex; j < nodes.size(); j++) {
 					Element node = nodes.get(j);
 					moveHere(node);
-					/* duplicate
-					outerContext.removeChild(node);
-					context.appendChild(node);
-					*/
 				}
 				// throw new IllegalArgumentException(
 				// "sorry, numAndOps != operands.size()... " + numAndOps + " != " + operators.size());
@@ -1506,13 +1489,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (numOrOps > 0) {
 			if (!context.getTagName().equals("operand")) {
 				Element previousContext = contextNode(-1);
-				// Element outerContext = context; // unused
 				contextOpen("operand");
 				moveHere(previousContext);
-				/* duplicate
-				outerContext.removeChild(previousContext);
-				context.appendChild(previousContext);
-				*/
 			}
 			contextClose("operand");
 		}
@@ -1540,15 +1518,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 			// TODO
 		} else {
 			Element previousContext = contextNode(-1);
-			// Element outerContext = context; // unused
 			contextOpen("operation");
 			setAttribute("type", "multiary");
 			contextOpen("operand");
 			moveHere(previousContext);
-			/* duplicate
-			outerContext.removeChild(previousContext);
-			context.appendChild(previousContext);
-			*/
 			contextClose("operand");
 		}
 		contextOpen("operator");
@@ -1595,21 +1568,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 		}
 		Element target = contextNode(-2);
 		Element value = contextNode(-1);
-		// Element outerContext = context; // unused
 		contextOpen("assignment");
 		contextOpen("target");
 		moveHere(target);
-		/* duplicate
-		outerContext.removeChild(target);
-		context.appendChild(target);
-		*/
 		contextClose("target");
 		contextOpen("value");
 		moveHere(value);
-		/* duplicate
-		outerContext.removeChild(value);
-		context.appendChild(value);
-		*/
 		contextClose("value");
 		if (verbosity >= 100)
 			super.assignment_stmt(label, eos);
@@ -1692,15 +1656,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void if_then_stmt(Token label, Token id, Token ifKeyword, Token thenKeyword, Token eos) {
 		contextRename("statement", "if");
 		ArrayList<Element> nodes = contextNodes();
-		// Element outerContext = context; // unused
 		contextOpen("header");
 		for (Element node : nodes) {
 			// System.err.println(" " + ((Element) node).getTagName());
 			moveHere(node);
-			/* duplicate
-			outerContext.removeChild(node);
-			context.appendChild(node);
-			*/
 		}
 		contextClose("header");
 		if (verbosity >= 80)
@@ -1711,15 +1670,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void else_if_stmt(Token label, Token elseKeyword, Token ifKeyword, Token thenKeyword, Token id, Token eos) {
 		Element condition = contextNode(-1);
-		// Element outerContext = context; // unused
 		contextClose("body");
 		contextOpen("header");
 		setAttribute("type", "else-if");
 		moveHere(condition);
-		/* duplicate
-		outerContext.removeChild(condition);
-		context.appendChild(condition);
-		*/
 		contextClose("header");
 		if (verbosity >= 80)
 			super.else_if_stmt(label, elseKeyword, ifKeyword, thenKeyword, id, eos);
@@ -1784,16 +1738,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void select_case_stmt(Token label, Token id, Token selectKeyword, Token caseKeyword, Token eos) {
 		contextRename("statement", "select");
-		// setAttribute("type", "case");
-		// Element outerContext = context; // unused
 		ArrayList<Element> nodes = contextNodes();
 		contextOpen("header");
 		for (Element node : nodes) {
 			moveHere(node);
-			/* duplicate
-			outerContext.removeChild(node);
-			context.appendChild(node);
-			*/
 		}
 		contextClose();
 		super.select_case_stmt(label, id, selectKeyword, caseKeyword, eos);
@@ -1917,14 +1865,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 			loopType = "do";
 			break;
 		case 1702:
-			// Element outerContext = context; // unused
 			Element node = contextNode(-1);
 			contextOpen("header");
 			moveHere(node);
-			/* duplicate
-			outerContext.removeChild(node);
-			context.appendChild(node);
-			*/
 			contextClose("header");
 			loopType = "do-while";
 			break;
@@ -1972,14 +1915,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void stop_stmt(Token label, Token stopKeyword, Token eos, boolean hasStopCode) {
 		if (hasStopCode) {
-			// Element outerContext = context; // unused
 			Element value = contextNode(-1);
 			contextOpen("stop");
 			moveHere(value);
-			/* duplicate
-			outerContext.removeChild(value);
-			context.appendChild(value);
-			*/
 			Node stopCode = value.getAttributes().getNamedItem("digitString");
 			setAttribute("code", stopCode.getNodeValue());
 		} else {
@@ -1992,14 +1930,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void open_stmt(Token label, Token openKeyword, Token eos) {
-		// Element outerContext = context; // unused
 		Element args = contextNode(-1);
 		contextOpen("open");
 		moveHere(args);
-		/* duplicate
-		outerContext.removeChild(args);
-		context.appendChild(args);
-		*/
 		super.open_stmt(label, openKeyword, eos);
 		contextClose();
 	}
@@ -2030,14 +1963,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void close_stmt(Token label, Token closeKeyword, Token eos) {
-		// Element outerContext = context; // unused
 		Element args = contextNode(-1);
 		contextOpen("close");
 		moveHere(args);
-		/* duplicate
-		outerContext.removeChild(args);
-		context.appendChild(args);
-		*/
 		super.close_stmt(label, closeKeyword, eos);
 		contextClose();
 	}
@@ -2074,23 +2002,14 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (hasInputItemList) {
 			value = contextNode(outerContext, -3);
 			moveHere(value);
-			/* duplicate
-			outerContext.removeChild(value);
-			context.appendChild(value);
-			*/
 		}
 		value = contextNode(outerContext, -2);
 		moveHere(value);
-		/* duplicate
-		outerContext.removeChild(value);
-		context.appendChild(value);
-		*/
 		super.read_stmt(label, readKeyword, eos, hasInputItemList);
 		contextClose();
 	}
 
 	public void write_stmt(Token label, Token writeKeyword, Token eos, boolean hasOutputItemList) {
-		// Element outerContext = context; // unused
 		Element args = contextNode(-1);
 		Element outputs = null;
 		if (hasOutputItemList) {
@@ -2099,33 +2018,19 @@ public class XMLPrinter extends FortranParserActionPrint {
 		}
 		contextOpen("write");
 		moveHere(args);
-		/*
-		outerContext.removeChild(args);
-		context.appendChild(args);
-		*/
-		if (hasOutputItemList) {
+		if (hasOutputItemList)
 			moveHere(outputs);
-			/* duplicate
-			outerContext.removeChild(outputs);
-			context.appendChild(outputs);
-			*/
-		}
 		super.write_stmt(label, writeKeyword, eos, hasOutputItemList);
 		contextClose();
 	}
 
 	public void print_stmt(Token label, Token printKeyword, Token eos, boolean hasOutputItemList) {
-		// Element outerContext = context; // unused
 		Element outputs = null;
 		if (hasOutputItemList)
 			outputs = contextNode(-1);
 		contextOpen("print");
 		if (hasOutputItemList) {
 			moveHere(outputs);
-			/* duplicate
-			outerContext.removeChild(outputs);
-			context.appendChild(outputs);
-			*/
 		}
 		super.print_stmt(label, printKeyword, eos, hasOutputItemList);
 		contextClose("print");
@@ -2446,24 +2351,14 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void intrinsic_stmt(Token label, Token intrinsicKeyword, Token eos) {
 		Element condition = contextNode(-1);
-		/* unused
-		Element outerContext = context;
-		*/
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "intrinsic");
 		moveHere(condition);
-		/* duplicate
-		outerContext.removeChild(condition);
-		context.appendChild(condition);
-		*/
 		super.intrinsic_stmt(label, intrinsicKeyword, eos);
 	}
 
 	public void call_stmt(Token label, Token callKeyword, Token eos, boolean hasActualArgSpecList) {
-		/* not DRY
-		Element outerContext = context;
-		*/
 		ArrayList<Element> nodes = contextNodes();
 		Element name = nodes.get(nodes.size() - 1);
 		Element arguments = null;
@@ -2476,16 +2371,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		}
 		contextOpen("call");
 		moveHere(name);
-		/* not DRY
-		outerContext.removeChild(name);
-		context.appendChild(name);
-		*/
 		if (arguments != null) {
 			moveHere(arguments);
-			/* not DRY
-			outerContext.removeChild(arguments);
-			context.appendChild(arguments);
-			*/
 		}
 		super.call_stmt(label, callKeyword, eos, hasActualArgSpecList);
 		contextClose("call");
@@ -2533,19 +2420,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 				moveHere(element);
 			} else
 				contextOpen("argument");
-			/* not DRY
-			Element outerContext = null;
-			Element e = null;
-			if (hasExpr) {
-				outerContext = context;
-				e = contextNode(-1);
-			}
-			contextOpen("argument");
-			if (hasExpr) {
-				outerContext.removeChild(e);
-				context.appendChild(e);
-			}
-			*/
 		}
 		if (verbosity >= 60)
 			super.actual_arg(hasExpr, label);
@@ -2644,22 +2518,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("hasValue", hasScalarIntExpr);
 		super.return_stmt(label, keyword, eos, hasScalarIntExpr);
 		contextClose();
-		/* not DRY
-		Element outerContext = context;
-		Element e = null;
-		if (hasScalarIntExpr)
-			e = contextNode(-1);
-		contextOpen("return");
-		setAttribute("hasValue", hasScalarIntExpr);
-		if (hasScalarIntExpr) {
-			contextOpen("value");
-			outerContext.removeChild(e);
-			context.appendChild(e);
-			contextClose("value");
-		}
-		super.return_stmt(label, keyword, eos, hasScalarIntExpr);
-		contextClose("return");
-		*/
 	}
 
 	public void contains_stmt(Token label, Token keyword, Token eos) {

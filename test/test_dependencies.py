@@ -6,7 +6,6 @@ import runpy
 import shutil
 import sys
 import unittest
-import urllib.error
 
 
 class Tests(unittest.TestCase):
