@@ -39,16 +39,13 @@ class Tests(unittest.TestCase):
     @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
     def test_deps(self):
         # as script
-        with self.assertRaises(urllib.error.HTTPError):
-            self.execute_module('open_fortran_parser.dependencies')
+        self.execute_module('open_fortran_parser.dependencies')
 
         # as module
         from open_fortran_parser.dependencies import DEPENDENCIES, ensure_dependencies
         for silent in (True, False):
-            with self.assertRaises(urllib.error.HTTPError):
-                ensure_dependencies(DEPENDENCIES, silent=silent)
+            ensure_dependencies(DEPENDENCIES, silent=silent)
 
         # create folder
         shutil.rmtree(str(self.test_root_path), ignore_errors=True)
-        with self.assertRaises(urllib.error.HTTPError):
-            ensure_dependencies(DEPENDENCIES, self.test_root_path)
+        ensure_dependencies(DEPENDENCIES, self.test_root_path)
