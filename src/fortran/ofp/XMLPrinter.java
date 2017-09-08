@@ -457,11 +457,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void kind_selector(Token token1, Token token2, boolean hasExpression) {
 		if (hasExpression) {
-			Element outerContext = context;
 			Element value = contextNode(-1);
 			contextOpen("kind");
-			outerContext.removeChild(value);
-			context.appendChild(value);
+			moveHere(value);
 		} else {
 			contextOpen("kind");
 			setAttribute("value", token2);
@@ -492,11 +490,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void char_length(boolean hasTypeParamValue) {
-		Element outerContext = context;
 		Element value = contextNode(-1);
 		contextOpen("length");
-		outerContext.removeChild(value);
-		context.appendChild(value);
+		moveHere(value);
 		super.char_length(hasTypeParamValue);
 		contextClose("length");
 	}
@@ -576,10 +572,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void ac_implied_do() {
 		Element value = context;
 		contextClose();
-		Element innerContext = context;
 		contextClose("value");
-		innerContext.removeChild(value);
-		context.appendChild(value);
+		moveHere(value);
 		super.ac_implied_do();
 		contextRename("array-constructor-values", "array-constructor");
 		contextOpen("value");
@@ -597,13 +591,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void declaration_type_spec(Token udtKeyword, int type) {
-		Element outerContext = context;
 		ArrayList<Element> typeDeclarations = contextNodes();
 		contextOpen("type");
 		setAttribute("hasLength", false);
 		setAttribute("hasKind", false);
 		for (Element declaration : typeDeclarations) {
-			outerContext.removeChild(declaration);
 			switch (declaration.getTagName()) {
 			case "intrinsic-type-spec":
 				setAttribute("name", declaration.getAttribute("keyword1"));
@@ -617,7 +609,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 			default:
 				break;
 			}
-			context.appendChild(declaration);
+			moveHere(declaration);
 		}
 		super.declaration_type_spec(udtKeyword, type);
 		contextClose("type");
@@ -650,13 +642,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void initialization(boolean hasExpr, boolean hasNullInit) {
-		Element outerContext = context;
 		Element initialValue = contextNode(-1);
 		contextOpen("initial-value");
-		outerContext.removeChild(initialValue);
-		context.appendChild(initialValue);
+		moveHere(initialValue);
 		super.initialization(hasExpr, hasNullInit);
-		contextClose("initial-value");
+		contextClose();
 	}
 
 	public void access_spec(Token keyword, int type) {
@@ -680,18 +670,17 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void array_spec_element(int type) {
-		Element outerContext = context;
 		Element value = null;
 		Element value2 = null;
 		switch (type) {
 		case 700:
 		case 701:
 		case 703:
-			value = contextNode(outerContext, -1);
+			value = contextNode(-1);
 			break;
 		case 702:
-			value = contextNode(outerContext, -2);
-			value2 = contextNode(outerContext, -1);
+			value = contextNode(-2);
+			value2 = contextNode(-1);
 			break;
 		case 704:
 		case 705:
@@ -707,31 +696,26 @@ public class XMLPrinter extends FortranParserActionPrint {
 		switch (type) {
 		case 700:
 			setAttribute("type", "simple"); // (a)
-			outerContext.removeChild(value);
-			context.appendChild(value);
+			moveHere(value);
 			break;
 		case 701:
 			setAttribute("type", "upper-bound-assumed-shape"); // (a:)
-			outerContext.removeChild(value);
-			context.appendChild(value);
+			moveHere(value);
 			break;
 		case 702:
 			setAttribute("type", "range"); // (a:b)
 			contextOpen("range");
 			contextOpen("lower-bound");
-			outerContext.removeChild(value);
-			context.appendChild(value);
+			moveHere(value);
 			contextClose();
 			contextOpen("upper-bound");
-			outerContext.removeChild(value2);
-			context.appendChild(value2);
+			moveHere(value2);
 			contextClose();
 			contextClose();
 			break;
 		case 703:
 			setAttribute("type", "upper-bound-assumed-size"); // (a:*)
-			outerContext.removeChild(value);
-			context.appendChild(value);
+			moveHere(value);
 			break;
 		case 704:
 			setAttribute("type", "assumed-size"); // (*)
@@ -766,15 +750,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void asynchronous_stmt(Token label, Token keyword, Token eos) {
 		if (!context.getTagName().equals("declaration")) {
-			Element outerContext = context;
 			Element value = contextNode(-1);
 			if (value.getTagName() != "names") {
 				System.err.println("tag name is not 'names' but '" + value.getTagName() + "'");
 				cleanUpAfterError();
 			}
 			contextOpen("declaration");
-			outerContext.removeChild(value);
-			context.appendChild(value);
+			moveHere(value);
 		}
 		super.asynchronous_stmt(label, keyword, eos);
 	}
@@ -831,7 +813,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void dimension_decl(Token id) {
-		Element outerContext = context;
 		Element value = contextNode(-1);
 		if (!context.getTagName().equals("variables")) {
 			if (!context.getTagName().equals("declaration"))
@@ -840,8 +821,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		}
 		contextOpen("variable");
 		setAttribute("name", id);
-		outerContext.removeChild(value);
-		context.appendChild(value);
+		moveHere(value);
 		/*
 		if (contextTryFind("declaration") == null) {
 			contextOpen("declaration");
@@ -886,14 +866,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void value_stmt(Token label, Token keyword, Token eos) {
-		Element outerContext = context;
 		// TODO: get also label node if there is one
 		Element value = contextNode(-1);
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "value");
-		outerContext.removeChild(value);
-		context.appendChild(value);
+		moveHere(value);
 		super.value_stmt(label, keyword, eos);
 	}
 
@@ -1013,7 +991,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void substring_range(boolean hasLowerBound, boolean hasUpperBound) {
-		Element outerContext = context;
 		Element lowerBound = null;
 		Element upperBound = null;
 		if (hasLowerBound)
@@ -1029,14 +1006,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("range");
 		if (lowerBound != null) {
 			contextOpen("lower-bound");
-			outerContext.removeChild(lowerBound);
-			context.appendChild(lowerBound);
+			moveHere(lowerBound);
 			contextClose();
 		}
 		if (upperBound != null) {
 			contextOpen("upper-bound");
-			outerContext.removeChild(upperBound);
-			context.appendChild(upperBound);
+			moveHere(upperBound);
 			contextClose();
 		}
 		if (verbosity >= 100)
@@ -1045,7 +1020,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void part_ref(Token id, boolean hasSectionSubscriptList, boolean hasImageSelector) {
-		Element outerContext = context;
 		Element e = null;
 		if (hasSectionSubscriptList) {
 			e = contextNode(-1);
@@ -1057,10 +1031,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("name");
 		setAttribute("id", id);
 		setAttribute("hasSubscripts", hasSectionSubscriptList);
-		if (hasSectionSubscriptList) {
-			outerContext.removeChild(e);
-			context.appendChild(e);
-		}
+		if (hasSectionSubscriptList)
+			moveHere(e);
 		if (verbosity >= 60)
 			super.part_ref(id, hasSectionSubscriptList, hasImageSelector);
 	}
@@ -1165,7 +1137,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.primary();
 		contextClose(); // re-close previously closed context
 		if (context.getTagName().equals("index-variable")) {
-			Element indexVariableContext = context;
 			ArrayList<Element> indexVariableNodes = contextNodes();
 			boolean hasLowerBound = false;
 			boolean hasUpperBound = false;
@@ -1188,10 +1159,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 					contextOpen("upper-bound");
 				else if (!hasStep)
 					contextOpen("step");
-				for (Element node : unassignedNodes) {
-					indexVariableContext.removeChild(node);
-					context.appendChild(node);
-				}
+				for (Element node : unassignedNodes)
+					moveHere(node);
 				contextClose();
 			}
 		}
@@ -1313,13 +1282,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void power_op(Token powerKeyword) {
 		Element previousContext = contextNode(-1);
-		Element outerContext = context;
 		contextOpen("operation");
 		setAttribute("type", "multiary");
 		// setAttribute("operator", powerKeyword);
 		contextOpen("operand");
-		outerContext.removeChild(previousContext);
-		context.appendChild(previousContext);
+		moveHere(previousContext);
 		contextClose("operand");
 		contextOpen("operator");
 		setAttribute("operator", powerKeyword);
@@ -1339,12 +1306,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 				setAttribute("type", "unary");
 			} else {
 				Element previousContext = contextNode(-1);
-				Element outerContext = context;
 				contextOpen("operation");
 				setAttribute("type", "multiary");
 				contextOpen("operand");
-				outerContext.removeChild(previousContext);
-				context.appendChild(previousContext);
+				moveHere(previousContext);
 			}
 		}
 		if (context.getTagName().equals("operand"))
@@ -1367,12 +1332,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 				setAttribute("type", "unary");
 			} else {
 				Element previousContext = contextNode(-1);
-				Element outerContext = context;
 				contextOpen("operation");
 				setAttribute("type", "multiary");
 				contextOpen("operand");
-				outerContext.removeChild(previousContext);
-				context.appendChild(previousContext);
+				moveHere(previousContext);
 			}
 		}
 		if (context.getTagName().equals("operand"))
@@ -1404,12 +1367,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 			// TODO
 		} else {
 			Element previousContext = contextNode(-1);
-			Element outerContext = context;
 			contextOpen("operation");
 			setAttribute("type", "multiary");
 			contextOpen("operand");
-			outerContext.removeChild(previousContext);
-			context.appendChild(previousContext);
+			moveHere(previousContext);
 			contextClose("operand");
 		}
 		contextOpen("operator");
@@ -1422,12 +1383,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void rel_op(Token relOp) {
 		Element previousContext = contextNode(-1);
-		Element outerContext = context;
 		contextOpen("operation");
 		setAttribute("type", "multiary");
 		contextOpen("operand");
-		outerContext.removeChild(previousContext);
-		context.appendChild(previousContext);
+		moveHere(previousContext);
 		contextClose("operand");
 		contextOpen("operator");
 		setAttribute("operator", relOp);
@@ -1539,12 +1498,10 @@ public class XMLPrinter extends FortranParserActionPrint {
 			// TODO
 		} else {
 			Element previousContext = contextNode(-1);
-			Element outerContext = context;
 			contextOpen("operation");
 			setAttribute("type", "multiary");
 			contextOpen("operand");
-			outerContext.removeChild(previousContext);
-			context.appendChild(previousContext);
+			moveHere(previousContext);
 			contextClose("operand");
 		}
 		contextOpen("operator");
