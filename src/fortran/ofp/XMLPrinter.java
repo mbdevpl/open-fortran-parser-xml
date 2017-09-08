@@ -2133,10 +2133,20 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("outputs");
 	}
 
+	public void io_implied_do() {
+		// TODO Auto-generated method stub
+		super.io_implied_do();
+	}
+
 	public void io_implied_do_object() {
 		if (verbosity >= 100)
 			super.io_implied_do_object();
 		contextOpen("statement");
+	}
+
+	public void io_implied_do_control(boolean hasStride) {
+		// TODO Auto-generated method stub
+		super.io_implied_do_control(hasStride);
 	}
 
 	public void format_item_list__begin() {
