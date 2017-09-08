@@ -310,9 +310,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute(name, value, context);
 	}
 
-	protected void moveHere(Element element) {
+	protected void moveTo(Element targetContext, Element element) {
 		element.getParentNode().removeChild(element);
-		context.appendChild(element);
+		targetContext.appendChild(element);
+	}
+
+	protected void moveHere(Element element) {
+		moveTo(context, element);
 	}
 
 	protected void printRuleHeader(int rule, String name, String addendum) {
@@ -1069,18 +1073,15 @@ public class XMLPrinter extends FortranParserActionPrint {
 			contextClose();
 			if (hasStride) {
 				Element value = contextNode(outerContext, -2);
-				outerContext.removeChild(value);
-				step.appendChild(value);
+				moveTo(step, value);
 			}
 			if (hasUpperBound) {
 				Element value = contextNode(outerContext, -2);
-				outerContext.removeChild(value);
-				upperBound.appendChild(value);
+				moveTo(upperBound, value);
 			}
 			if (hasLowerBound) {
 				Element value = contextNode(outerContext, -2);
-				outerContext.removeChild(value);
-				lowerBound.appendChild(value);
+				moveTo(lowerBound, value);
 			}
 		}
 		contextClose("subscript");
@@ -1672,8 +1673,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element ifCondition = contextNode(statementToBeFixed, 0);
 		if (!ifBody.getTagName().equals("body"))
 			throw new IllegalArgumentException();
-		statementToBeFixed.removeChild(ifCondition);
-		ifHeader.appendChild(ifCondition);
+		moveTo(ifHeader, ifCondition);
 		contextCloseAllInner("if");
 		super.if_stmt(label, ifKeyword);
 		contextClose("if");
