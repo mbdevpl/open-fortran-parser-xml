@@ -386,7 +386,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("imports", numImportStmts);
 		setAttribute("implicits", numImplStmts);
 		setAttribute("declarations", numDeclConstructs);
-		contextClose("specification");
+		contextClose();
 		contextOpen("statement");
 	}
 
@@ -579,7 +579,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("count", count);
 		if (verbosity >= 100)
 			super.ac_value_list(count);
-		contextClose("array-constructor-values", "array-constructor");
+		contextClose();
 	}
 
 	public void ac_implied_do() {
@@ -632,7 +632,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		super.entity_decl(id, hasArraySpec, hasCoarraySpec, hasCharLength, hasInitialization);
 		setAttribute("name", id);
 		setAttribute("hasInitialValue", hasInitialization);
-		contextClose("variable");
+		contextClose();
 		contextOpen("variable");
 	}
 
@@ -649,7 +649,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.entity_decl_list(count);
 		setAttribute("count", count);
-		contextClose("variables");
+		contextClose();
 	}
 
 	public void initialization(boolean hasExpr, boolean hasNullInit) {
@@ -677,7 +677,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.array_spec(count);
 		setAttribute("count", count);
-		contextClose("dimensions");
+		contextClose();
 	}
 
 	public void array_spec_element(int type) {
@@ -817,7 +817,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextCloseAllInner("variables");
 		setAttribute("count", count);
 		super.dimension_stmt(label, keyword, eos, count);
-		contextClose("variables");
+		contextClose();
 		setAttribute("type", "variable-dimensions");
 	}
 
@@ -925,7 +925,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("count", count);
 		if (verbosity >= 100)
 			super.namelist_group_object_list(count);
-		contextClose("names");
+		contextClose();
 	}
 
 	public void equivalence_set_list__begin() {
@@ -944,7 +944,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("count", count);
 		if (verbosity >= 100)
 			super.equivalence_set_list(count);
-		contextClose("equivalents");
+		contextClose();
 	}
 
 	public void equivalence_object() {
@@ -982,7 +982,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.common_block_object_list(count);
 		setAttribute("count", count);
-		contextClose("objects");
+		contextClose();
 	}
 
 	public void variable() {
@@ -1089,7 +1089,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 				moveTo(lowerBound, value);
 			}
 		}
-		contextClose("subscript");
+		contextClose();
 		if (verbosity >= 80)
 			super.section_subscript(hasLowerBound, hasUpperBound, hasStride, isAmbiguous);
 		contextOpen("subscript");
@@ -1128,7 +1128,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.allocation_list(count);
 		setAttribute("count", count);
-		contextClose("allocations");
+		contextClose();
 	}
 
 	public void allocate_object() {
@@ -1299,7 +1299,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.level_2_expr(numConcatOps);
 		if (numConcatOps > 0) {
 			setAttribute("operators", numConcatOps);
-			contextClose("operation");
+			contextClose();
 		}
 	}
 
@@ -1452,7 +1452,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 			}
 		}
 		if (numAndOps > 0 || hasNotOp)
-			contextClose("operation");
+			contextClose();
 	}
 
 	public void and_operand__not_op(boolean hasNotOp) {
@@ -1565,7 +1565,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextCloseAllInner("index-variable");
 		setAttribute("name", id);
 		super.forall_triplet_spec(id, hasStride);
-		contextClose("index-variable");
+		contextClose();
 		contextOpen("index-variable");
 	}
 
@@ -1608,7 +1608,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void forall_stmt(Token label, Token forallKeyword) {
 		contextCloseAllInner("loop");
 		super.forall_stmt(label, forallKeyword);
-		contextClose("loop");
+		contextClose();
 		contextOpen("statement"); // TODO: temporary workaround
 	}
 
@@ -1622,7 +1622,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextCloseAllInner("if");
 		if (verbosity >= 100)
 			super.if_construct();
-		contextClose("if");
+		contextClose();
 		contextOpen("statement");
 	}
 
@@ -1689,7 +1689,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		moveTo(ifHeader, ifCondition);
 		contextCloseAllInner("if");
 		super.if_stmt(label, ifKeyword);
-		contextClose("if");
+		contextClose();
 		contextOpen("statement");
 	}
 
@@ -1702,7 +1702,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextCloseAllInner("select");
 		if (verbosity >= 100)
 			super.case_construct();
-		contextClose("select");
+		contextClose();
 		contextOpen("statement");
 	}
 
@@ -1768,7 +1768,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.case_value_range_list(count);
 		setAttribute("count", count);
-		contextClose("value-ranges");
+		contextClose();
 		contextClose("header");
 	}
 
@@ -1789,7 +1789,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextCloseAllInner("loop");
 		if (verbosity >= 100)
 			super.do_construct();
-		contextClose("loop");
+		contextClose();
 		contextOpen("statement");
 	}
 
@@ -1912,7 +1912,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void connect_spec(Token id) {
 		contextCloseAllInner("keyword-argument");
 		setAttribute("argument-name", id);
-		contextClose("keyword-argument");
+		contextClose();
 		if (verbosity >= 100)
 			super.connect_spec(id);
 		contextOpen("keyword-argument");
@@ -1931,7 +1931,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.connect_spec_list(count);
 		setAttribute("count", count);
-		contextClose("keyword-arguments");
+		contextClose();
 	}
 
 	public void close_stmt(Token label, Token closeKeyword, Token eos) {
@@ -1945,7 +1945,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void close_spec(Token closeSpec) {
 		contextCloseAllInner("keyword-argument");
 		setAttribute("argument-name", closeSpec);
-		contextClose("keyword-argument");
+		contextClose();
 		if (verbosity >= 100)
 			super.close_spec(closeSpec);
 		contextOpen("keyword-argument");
@@ -1964,7 +1964,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.close_spec_list(count);
 		setAttribute("count", count);
-		contextClose("keyword-arguments");
+		contextClose();
 	}
 
 	public void read_stmt(Token label, Token readKeyword, Token eos, boolean hasInputItemList) {
@@ -2027,7 +2027,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.io_control_spec_list(count);
 		setAttribute("count", count);
-		contextClose("io-controls");
+		contextClose();
 	}
 
 	public void input_item() {
@@ -2050,7 +2050,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.input_item_list(count);
 		setAttribute("count", count);
-		contextClose("inputs");
+		contextClose();
 	}
 
 	public void output_item() {
@@ -2073,7 +2073,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.output_item_list(count);
 		setAttribute("count", count);
-		contextClose("outputs");
+		contextClose();
 	}
 
 	public void io_implied_do() {
@@ -2152,7 +2152,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextCloseAllInner("module");
 		if (verbosity >= 100)
 			super.module();
-		contextClose("module");
+		contextClose();
 	}
 
 	public void module_stmt__begin() {
@@ -2280,7 +2280,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void end_interface_stmt(Token label, Token kw1, Token kw2, Token eos, boolean hasGenericSpec) {
 		contextCloseAllInner("interface");
 		super.end_interface_stmt(label, kw1, kw2, eos, hasGenericSpec);
-		contextClose("interface");
+		contextClose();
 	}
 
 	public void interface_body(boolean hasPrefix) {
@@ -2332,7 +2332,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("count", count);
 		if (verbosity >= 100)
 			super.proc_decl_list(count);
-		contextClose("procedures");
+		contextClose();
 	}
 
 	public void intrinsic_stmt(Token label, Token intrinsicKeyword, Token eos) {
@@ -2481,13 +2481,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 		setAttribute("count", count);
 		if (verbosity >= 100)
 			super.dummy_arg_list(count);
-		contextClose("arguments");
+		contextClose();
 	}
 
 	public void end_subroutine_stmt(Token label, Token keyword1, Token keyword2, Token name, Token eos) {
 		contextCloseAllInner("subroutine");
 		super.end_subroutine_stmt(label, keyword1, keyword2, name, eos);
-		contextClose("subroutine");
+		contextClose();
 	}
 
 	public void return_stmt(Token label, Token keyword, Token eos, boolean hasScalarIntExpr) {
@@ -2562,7 +2562,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextCloseAllInner("file");
 		if (verbosity >= 100)
 			super.end_of_file(filename, path);
-		contextClose("file");
+		contextClose();
 	}
 
 	public void cleanUpAfterError() {
