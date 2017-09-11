@@ -1857,6 +1857,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 			// contextClose();
 			// contextRename("array-constructor-values", "loop");
 			// setAttribute("type", "array-constructor");
+		} else if (context.getTagName().equals("outputs")) {
+			contextOpen("loop");
 		} else {
 			System.err.println("unexpected context of 'do-variable': '" + context.getTagName() + "'");
 			cleanUpAfterError();
@@ -2075,18 +2077,34 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void io_implied_do() {
-		// TODO Auto-generated method stub
+		contextCloseAllInner("loop");
+		setAttribute("type", "implied-do");
 		super.io_implied_do();
+		Element loop = context;
+		contextClose();
+		ArrayList<Element> nodesBeforeLoop = contextNodes();
+		nodesBeforeLoop.remove(loop); // remove loop
+		Element loopHeader = contextNode(loop, 0);
+		Element loopBody = doc.createElement("body");
+		loop.insertBefore(loopBody, loopHeader);
+		for (Element node : nodesBeforeLoop) {
+			if (node.getTagName().equals("expression"))
+				moveTo(loopBody, node);
+		}
 	}
 
 	public void io_implied_do_object() {
+		context = contextNode(-1);
+		contextRename("output", "expression");
 		if (verbosity >= 100)
 			super.io_implied_do_object();
-		contextOpen("statement");
+		contextClose();
 	}
 
 	public void io_implied_do_control(boolean hasStride) {
-		// TODO Auto-generated method stub
+		// TODO in the future, use hasStride to construct index-variable node from scratch
+		contextClose("index-variable");
+		contextClose("header");
 		super.io_implied_do_control(hasStride);
 	}
 
