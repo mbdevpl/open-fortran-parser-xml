@@ -1179,6 +1179,23 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose(); // re-close previously closed context
 	}
 
+	protected void genericMultiaryOperatorIntro() {
+		int nodesCount = contextNodesCount();
+		if (nodesCount == 0)
+			return;
+		Element previousContext = contextNode(-1);
+		contextOpen("operation");
+		setAttribute("type", "multiary");
+		contextOpen("operand");
+		moveHere(previousContext);
+		contextClose();
+	}
+
+	protected void genericMultiaryOperatorOutro() {
+		if (context.getTagName().equals("operation"))
+			contextOpen("operand");
+	}
+
 	public void power_operand(boolean hasPowerOperand) {
 		if (verbosity >= 100)
 			super.power_operand(hasPowerOperand);
@@ -1386,18 +1403,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void rel_op(Token relOp) {
-		Element previousContext = contextNode(-1);
-		contextOpen("operation");
-		setAttribute("type", "multiary");
-		contextOpen("operand");
-		moveHere(previousContext);
-		contextClose();
+		genericMultiaryOperatorIntro();
 		contextOpen("operator");
 		setAttribute("operator", relOp);
 		if (verbosity >= 100)
 			super.rel_op(relOp);
 		contextClose();
-		contextOpen("operand");
+		genericMultiaryOperatorOutro();
 	}
 
 	public void and_operand(boolean hasNotOp, int numAndOps) {
