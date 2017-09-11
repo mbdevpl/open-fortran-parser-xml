@@ -154,18 +154,37 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	/**
-	 * Rename first innermost context with name equal given name.
+	 * Rename given context to given name.
 	 *
+	 * @param context
+	 * @param toName
+	 */
+	protected void contextRename(Element context, String toName) {
+		doc.renameNode(context, null, toName);
+	}
+
+	protected void contextRename(String toName) {
+		contextRename(context, context.getTagName(), toName);
+	}
+
+	/**
+	 * Rename given context to given name after making sure about its current name.
+	 *
+	 * @param context
 	 * @param fromName
 	 * @param toName
 	 */
-	protected void contextRename(String fromName, String toName) {
+	protected void contextRename(Element context, String fromName, String toName) {
 		if (context.getTagName() != fromName) {
 			System.err.println("Cannot rename current context from '" + fromName + "' to '" + toName
 					+ "' because it has unexpected name '" + context.getTagName() + "'.");
 			cleanUpAfterError();
 		}
-		doc.renameNode(context, null, toName);
+		contextRename(context, toName);
+	}
+
+	protected void contextRename(String fromName, String toName) {
+		contextRename(context, fromName, toName);
 	}
 
 	/**
@@ -1143,6 +1162,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 			super.primary();
 		contextClose(); // re-close previously closed context
 		if (context.getTagName().equals("index-variable")) {
+			// TODO remove this ugly workaround
 			ArrayList<Element> indexVariableNodes = contextNodes();
 			boolean hasLowerBound = false;
 			boolean hasUpperBound = false;
@@ -1857,7 +1877,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 			// contextClose();
 			// contextRename("array-constructor-values", "loop");
 			// setAttribute("type", "array-constructor");
-		} else if (context.getTagName().equals("outputs")) {
+		} else if (context.getTagName().equals("outputs") || context.getTagName().equals("inputs")) {
+			// TODO do this properly
 			contextOpen("loop");
 		} else {
 			System.err.println("unexpected context of 'do-variable': '" + context.getTagName() + "'");
@@ -2008,10 +2029,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void io_control_spec(boolean hasExpression, Token keyword, boolean hasAsterisk) {
-		Element element = contextNode(-1);
-		contextOpen("io-control");
+		if (hasExpression) {
+			Element element = contextNode(-1);
+			contextOpen("io-control");
+			moveHere(element);
+		} else
+			contextOpen("io-control");
 		setAttribute("argument-name", keyword == null ? "" : keyword);
-		moveHere(element);
 		super.io_control_spec(hasExpression, keyword, hasAsterisk);
 		contextClose("io-control");
 	}
@@ -2095,7 +2119,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void io_implied_do_object() {
 		context = contextNode(-1);
-		contextRename("output", "expression");
+		contextRename("expression");
 		if (verbosity >= 100)
 			super.io_implied_do_object();
 		contextClose();
