@@ -1476,8 +1476,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void and_operand__not_op(boolean hasNotOp) {
-		contextClose("operand");
+		if (hasNotOp)
+			contextClose("operand");
 		super.and_operand__not_op(hasNotOp);
+		/*
+		System.err.println("hasNotOp = " + hasNotOp);
+		cleanUpAfterError();
+		*/
 	}
 
 	public void or_operand(int numOrOps) {
