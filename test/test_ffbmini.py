@@ -43,7 +43,7 @@ class Tests(unittest.TestCase):
         from .test_compatibility import Tests as CompTests
         CompTests.check_cases_and_report(
             self, 'FFB-MINI+OFC', failure_reports_path, success_reports_path, _FFBMINI_SRC_DIR,
-            ALL_FFBMINI_SRC_PATHS, 36, True)
+            ALL_FFBMINI_SRC_PATHS, 35, True)
 
     @unittest.skip('not ready')
     def test_transform(self):
