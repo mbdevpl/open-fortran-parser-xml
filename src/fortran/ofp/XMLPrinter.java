@@ -2006,22 +2006,21 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void io_control_spec(boolean hasExpression, Token keyword, boolean hasAsterisk) {
-		contextCloseAllInner("io-control");
-		setAttribute("argument-name", keyword == null ? "" : keyword);
-		contextClose("io-control");
-		super.io_control_spec(hasExpression, keyword, hasAsterisk);
+		Element element = contextNode(-1);
 		contextOpen("io-control");
+		setAttribute("argument-name", keyword == null ? "" : keyword);
+		moveHere(element);
+		super.io_control_spec(hasExpression, keyword, hasAsterisk);
+		contextClose("io-control");
 	}
 
 	public void io_control_spec_list__begin() {
 		contextOpen("io-controls");
 		if (verbosity >= 100)
 			super.io_control_spec_list__begin();
-		contextOpen("io-control");
 	}
 
 	public void io_control_spec_list(int count) {
-		contextClose("io-control");
 		contextCloseAllInner("io-controls");
 		if (verbosity >= 100)
 			super.io_control_spec_list(count);
@@ -2030,21 +2029,22 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void input_item() {
-		contextClose("input");
+		Element element = contextNode(-1);
+		contextOpen("input");
+		moveHere(element);
 		if (verbosity >= 100)
 			super.input_item();
-		contextOpen("input");
+		contextClose("input");
 	}
 
 	public void input_item_list__begin() {
 		contextOpen("inputs");
 		if (verbosity >= 100)
 			super.input_item_list__begin();
-		contextOpen("input");
 	}
 
 	public void input_item_list(int count) {
-		contextClose("input");
+		contextCloseAllInner("inputs");
 		if (verbosity >= 100)
 			super.input_item_list(count);
 		setAttribute("count", count);
@@ -2067,6 +2067,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void output_item_list(int count) {
+		contextCloseAllInner("outputs");
 		if (verbosity >= 100)
 			super.output_item_list(count);
 		setAttribute("count", count);
