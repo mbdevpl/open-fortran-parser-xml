@@ -1688,6 +1688,18 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("assignment");
 	}
 
+	public void forall_construct() {
+		if (verbosity >= 100)
+			super.forall_construct();
+		contextClose("loop");
+		contextOpen("statement");
+	}
+
+	public void forall_construct_stmt(Token label, Token id, Token forallKeyword, Token eos) {
+		contextCloseAllInner("loop");
+		super.forall_construct_stmt(label, id, forallKeyword, eos);
+	}
+
 	public void forall_header() {
 		contextClose("header");
 		if (verbosity >= 100)
@@ -1730,6 +1742,11 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.forall_assignment_stmt(isPointerAssignment);
 		contextClose(); // re-close previously closed context
+	}
+
+	public void end_forall_stmt(Token label, Token endKeyword, Token forallKeyword, Token id, Token eos) {
+		contextCloseAllInner("loop");
+		super.end_forall_stmt(label, endKeyword, forallKeyword, id, eos);
 	}
 
 	public void forall_stmt__begin() {
@@ -2396,17 +2413,16 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void interface_stmt(Token label, Token abstractToken, Token keyword, Token eos, boolean hasGenericSpec) {
-		Element previous_context = context;
-		contextClose("header");
-		if (context.getTagName() != "interface") {
-			context = previous_context;
+		if (contextTryFind("declaration") == null)
+			// interface_stmt__begin is not always emitted
 			contextOpen("declaration");
+		if (contextTryFind("interface") == null) {
 			contextOpen("interface");
 			contextOpen("header");
-			contextClose();
 		}
+		contextClose("header");
 		super.interface_stmt(label, abstractToken, keyword, eos, hasGenericSpec);
-		if (abstractToken != null) // && abstractToken.getText().toLowerCase() == "abstract")
+		if (abstractToken != null)
 			setAttribute("type", abstractToken);
 		contextOpen("body");
 		contextOpen("specification");
