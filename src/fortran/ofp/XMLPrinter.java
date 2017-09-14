@@ -1129,31 +1129,138 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("subscripts");
 	}
 
+	public void allocate_stmt(Token label, Token allocateKeyword, Token eos, boolean hasTypeSpec,
+			boolean hasAllocOptList) {
+		/*
+		if (hasAllocOptList) {
+			System.err.println("didn't expect hasAllocOptList=" + hasAllocOptList);
+			cleanUpAfterError();
+		}
+		*/
+		Element outerContext = context;
+		contextOpen("allocate");
+		if (hasAllocOptList)
+			moveHere(contextNode(outerContext, -2));
+		moveHere(contextNode(outerContext, -1));
+		super.allocate_stmt(label, allocateKeyword, eos, hasTypeSpec, hasAllocOptList);
+		contextClose();
+	}
+
+	public void alloc_opt(Token allocOpt) {
+		contextCloseAllInner("keyword-arguments");
+		Element element = contextNode(-1);
+		contextOpen("keyword-argument");
+		setAttribute("name", allocOpt);
+		moveHere(element);
+		if (verbosity >= 100)
+			super.alloc_opt(allocOpt);
+		contextClose();
+	}
+
+	public void alloc_opt_list__begin() {
+		contextOpen("keyword-arguments");
+		if (verbosity >= 100)
+			super.alloc_opt_list__begin();
+	}
+
+	public void alloc_opt_list(int count) {
+		contextCloseAllInner("keyword-arguments");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.alloc_opt_list(count);
+		contextClose();
+	}
+
 	public void allocation(boolean hasAllocateShapeSpecList, boolean hasAllocateCoarraySpec) {
-		contextClose("allocation");
+		if (hasAllocateShapeSpecList || hasAllocateCoarraySpec) {
+			System.err.println("didn't expect hasAllocateShapeSpecList=" + hasAllocateShapeSpecList
+					+ " hasAllocateCoarraySpec=" + hasAllocateCoarraySpec);
+			cleanUpAfterError();
+		}
+		Element element = contextNode(-1);
+		if (element.getTagName().equals("expression"))
+			context = contextNode(-1);
+		else {
+			contextOpen("expression");
+			moveHere(element);
+		}
 		super.allocation(hasAllocateShapeSpecList, hasAllocateCoarraySpec);
-		contextOpen("allocation");
+		contextClose();
 	}
 
 	public void allocation_list__begin() {
-		contextOpen("allocations");
+		contextOpen("expressions");
 		if (verbosity >= 100)
 			super.allocation_list__begin();
-		contextOpen("allocation");
 	}
 
 	public void allocation_list(int count) {
-		contextCloseAllInner("allocations");
+		contextCloseAllInner("expressions");
+		setAttribute("count", count);
 		if (verbosity >= 100)
 			super.allocation_list(count);
-		setAttribute("count", count);
 		contextClose();
 	}
 
 	public void allocate_object() {
+		setAttribute("type", "variable");
+		contextClose("name");
+		Element element = contextNode(-1);
+		contextOpen("expression");
+		moveHere(element);
 		if (verbosity >= 100)
 			super.allocate_object();
-		setAttribute("type", "variable");
+		contextClose();
+	}
+
+	public void allocate_object_list__begin() {
+		contextOpen("expressions");
+		if (verbosity >= 100)
+			super.allocate_object_list__begin();
+	}
+
+	public void allocate_object_list(int count) {
+		contextCloseAllInner("expressions");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.allocate_object_list(count);
+		contextClose();
+	}
+
+	public void deallocate_stmt(Token label, Token deallocateKeyword, Token eos, boolean hasDeallocOptList) {
+		Element element2 = hasDeallocOptList ? contextNode(-2) : null;
+		Element element = contextNode(-1);
+		contextOpen("deallocate");
+		if (hasDeallocOptList)
+			moveHere(element2);
+		moveHere(element);
+		super.deallocate_stmt(label, deallocateKeyword, eos, hasDeallocOptList);
+		contextClose();
+	}
+
+	public void dealloc_opt(Token id) {
+		contextCloseAllInner("keyword-arguments");
+		Element element = contextNode(-1);
+		contextOpen("keyword-argument");
+		setAttribute("name", id);
+		moveHere(element);
+		if (verbosity >= 100)
+			super.dealloc_opt(id);
+		contextClose();
+	}
+
+	public void dealloc_opt_list__begin() {
+		contextOpen("keyword-arguments");
+		if (verbosity >= 100)
+			super.dealloc_opt_list__begin();
+	}
+
+	public void dealloc_opt_list(int count) {
+		contextCloseAllInner("keyword-arguments");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.dealloc_opt_list(count);
+		contextClose();
 	}
 
 	public void primary() {
