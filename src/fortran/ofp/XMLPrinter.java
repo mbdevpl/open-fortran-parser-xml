@@ -1934,6 +1934,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("value");
 	}
 
+	public void type_guard_stmt(Token label, Token typeKeyword, Token isOrDefaultKeyword, Token selectConstructName,
+			Token eos) {
+		// TODO Auto-generated method stub
+		contextOpen("statement");
+		super.type_guard_stmt(label, typeKeyword, isOrDefaultKeyword, selectConstructName, eos);
+	}
+
 	public void do_construct() {
 		contextCloseAllInner("loop");
 		if (verbosity >= 100)
