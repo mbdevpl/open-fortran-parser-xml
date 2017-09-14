@@ -1934,6 +1934,48 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextOpen("value");
 	}
 
+	public void associate_construct() {
+		super.associate_construct();
+		contextClose("associate");
+		contextOpen("statement");
+	}
+
+	public void associate_stmt(Token label, Token id, Token associateKeyword, Token eos) {
+		Element element = contextNode(-1);
+		contextRename("statement", "associate");
+		contextOpen("header");
+		moveHere(element);
+		contextClose();
+		super.associate_stmt(label, id, associateKeyword, eos);
+		contextOpen("body");
+		contextOpen("statement");
+	}
+
+	public void association_list__begin() {
+		contextOpen("associations");
+		if (verbosity >= 100)
+			super.association_list__begin();
+	}
+
+	public void association_list(int count) {
+		contextCloseAllInner("associations");
+		setAttribute("count", count);
+		if (verbosity >= 100)
+			super.association_list(count);
+		contextClose();
+	}
+
+	@Override
+	public void association(Token id) {
+		// TODO Auto-generated method stub
+		super.association(id);
+	}
+
+	public void end_associate_stmt(Token label, Token endKeyword, Token associateKeyword, Token id, Token eos) {
+		contextClose("body");
+		super.end_associate_stmt(label, endKeyword, associateKeyword, id, eos);
+	}
+
 	public void type_guard_stmt(Token label, Token typeKeyword, Token isOrDefaultKeyword, Token selectConstructName,
 			Token eos) {
 		// TODO Auto-generated method stub
