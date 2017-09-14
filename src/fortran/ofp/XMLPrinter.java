@@ -98,7 +98,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		ArrayList<Element> hierarchy = new ArrayList<Element>();
 		hierarchy.add(context);
 		Element found = context;
-		while (found != root) {
+		while (found != root && found.getParentNode() != null) {
 			found = (Element) found.getParentNode();
 			hierarchy.add(found);
 		}
@@ -175,11 +175,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 	 * @param toName
 	 */
 	protected void contextRename(Element context, String fromName, String toName) {
-		if (context.getTagName() != fromName) {
-			System.err.println("Cannot rename current context from '" + fromName + "' to '" + toName
+		if (context.getTagName() != fromName)
+			cleanUpAfterError("Cannot rename current context from '" + fromName + "' to '" + toName
 					+ "' because it has unexpected name '" + context.getTagName() + "'.");
-			cleanUpAfterError();
-		}
 		contextRename(context, toName);
 	}
 
@@ -197,8 +195,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 			// if (context == null)
 			// System.err.println("Cannot close given context because 'null' was given.");
 			// else
-			System.err.println("Cannot close given context because it is root node of the document.");
-			cleanUpAfterError();
+			cleanUpAfterError("Cannot close given context because it is root node of the document.");
 		}
 		this.context = (Element) context.getParentNode();
 	}
@@ -339,12 +336,32 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	protected void moveTo(Element targetContext, Element element) {
-		element.getParentNode().removeChild(element);
-		targetContext.appendChild(element);
+		if (targetContext == element)
+			cleanUpAfterError("Cannot move " + element + " to itself.");
+		try {
+			element.getParentNode().removeChild(element);
+			targetContext.appendChild(element);
+		} catch (org.w3c.dom.DOMException error) {
+			System.err.println("Cannot move " + element + " to " + targetContext + ".");
+			contextPrint(element);
+			System.err.println(contextNameHierarchy(element));
+			contextPrint(targetContext);
+			System.err.println(contextNameHierarchy(targetContext));
+			cleanUpAfterError(error);
+		}
+	}
+
+	protected void moveTo(Element targetContext, ArrayList<Element> elements) {
+		for (Element element : elements)
+			moveTo(targetContext, element);
 	}
 
 	protected void moveHere(Element element) {
 		moveTo(context, element);
+	}
+
+	protected void moveHere(ArrayList<Element> elements) {
+		moveTo(context, elements);
 	}
 
 	protected void printRuleHeader(int rule, String name, String addendum) {
@@ -432,6 +449,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void action_stmt() {
+		if (contextTryFind("statement") == null) {
+			// TODO this ugly workaround should be removed
+			contextClose();
+			Element element = contextNode(-1);
+			contextOpen("statement");
+			moveHere(element);
+		}
 		if (verbosity >= 100)
 			super.action_stmt();
 		contextClose("statement");
@@ -779,10 +803,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void asynchronous_stmt(Token label, Token keyword, Token eos) {
 		if (!context.getTagName().equals("declaration")) {
 			Element value = contextNode(-1);
-			if (value.getTagName() != "names") {
-				System.err.println("tag name is not 'names' but '" + value.getTagName() + "'");
-				cleanUpAfterError();
-			}
+			if (value.getTagName() != "names")
+				cleanUpAfterError("tag name is not 'names' but '" + value.getTagName() + "'");
 			contextOpen("declaration");
 			moveHere(value);
 		}
@@ -1051,10 +1073,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element e = null;
 		if (hasSectionSubscriptList) {
 			e = contextNode(-1);
-			if (!e.getTagName().equals("subscripts")) {
-				System.err.println("tag name is not 'subscripts' but '" + e.getTagName() + "'");
-				cleanUpAfterError();
-			}
+			if (!e.getTagName().equals("subscripts"))
+				cleanUpAfterError("tag name is not 'subscripts' but '" + e.getTagName() + "'");
 		}
 		contextOpen("name");
 		setAttribute("id", id);
@@ -1132,16 +1152,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void allocate_stmt(Token label, Token allocateKeyword, Token eos, boolean hasTypeSpec,
 			boolean hasAllocOptList) {
 		/*
-		if (hasAllocOptList) {
-			System.err.println("didn't expect hasAllocOptList=" + hasAllocOptList);
-			cleanUpAfterError();
-		}
-		*/
-		Element outerContext = context;
-		contextOpen("allocate");
 		if (hasAllocOptList)
-			moveHere(contextNode(outerContext, -2));
-		moveHere(contextNode(outerContext, -1));
+			cleanUpAfterError("didn't expect hasAllocOptList=" + hasAllocOptList);
+		*/
+		int movedCount = 1 + (hasAllocOptList ? 1 : 0);
+		ArrayList<Element> elements = contextNodes(-movedCount, movedCount);
+		contextOpen("allocate");
+		moveHere(elements);
 		super.allocate_stmt(label, allocateKeyword, eos, hasTypeSpec, hasAllocOptList);
 		contextClose();
 	}
@@ -1172,11 +1189,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void allocation(boolean hasAllocateShapeSpecList, boolean hasAllocateCoarraySpec) {
-		if (hasAllocateShapeSpecList || hasAllocateCoarraySpec) {
-			System.err.println("didn't expect hasAllocateShapeSpecList=" + hasAllocateShapeSpecList
+		if (hasAllocateShapeSpecList || hasAllocateCoarraySpec)
+			cleanUpAfterError("didn't expect hasAllocateShapeSpecList=" + hasAllocateShapeSpecList
 					+ " hasAllocateCoarraySpec=" + hasAllocateCoarraySpec);
-			cleanUpAfterError();
-		}
 		Element element = contextNode(-1);
 		if (element.getTagName().equals("expression"))
 			context = contextNode(-1);
@@ -1292,8 +1307,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 					contextOpen("upper-bound");
 				else if (!hasStep)
 					contextOpen("step");
-				for (Element node : unassignedNodes)
-					moveHere(node);
+				moveHere(unassignedNodes);
 				contextClose();
 			}
 		}
@@ -1335,10 +1349,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose("operand");
 		if (verbosity >= 100)
 			super.power_operand__power_op(powerOp);
-		if (!context.getTagName().equals("operation")) {
-			System.err.println("current context is not 'operation' but '" + context.getTagName() + "'");
-			cleanUpAfterError();
-		}
+		if (!context.getTagName().equals("operation"))
+			cleanUpAfterError("current context is not 'operation' but '" + context.getTagName() + "'");
 		setAttribute("operator", powerOp);
 	}
 
@@ -1355,10 +1367,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		// contextOpen("operator");
 		if (verbosity >= 100)
 			super.mult_operand__mult_op(multOp);
-		if (!context.getTagName().equals("operation")) {
-			System.err.println("current context is not 'operation' but '" + context.getTagName() + "'");
-			cleanUpAfterError();
-		}
+		if (!context.getTagName().equals("operation"))
+			cleanUpAfterError("current context is not 'operation' but '" + context.getTagName() + "'");
 		if (multOp == null)
 			throw new NullPointerException();
 		if (context.hasAttribute("operator") && !context.getAttribute("operator").equals(multOp.getText()))
@@ -1370,10 +1380,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		Element operationContext = null;
 		ArrayList<Element> operands = null;
 		if (addOp != null) {
-			if (!context.getTagName().equals("operand")) {
-				System.err.println("current context is not 'operand' but '" + context.getTagName() + "'");
-				cleanUpAfterError();
-			}
+			if (!context.getTagName().equals("operand"))
+				cleanUpAfterError("current context is not 'operand' but '" + context.getTagName() + "'");
 			Element operandContext = context;
 			contextClose("operand");
 			operationContext = context;
@@ -1385,10 +1393,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 				for (Element node : operationNodes)
 					if (node != operandContext && node.getTagName().equals("operand"))
 						operands.add(node);
-				if (operands.size() != 1) {
-					System.err.println("exactly 1 operand expected but " + operands.size() + " present");
-					cleanUpAfterError();
-				}
+				if (operands.size() != 1)
+					cleanUpAfterError("exactly 1 operand expected but " + operands.size() + " present");
 			}
 		}
 		if (verbosity >= 100)
@@ -1563,17 +1569,19 @@ public class XMLPrinter extends FortranParserActionPrint {
 			}
 			if (numAndOps != operators.size()) {
 				int firstRelevantOp = operators.size() - numAndOps;
-				if (firstRelevantOp < 1) {
-					System.err
-							.println("sorry, numAndOps != operands.size()... " + numAndOps + " != " + operators.size());
-					cleanUpAfterError();
-				}
+				if (firstRelevantOp < 1)
+					cleanUpAfterError(
+							"sorry, numAndOps != operands.size()... " + numAndOps + " != " + operators.size());
 				int startIndex = operators.get(firstRelevantOp).intValue() - 1;
+				nodes = contextNodes(startIndex, nodes.size() - startIndex);
 				contextOpen("operation");
+				moveHere(nodes);
+				/*
 				for (int j = startIndex; j < nodes.size(); j++) {
 					Element node = nodes.get(j);
 					moveHere(node);
 				}
+				*/
 				// throw new IllegalArgumentException(
 				// "sorry, numAndOps != operands.size()... " + numAndOps + " != " + operators.size());
 			}
@@ -1586,10 +1594,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (hasNotOp)
 			contextClose("operand");
 		super.and_operand__not_op(hasNotOp);
-		/*
-		System.err.println("hasNotOp = " + hasNotOp);
-		cleanUpAfterError();
-		*/
+		// cleanUpAfterError("hasNotOp = " + hasNotOp);
 	}
 
 	public void or_operand(int numOrOps) {
@@ -1667,10 +1672,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void assignment_stmt(Token label, Token eos) {
 		ArrayList<Element> nodes = contextNodes();
-		if (nodes.size() < 2) {
-			System.err.println("there should be at least 2 nodes for 'assignment' but " + nodes.size() + " found");
-			cleanUpAfterError();
-		}
+		if (nodes.size() < 2)
+			cleanUpAfterError("there should be at least 2 nodes for 'assignment' but " + nodes.size() + " found");
 		Element target = contextNode(-2);
 		Element value = contextNode(-1);
 		contextOpen("assignment");
@@ -1762,8 +1765,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextRename("statement", "if");
 		ArrayList<Element> nodes = contextNodes();
 		contextOpen("header");
-		for (Element node : nodes)
-			moveHere(node);
+		moveHere(nodes);
 		contextClose();
 		if (verbosity >= 80)
 			super.if_then_stmt(label, id, ifKeyword, thenKeyword, eos);
@@ -1842,9 +1844,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextRename("statement", "select");
 		ArrayList<Element> nodes = contextNodes();
 		contextOpen("header");
-		for (Element node : nodes) {
-			moveHere(node);
-		}
+		moveHere(nodes);
 		contextClose();
 		super.select_case_stmt(label, id, selectKeyword, caseKeyword, eos);
 		contextOpen("body");
@@ -1992,10 +1992,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		} else if (context.getTagName().equals("outputs") || context.getTagName().equals("inputs")) {
 			// TODO do this properly
 			contextOpen("loop");
-		} else {
-			System.err.println("unexpected context of 'do-variable': '" + context.getTagName() + "'");
-			cleanUpAfterError();
-		}
+		} else
+			cleanUpAfterError("unexpected context of 'do-variable': '" + context.getTagName() + "'");
 		contextOpen("header");
 		contextOpen("index-variable");
 		setAttribute("name", id);
@@ -2103,13 +2101,9 @@ public class XMLPrinter extends FortranParserActionPrint {
 	public void read_stmt(Token label, Token readKeyword, Token eos, boolean hasInputItemList) {
 		Element outerContext = context;
 		contextOpen("read");
-		Element value = null;
-		if (hasInputItemList) {
-			value = contextNode(outerContext, -3);
-			moveHere(value);
-		}
-		value = contextNode(outerContext, -2);
-		moveHere(value);
+		if (hasInputItemList)
+			moveHere(contextNode(outerContext, -3));
+		moveHere(contextNode(outerContext, -2));
 		super.read_stmt(label, readKeyword, eos, hasInputItemList);
 		contextClose();
 	}
@@ -2280,6 +2274,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void end_program_stmt(Token label, Token endKeyword, Token programKeyword, Token id, Token eos) {
+		if (contextTryFind("program") == null) {
+			// TODO: this workaround should not be needed
+			ArrayList<Element> nodes = contextNodes();
+			contextOpen("program");
+			moveHere(nodes);
+		}
 		contextCloseAllInner("program");
 		super.end_program_stmt(label, endKeyword, programKeyword, id, eos);
 	}
@@ -2486,10 +2486,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (name.getTagName() == "arguments") {
 			arguments = name;
 			name = contextNode(-2);
-		} else if (name.getTagName() != "name") {
-			System.err.println("tag name is not 'name' but '" + name.getTagName() + "'");
-			cleanUpAfterError();
-		}
+		} else if (name.getTagName() != "name")
+			cleanUpAfterError("tag name is not 'name' but '" + name.getTagName() + "'");
 		contextOpen("call");
 		moveHere(name);
 		if (arguments != null)
@@ -2701,10 +2699,24 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose();
 	}
 
-	public void cleanUpAfterError() {
-		new RuntimeException("Aborting construction of the AST.").printStackTrace();
+	public void cleanUpAfterError(String comment, Exception error) {
+		if (comment != null)
+			System.err.println(comment);
+		new RuntimeException("Aborting construction of the AST.", error).printStackTrace();
 		cleanUp();
 		System.exit(1);
+	}
+
+	public void cleanUpAfterError(String comment) {
+		cleanUpAfterError(comment, null);
+	}
+
+	public void cleanUpAfterError(Exception error) {
+		cleanUpAfterError(null, error);
+	}
+
+	public void cleanUpAfterError() {
+		cleanUpAfterError(null, null);
 	}
 
 	public void cleanUp() {
