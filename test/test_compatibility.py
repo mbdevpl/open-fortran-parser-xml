@@ -176,12 +176,40 @@ class Tests(unittest.TestCase):
 
         return passed_test_cases, new_passed_cases, failed_test_cases, new_failed_cases
 
-    def test_ofp_required_cases(self):
+    def test_ofp_expressions(self):
         input_paths = [pathlib.Path(_) for _ in [
-            'annex_c/c_5_3_7.f03',
-            'rule-tests/R802.f03',
-            'bug-reports/bug-1759956.f90',
+            'rule-tests/R802.f03']]
+        self.check_cases(input_paths)
+
+    def test_ofp_if(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'rule-tests/R802.f03']]
+        self.check_cases(input_paths)
+
+    def test_ofp_dimensions(self):
+        input_paths = [pathlib.Path(_) for _ in [
             'rule-tests/R510.f03']]
+        self.check_cases(input_paths)
+
+    def test_ofp_allocate_deallocate(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'rule-tests/R635.f03',
+            'rule-tests/R636.f03']]
+        self.check_cases(input_paths)
+
+    def test_ofp_do(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'annex_c/c_5_3_7.f03']]
+        self.check_cases(input_paths)
+
+    def test_ofp_implied_do(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'bug-reports/bug-1759956.f90']]
+        self.check_cases(input_paths)
+
+    def test_ofp_associate(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'rule-tests/R817.f03']]
         self.check_cases(input_paths)
 
     def test_ofp_module_contains(self):
@@ -200,6 +228,14 @@ class Tests(unittest.TestCase):
             'rule-tests/R814.f03']]
         self.check_cases(input_paths)
 
+    @unittest.skip('not ready')
+    def test_ofp_interface(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'rule-tests/R310.f03',
+            'rule-tests/R311.f03',
+            'annex_c/c_8_3_7.f03']]
+        self.check_cases(input_paths)
+
     def test_ofp_all_cases(self):
         tests_absolute_path = _OFP_TESTS_DIR.resolve()
         failure_reports_path = _HERE.joinpath('compatibility_failure')
@@ -207,4 +243,4 @@ class Tests(unittest.TestCase):
 
         self.check_cases_and_report(
             'OFP', failure_reports_path, success_reports_path, tests_absolute_path,
-            ALL_OFP_TEST_PATHS, 395)
+            ALL_OFP_TEST_PATHS, 396)

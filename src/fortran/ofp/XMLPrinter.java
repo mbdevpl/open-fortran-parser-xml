@@ -309,6 +309,14 @@ public class XMLPrinter extends FortranParserActionPrint {
 		System.err.println(contextNodes(context));
 	}
 
+	protected Attr getAttribute(String name, Element context) {
+		return (Attr) context.getAttributes().getNamedItem(name);
+	}
+
+	protected Attr getAttribute(String name) {
+		return getAttribute(name, context);
+	}
+
 	/**
 	 * Set attribute for a given context.
 	 *
@@ -1067,6 +1075,22 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.substring_range(hasLowerBound, hasUpperBound);
 		contextClose();
+	}
+
+	public void data_ref(int numPartRef) {
+		if (numPartRef > 1) {
+			assert numPartRef == 2;
+			assert context.getTagName().equals("name");
+			Element innerName = context;
+			ArrayList<Element> elements = contextNodes();
+			Attr innerNameId = getAttribute("id");
+			contextClose();
+			assert context.getTagName().equals("name");
+			moveHere(elements);
+			setAttribute("id", getAttribute("id") + "%" + innerNameId.getValue());
+			context.removeChild(innerName);
+		}
+		super.data_ref(numPartRef);
 	}
 
 	public void part_ref(Token id, boolean hasSectionSubscriptList, boolean hasImageSelector) {
@@ -1952,23 +1976,35 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void association_list__begin() {
-		contextOpen("associations");
+		contextOpen("keyword-arguments");
 		if (verbosity >= 100)
 			super.association_list__begin();
 	}
 
 	public void association_list(int count) {
-		contextCloseAllInner("associations");
+		contextCloseAllInner("keyword-arguments");
 		setAttribute("count", count);
 		if (verbosity >= 100)
 			super.association_list(count);
 		contextClose();
 	}
 
-	@Override
 	public void association(Token id) {
-		// TODO Auto-generated method stub
-		super.association(id);
+		context = contextNode(-1);
+		assert context.getNodeName().equals("keyword-argument");
+		setAttribute("argument-name", id);
+		if (verbosity >= 100)
+			super.association(id);
+		contextClose();
+	}
+
+	public void selector() {
+		Element element = contextNode(-1);
+		contextOpen("keyword-argument");
+		moveHere(element);
+		if (verbosity >= 100)
+			super.selector();
+		contextClose();
 	}
 
 	public void end_associate_stmt(Token label, Token endKeyword, Token associateKeyword, Token id, Token eos) {
@@ -2003,9 +2039,8 @@ public class XMLPrinter extends FortranParserActionPrint {
 			contextOpen("header");
 		}
 		contextClose("header");
-		if (digitString != null) {
+		if (digitString != null)
 			setAttribute("label", digitString);
-		}
 		super.do_stmt(label, id, doKeyword, digitString, eos, hasLoopControl);
 		contextOpen("body");
 		contextOpen("statement");
