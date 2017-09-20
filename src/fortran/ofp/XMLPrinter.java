@@ -177,7 +177,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 	protected void contextRename(Element context, String fromName, String toName) {
 		if (context.getTagName() != fromName)
 			cleanUpAfterError("Cannot rename current context from '" + fromName + "' to '" + toName
-					+ "' because it has unexpected name '" + context.getTagName() + "'.");
+					+ "' because its name is '" + context.getTagName() + "'.");
 		contextRename(context, toName);
 	}
 
@@ -259,12 +259,13 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (beginIndex < 0)
 			beginIndex = nodeListLength + beginIndex;
 		if (beginIndex < 0 || beginIndex >= nodeListLength)
-			throw new IndexOutOfBoundsException(
-					"starting index " + beginIndex + " out of bounds [" + 0 + ", " + nodeListLength + ")");
+			// throw new IndexOutOfBoundsException(
+			cleanUpAfterError("starting index " + beginIndex + " out of bounds [" + 0 + ", " + nodeListLength + ")");
 		if (count == 0)
 			count = nodeListLength - beginIndex;
 		if (count < 0)
-			throw new IndexOutOfBoundsException("attemted to return " + count + " number of nodes");
+			// throw new IndexOutOfBoundsException(
+			cleanUpAfterError("attemted to return " + count + " number of nodes");
 		int endIndex = beginIndex + count;
 		/*
 		System.err.println("returning " + count + " subnodes of " + context + " (from index " + beginIndex + " to "
@@ -634,18 +635,20 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void ac_implied_do() {
-		Element value = context;
-		contextClose();
-		contextClose("value");
-		moveHere(value);
 		super.ac_implied_do();
 		contextRename("array-constructor-values", "array-constructor");
 		contextOpen("value");
 	}
 
 	public void ac_implied_do_control(boolean hasStride) {
-		contextClose("index-variable");
+		genericLoopControl(hasStride);
+		Element element = contextNode(-1);
+		contextClose("value");
+		contextOpen("header");
+		moveHere(element);
+		// contextClose("index-variable");
 		super.ac_implied_do_control(hasStride);
+		contextClose();
 	}
 
 	public void type_declaration_stmt(Token label, int numAttributes, Token eos) {
@@ -1307,34 +1310,6 @@ public class XMLPrinter extends FortranParserActionPrint {
 		if (verbosity >= 100)
 			super.primary();
 		contextClose(); // re-close previously closed context
-		if (context.getTagName().equals("index-variable")) {
-			// TODO remove this ugly workaround
-			ArrayList<Element> indexVariableNodes = contextNodes();
-			boolean hasLowerBound = false;
-			boolean hasUpperBound = false;
-			boolean hasStep = false;
-			ArrayList<Element> unassignedNodes = new ArrayList<Element>();
-			for (Element node : indexVariableNodes) {
-				if (node.getTagName().equals("lower-bound"))
-					hasLowerBound = true;
-				else if (node.getTagName().equals("upper-bound"))
-					hasUpperBound = true;
-				else if (node.getTagName().equals("step"))
-					hasStep = true;
-				else
-					unassignedNodes.add(node);
-			}
-			if (unassignedNodes.size() > 0) {
-				if (!hasLowerBound)
-					contextOpen("lower-bound");
-				else if (!hasUpperBound)
-					contextOpen("upper-bound");
-				else if (!hasStep)
-					contextOpen("step");
-				moveHere(unassignedNodes);
-				contextClose();
-			}
-		}
 	}
 
 	public void parenthesized_expr() {
@@ -1344,349 +1319,232 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose(); // re-close previously closed context
 	}
 
-	protected void genericMultiaryOperatorIntro() {
-		int nodesCount = contextNodesCount();
-		if (nodesCount == 0)
-			return;
-		Element previousContext = contextNode(-1);
+	protected void genericOperationForceOpen(int nodesCount) {
+		ArrayList<Element> nodes = contextNodes(-nodesCount, nodesCount);
 		contextOpen("operation");
-		setAttribute("type", "multiary");
-		contextOpen("operand");
-		moveHere(previousContext);
-		contextClose();
+		if (nodesCount == 2)
+			setAttribute("type", "unary");
+		else if (nodesCount > 2)
+			setAttribute("type", "multiary");
+		else
+			cleanUpAfterError("didn't expect nodesCount=" + nodesCount);
+		for (Element node : nodes) {
+			boolean needsTransform = !node.getTagName().equals("operand") && !node.getTagName().equals("operator");
+			if (needsTransform)
+				contextOpen("operand");
+			moveHere(node);
+			if (needsTransform)
+				contextClose();
+		}
 	}
 
-	protected void genericMultiaryOperatorOutro() {
-		if (context.getTagName().equals("operation"))
-			contextOpen("operand");
+	protected void genericOperationOpen(int numberOfOperators) {
+		if (numberOfOperators > 0) {
+			int nodesCount = 2 * numberOfOperators + 1;
+			genericOperationForceOpen(nodesCount);
+		}
+	}
+
+	protected void genericOperationClose(int numberOfOperators) {
+		if (numberOfOperators > 0)
+			contextClose();
 	}
 
 	public void power_operand(boolean hasPowerOperand) {
+		/*
+		if (!hasPowerOperand)
+			cleanUpAfterError("didn't expect hasPowerOperand=" + hasPowerOperand);
+		*/
+		int numPowerOp = hasPowerOperand ? 1 : 0;
+		genericOperationOpen(numPowerOp);
 		if (verbosity >= 100)
 			super.power_operand(hasPowerOperand);
-		if (!hasPowerOperand)
-			return;
-		contextClose("operation");
+		genericOperationClose(numPowerOp);
 	}
 
 	public void power_operand__power_op(Token powerOp) {
-		contextClose("operand");
 		if (verbosity >= 100)
 			super.power_operand__power_op(powerOp);
-		if (!context.getTagName().equals("operation"))
-			cleanUpAfterError("current context is not 'operation' but '" + context.getTagName() + "'");
-		setAttribute("operator", powerOp);
+		cleanUpAfterError();
 	}
 
 	public void mult_operand(int numMultOps) {
+		genericOperationOpen(numMultOps);
 		if (verbosity >= 100)
 			super.mult_operand(numMultOps);
-		if (numMultOps == 0)
-			return;
-		contextClose("operation");
+		genericOperationClose(numMultOps);
 	}
 
 	public void mult_operand__mult_op(Token multOp) {
-		contextClose("operand");
-		// contextOpen("operator");
+		Element element = contextNode(-1);
+		contextOpen("operand");
+		moveHere(element);
 		if (verbosity >= 100)
 			super.mult_operand__mult_op(multOp);
-		if (!context.getTagName().equals("operation"))
-			cleanUpAfterError("current context is not 'operation' but '" + context.getTagName() + "'");
-		if (multOp == null)
-			throw new NullPointerException();
-		if (context.hasAttribute("operator") && !context.getAttribute("operator").equals(multOp.getText()))
-			throw new RuntimeException("blah blah" + context.getAttribute("operator"));
-		// setAttribute("operator", multOp);
+		contextClose();
 	}
 
 	public void signed_operand(Token addOp) {
-		Element operationContext = null;
-		ArrayList<Element> operands = null;
-		if (addOp != null) {
-			if (!context.getTagName().equals("operand"))
-				cleanUpAfterError("current context is not 'operand' but '" + context.getTagName() + "'");
-			Element operandContext = context;
-			contextClose("operand");
-			operationContext = context;
-			if (context.getAttribute("type").equals("multiary")) {
-				// fix unary operation incorrectly classified as multiary
-				setAttribute("type", "unary");
-				ArrayList<Element> operationNodes = contextNodes();
-				operands = new ArrayList<Element>();
-				for (Element node : operationNodes)
-					if (node != operandContext && node.getTagName().equals("operand"))
-						operands.add(node);
-				if (operands.size() != 1)
-					cleanUpAfterError("exactly 1 operand expected but " + operands.size() + " present");
-			}
-		}
+		if (addOp != null)
+			genericOperationForceOpen(2);
 		if (verbosity >= 100)
 			super.signed_operand(addOp);
-		if (addOp != null) {
-			contextClose("operation");
-			if (operands != null)
-				for (Element operand : operands) {
-					operationContext.removeChild(operand);
-					for (Element operandExpr : contextNodes(operand))
-						context.insertBefore(operandExpr, operationContext);
-				}
-		}
+		if (addOp != null)
+			genericOperationClose(1);
 	}
 
 	public void add_operand(int numAddOps) {
+		genericOperationOpen(numAddOps);
 		if (verbosity >= 100)
 			super.add_operand(numAddOps);
-		if (numAddOps > 0)
-			contextClose("operation");
+		genericOperationClose(numAddOps);
 	}
 
 	public void add_operand__add_op(Token addOp) {
-		contextClose("operand");
+		// same as mult_operand__mult_op()
+		Element element = contextNode(-1);
+		contextOpen("operand");
+		moveHere(element);
 		if (verbosity >= 100)
 			super.add_operand__add_op(addOp);
+		contextClose();
 	}
 
 	public void level_2_expr(int numConcatOps) {
-		if (numConcatOps > 0) {
-			contextClose("operand");
-			contextCloseAllInner("operation");
-		}
+		genericOperationOpen(numConcatOps);
 		if (verbosity >= 100)
 			super.level_2_expr(numConcatOps);
-		if (numConcatOps > 0) {
-			setAttribute("operators", numConcatOps);
-			contextClose();
-		}
+		genericOperationClose(numConcatOps);
 	}
 
 	public void power_op(Token powerKeyword) {
-		Element previousContext = contextNode(-1);
-		contextOpen("operation");
-		setAttribute("type", "multiary");
-		// setAttribute("operator", powerKeyword);
-		contextOpen("operand");
-		moveHere(previousContext);
-		contextClose();
 		contextOpen("operator");
 		setAttribute("operator", powerKeyword);
 		if (verbosity >= 100)
 			super.power_op(powerKeyword);
 		contextClose();
-		contextOpen("operand");
 	}
 
 	public void mult_op(Token multKeyword) {
-		if (context.getTagName().equals("operation")) {
-			// TODO
-		} else {
-			if (contextNodesCount() == 0) {
-				contextOpen("operation");
-				setAttribute("type", "unary");
-			} else {
-				Element previousContext = contextNode(-1);
-				contextOpen("operation");
-				setAttribute("type", "multiary");
-				contextOpen("operand");
-				moveHere(previousContext);
-			}
-		}
-		if (context.getTagName().equals("operand"))
-			contextClose("operand");
 		contextOpen("operator");
 		setAttribute("operator", multKeyword);
 		if (verbosity >= 100)
 			super.mult_op(multKeyword);
 		contextClose();
-		contextOpen("operand");
 	}
 
 	public void add_op(Token addKeyword) {
-		if (context.getTagName().equals("operation")) {
-			// TODO
-		} else {
-			if (contextNodesCount() == 0) {
-				contextOpen("operation");
-				setAttribute("type", "unary");
-			} else {
-				Element previousContext = contextNode(-1);
-				contextOpen("operation");
-				setAttribute("type", "multiary");
-				contextOpen("operand");
-				moveHere(previousContext);
-			}
-		}
-		if (context.getTagName().equals("operand"))
-			contextClose("operand");
 		contextOpen("operator");
 		setAttribute("operator", addKeyword);
 		if (verbosity >= 100)
 			super.add_op(addKeyword);
 		contextClose();
-		contextOpen("operand");
 	}
 
 	public void level_3_expr(Token relOp) {
-		if (relOp != null)
-			contextClose("operand");
+		int numRelOp = relOp == null ? 0 : 1;
+		genericOperationOpen(numRelOp);
 		if (verbosity >= 80)
 			super.level_3_expr(relOp);
-		if (relOp != null) {
-			// setAttribute("operator", relOp);
-			setAttribute("operators", 1);
-			contextClose("operation");
-		}
+		genericOperationClose(numRelOp);
 	}
 
 	public void concat_op(Token concatKeyword) {
-		if (context.getTagName().equals("operand"))
-			contextClose("operand");
-		if (context.getTagName().equals("operation")) {
-			// TODO
-		} else {
-			Element previousContext = contextNode(-1);
-			contextOpen("operation");
-			setAttribute("type", "multiary");
-			contextOpen("operand");
-			moveHere(previousContext);
-			contextClose("operand");
-		}
 		contextOpen("operator");
 		if (verbosity >= 100)
 			super.concat_op(concatKeyword);
 		setAttribute("operator", "//");
 		contextClose();
-		contextOpen("operand");
 	}
 
 	public void rel_op(Token relOp) {
-		genericMultiaryOperatorIntro();
 		contextOpen("operator");
 		setAttribute("operator", relOp);
 		if (verbosity >= 100)
 			super.rel_op(relOp);
 		contextClose();
-		genericMultiaryOperatorOutro();
 	}
 
 	public void and_operand(boolean hasNotOp, int numAndOps) {
-		if (hasNotOp) {
-			if (numAndOps == 0 && !context.getTagName().equals("operand")) {
-				Element previousContext = contextNode(-1);
-				contextOpen("operand");
-				moveHere(previousContext);
+		if (hasNotOp)
+			if (numAndOps == 0)
+				genericOperationForceOpen(2);
+			else {
+				int nodesCount = 2 * numAndOps + 2;
+				ArrayList<Element> nodes = contextNodes(-nodesCount, 2);
+				Element reference = contextNode(-nodesCount + 2);
+				contextOpen("operation");
+				Element operation = context;
+				setAttribute("type", "unary");
+				for (Element node : nodes) {
+					boolean needsTransform = !node.getTagName().equals("operand")
+							&& !node.getTagName().equals("operator");
+					if (needsTransform)
+						contextOpen("operand");
+					moveHere(node);
+					if (needsTransform)
+						contextClose();
+				}
+				contextClose();
+				context.removeChild(operation);
+				context.insertBefore(operation, reference);
+				genericOperationOpen(numAndOps);
+				// cleanUpAfterError("didn't expect hasNotOp=" + hasNotOp + " numAndOps=" + numAndOps);
 			}
-			contextClose("operand");
-		}
-		if (numAndOps > 0 || hasNotOp)
-			contextCloseAllInner("operation");
+		else
+			genericOperationOpen(numAndOps);
 		if (verbosity >= 100)
 			super.and_operand(hasNotOp, numAndOps);
-		if (numAndOps > 0) {
-			ArrayList<Element> nodes = contextNodes();
-			ArrayList<Integer> operators = new ArrayList<Integer>();
-			int i = 0;
-			for (Element node : nodes) {
-				if (node.getTagName().equals("operator"))
-					operators.add(i);
-				i += 1;
-			}
-			if (numAndOps != operators.size()) {
-				int firstRelevantOp = operators.size() - numAndOps;
-				if (firstRelevantOp < 1)
-					cleanUpAfterError(
-							"sorry, numAndOps != operands.size()... " + numAndOps + " != " + operators.size());
-				int startIndex = operators.get(firstRelevantOp).intValue() - 1;
-				nodes = contextNodes(startIndex, nodes.size() - startIndex);
-				contextOpen("operation");
-				moveHere(nodes);
-				/*
-				for (int j = startIndex; j < nodes.size(); j++) {
-					Element node = nodes.get(j);
-					moveHere(node);
-				}
-				*/
-				// throw new IllegalArgumentException(
-				// "sorry, numAndOps != operands.size()... " + numAndOps + " != " + operators.size());
-			}
-		}
-		if (numAndOps > 0 || hasNotOp)
-			contextClose();
+		if (hasNotOp)
+			genericOperationClose(numAndOps > 0 ? numAndOps : 1);
+		else
+			genericOperationClose(numAndOps);
 	}
 
 	public void and_operand__not_op(boolean hasNotOp) {
-		if (hasNotOp)
-			contextClose("operand");
-		super.and_operand__not_op(hasNotOp);
-		// cleanUpAfterError("hasNotOp = " + hasNotOp);
+		if (hasNotOp) {
+			genericOperationForceOpen(2);
+			genericOperationClose(1);
+			// cleanUpAfterError("didn't expect hasNotOp=" + hasNotOp);
+		}
+		// same as mult_operand__mult_op()
+		Element element = contextNode(-1);
+		contextOpen("operand");
+		moveHere(element);
+		if (verbosity >= 100)
+			super.and_operand__not_op(hasNotOp);
+		contextClose();
 	}
 
 	public void or_operand(int numOrOps) {
-		if (numOrOps > 0) {
-			if (!context.getTagName().equals("operand")) {
-				Element previousContext = contextNode(-1);
-				contextOpen("operand");
-				moveHere(previousContext);
-			}
-			contextClose("operand");
-		}
+		genericOperationOpen(numOrOps);
 		if (verbosity >= 100)
 			super.or_operand(numOrOps);
-		if (numOrOps > 0)
-			contextClose("operation");
+		genericOperationClose(numOrOps);
 	}
 
 	public void not_op(Token notOp) {
-		contextOpen("operation");
-		setAttribute("type", "unary");
 		contextOpen("operator");
 		setAttribute("operator", notOp);
 		if (verbosity >= 100)
 			super.not_op(notOp);
 		contextClose();
-		contextOpen("operand");
 	}
 
 	public void and_op(Token andOp) {
-		if (context.getTagName().equals("operand"))
-			contextClose("operand");
-		if (context.getTagName().equals("operation")) {
-			// TODO
-		} else {
-			Element previousContext = contextNode(-1);
-			contextOpen("operation");
-			setAttribute("type", "multiary");
-			contextOpen("operand");
-			moveHere(previousContext);
-			contextClose();
-		}
 		contextOpen("operator");
 		setAttribute("operator", andOp);
 		if (verbosity >= 100)
 			super.and_op(andOp);
 		contextClose();
-		contextOpen("operand");
 	}
 
 	public void or_op(Token orOp) {
-		if (context.getTagName().equals("operand"))
-			contextClose("operand");
-		if (context.getTagName().equals("operation")) {
-			// TODO
-		} else {
-			Element previousContext = contextNode(-1);
-			contextOpen("operation");
-			setAttribute("type", "multiary");
-			contextOpen("operand");
-			moveHere(previousContext);
-			contextClose();
-		}
 		contextOpen("operator");
 		setAttribute("operator", orOp);
 		if (verbosity >= 100)
 			super.or_op(orOp);
 		contextClose();
-		contextOpen("operand");
 	}
 
 	public void equiv_op(Token equivOp) {
@@ -1709,7 +1567,7 @@ public class XMLPrinter extends FortranParserActionPrint {
 		contextClose();
 		if (verbosity >= 100)
 			super.assignment_stmt(label, eos);
-		contextClose("assignment");
+		contextClose();
 	}
 
 	public void forall_construct() {
@@ -1720,45 +1578,47 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void forall_construct_stmt(Token label, Token id, Token forallKeyword, Token eos) {
-		contextCloseAllInner("loop");
+		contextRename("statement", "loop");
+		setAttribute("type", "forall");
+		ArrayList<Element> elements = contextNodes();
+		contextOpen("header");
+		moveHere(elements);
+		contextClose();
 		super.forall_construct_stmt(label, id, forallKeyword, eos);
-	}
-
-	public void forall_header() {
-		contextClose("header");
-		if (verbosity >= 100)
-			super.forall_header();
 		contextOpen("body");
 		contextOpen("statement");
 	}
 
+	public void forall_header() {
+		if (verbosity >= 100)
+			super.forall_header();
+	}
+
 	public void forall_triplet_spec(Token id, boolean hasStride) {
-		contextCloseAllInner("index-variable");
+		contextOpen("index-variable");
 		setAttribute("name", id);
+		contextClose();
+		Element element = contextNode(-1);
+		context.removeChild(element);
+		context.insertBefore(element, contextNode(hasStride ? -3 : -2));
+		genericLoopControl(hasStride);
+		context = contextNode(-1);
 		super.forall_triplet_spec(id, hasStride);
 		contextClose();
-		contextOpen("index-variable");
 	}
 
 	public void forall_triplet_spec_list__begin() {
-		if (contextTryFind("loop") == null) {
-			contextRename("statement", "loop");
-			setAttribute("type", "forall");
-			setAttribute("subtype", "concurrent");
-			contextOpen("header");
-		}
 		contextOpen("index-variables");
 		if (verbosity >= 100)
 			super.forall_triplet_spec_list__begin();
-		contextOpen("index-variable");
 	}
 
 	public void forall_triplet_spec_list(int count) {
-		contextClose("index-variable");
+		contextCloseAllInner("index-variables");
 		setAttribute("count", count);
 		if (verbosity >= 100)
 			super.forall_triplet_spec_list(count);
-		contextClose("index-variables");
+		contextClose();
 	}
 
 	public void forall_assignment_stmt(boolean isPointerAssignment) {
@@ -2033,14 +1893,15 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void do_stmt(Token label, Token id, Token doKeyword, Token digitString, Token eos, boolean hasLoopControl) {
-		if (!context.getTagName().equals("header")) {
-			if (!context.getTagName().equals("loop"))
-				contextOpen("loop");
-			contextOpen("header");
+		if (!hasLoopControl) {
+			contextRename("statement", "loop");
+			setAttribute("type", "do-label");
 		}
-		contextClose("header");
+		/*
 		if (digitString != null)
+			// TODO: is this needed?
 			setAttribute("label", digitString);
+		*/
 		super.do_stmt(label, id, doKeyword, digitString, eos, hasLoopControl);
 		contextOpen("body");
 		contextOpen("statement");
@@ -2048,17 +1909,34 @@ public class XMLPrinter extends FortranParserActionPrint {
 
 	public void label_do_stmt(Token label, Token id, Token doKeyword, Token digitString, Token eos,
 			boolean hasLoopControl) {
+		cleanUpAfterError("didn't expect label-do-stmt");
 		contextClose("header");
 		super.label_do_stmt(label, id, doKeyword, digitString, eos, hasLoopControl);
 		contextOpen("body");
 		contextOpen("statement");
 	}
 
+	protected void genericLoopControl(boolean hasStep) {
+		String[] contexts = { "lower-bound", "upper-bound", "step" };
+		int takenNodesCount = hasStep ? 3 : 2;
+		ArrayList<Element> takenNodes = contextNodes(-takenNodesCount, takenNodesCount);
+		context = contextNode(-takenNodesCount - 1);
+		for (int i = 0; i < takenNodes.size(); ++i) {
+			contextOpen(contexts[i]);
+			moveHere(takenNodes.get(i));
+			contextClose();
+		}
+		contextClose();
+	}
+
 	public void loop_control(Token whileKeyword, int doConstructType, boolean hasOptExpr) {
-		if (!context.getTagName().equals("statement"))
-			contextClose("index-variable");
-		else
-			contextRename("statement", "loop");
+		/*
+		if(hasOptExpr)
+			cleanUpAfterError("didn't expect hasOptExpr=" + hasOptExpr);
+		*/
+		if (doConstructType != 1700)
+			genericLoopControl(hasOptExpr);
+		contextRename("statement", "loop");
 		String loopType = "";
 		switch (doConstructType) {
 		case 1700:
@@ -2068,37 +1946,24 @@ public class XMLPrinter extends FortranParserActionPrint {
 			loopType = "do";
 			break;
 		case 1702:
-			Element node = contextNode(-1);
-			contextOpen("header");
-			moveHere(node);
-			contextClose();
 			loopType = "do-while";
 			break;
 		default:
 			throw new IllegalArgumentException(Integer.toString(doConstructType));
 		}
+		setAttribute("type", loopType);
+		Element element = contextNode(-1);
+		contextOpen("header");
+		moveHere(element);
 		super.loop_control(whileKeyword, doConstructType, hasOptExpr);
-		setAttribute("type", loopType, "loop");
+		contextClose();
 	}
 
 	public void do_variable(Token id) {
-		if (context.getTagName().equals("statement")) {
-			contextRename("statement", "loop");
-			setAttribute("type", "do");
-		} else if (context.getTagName().equals("value")) {
-			// nothing special needed
-			// contextClose();
-			// contextRename("array-constructor-values", "loop");
-			// setAttribute("type", "array-constructor");
-		} else if (context.getTagName().equals("outputs") || context.getTagName().equals("inputs")) {
-			// TODO do this properly
-			contextOpen("loop");
-		} else
-			cleanUpAfterError("unexpected context of 'do-variable': '" + context.getTagName() + "'");
-		contextOpen("header");
 		contextOpen("index-variable");
 		setAttribute("name", id);
 		super.do_variable(id);
+		contextClose();
 	}
 
 	public void end_do() {
@@ -2308,20 +2173,18 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void io_implied_do() {
-		contextCloseAllInner("loop");
+		ArrayList<Element> elements = contextNodes();
+		Element header = contextNode(-1);
+		contextOpen("loop");
 		setAttribute("type", "implied-do");
-		super.io_implied_do();
-		Element loop = context;
-		contextClose();
-		ArrayList<Element> nodesBeforeLoop = contextNodes();
-		nodesBeforeLoop.remove(loop); // remove loop
-		Element loopHeader = contextNode(loop, 0);
-		Element loopBody = doc.createElement("body");
-		loop.insertBefore(loopBody, loopHeader);
-		for (Element node : nodesBeforeLoop) {
+		contextOpen("body");
+		for (Element node : elements)
 			if (node.getTagName().equals("expression"))
-				moveTo(loopBody, node);
-		}
+				moveHere(node);
+		contextClose();
+		moveHere(header);
+		super.io_implied_do();
+		contextClose();
 	}
 
 	public void io_implied_do_object() {
@@ -2333,10 +2196,12 @@ public class XMLPrinter extends FortranParserActionPrint {
 	}
 
 	public void io_implied_do_control(boolean hasStride) {
-		// TODO in the future, use hasStride to construct index-variable node from scratch
-		contextClose("index-variable");
-		contextClose("header");
+		genericLoopControl(hasStride);
+		Element element = contextNode(-1);
+		contextOpen("header");
+		moveHere(element);
 		super.io_implied_do_control(hasStride);
+		contextClose();
 	}
 
 	public void format_item_list__begin() {

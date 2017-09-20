@@ -40,15 +40,25 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
-    def check_cases(self, input_paths):
+    def check_cases(self, input_paths, relative=True):
         for input_path in input_paths:
-            input_path = _OFP_TESTS_DIR.joinpath(input_path).resolve()
+            if relative:
+                input_path = _OFP_TESTS_DIR.joinpath(input_path).resolve()
             try:
                 root_node = parse(input_path, verbosity=100, raise_on_error=True)
                 self.assertIsNotNone(root_node)
             except subprocess.CalledProcessError as err:
                 _LOG.exception(err.stdout.decode().rstrip())
                 self.fail('failed to parse "{}"'.format(input_path))
+
+    def _check_cases(self, cases, relative=True):
+        if relative:
+            cases = [_OFP_TESTS_DIR.joinpath(input_path).resolve() for input_path in cases]
+        tests_absolute_path = _OFP_TESTS_DIR.resolve()
+        failure_reports_path = _HERE.joinpath('compatibility_failure')
+        success_reports_path = _HERE.joinpath('compatibility_success')
+        self.check_cases_and_report(
+            'some', failure_reports_path, success_reports_path, tests_absolute_path, cases)
 
     def check_cases_and_report(
             self, scenario_name: str, failure_reports_path: pathlib.Path,
@@ -176,9 +186,40 @@ class Tests(unittest.TestCase):
 
         return passed_test_cases, new_passed_cases, failed_test_cases, new_failed_cases
 
+    def test_ofp_simple_expressions(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'annex_c/c_5_3_2.f03',
+            'annex_c/c_10_2_3.f03',
+            'bug-reports/bug-182228.f90',
+            'bug-reports/bug-194452.f',
+            'bug-reports/bug-1867239.f',
+            'bug-reports/bug-3056328.f90',
+            'bug-reports/bug-3076096.f90',
+            'f08-tests/R810-F08.f08',
+            'rule-f08-tests/R711.f90',
+            'rule-tests/R706.f03',
+            'rule-tests/R802.f03',
+            'rule-tests/R826.f03']]
+        self.check_cases(input_paths)
+
+    def test_ofp_unary_expressions(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'annex_c/c_3_2_0.f03',
+            'annex_c/c_9_6_2.f03',
+            'bug-reports/bug-3040730.f90',
+            'bug-reports/bug-3056309.f90',
+            'rule-tests/R1220.f90',
+            'rule-tests/R1222.f90',
+            'rule-tests/R1223.f90']]
+        self.check_cases(input_paths)
+
     def test_ofp_expressions(self):
         input_paths = [pathlib.Path(_) for _ in [
-            'rule-tests/R802.f03']]
+            'bug-reports/bug-196993.f90',
+            'bug-reports/bug-3040730.f90',
+            'bug-reports/bug-3313167.f90',
+            'LOPe/multigrid.f90',
+            'rule-tests/R714.f03']]
         self.check_cases(input_paths)
 
     def test_ofp_if(self):
@@ -199,8 +240,24 @@ class Tests(unittest.TestCase):
 
     def test_ofp_do(self):
         input_paths = [pathlib.Path(_) for _ in [
-            'annex_c/c_5_3_7.f03']]
-        self.check_cases(input_paths)
+            'annex_c/c_5_3_7.f03',
+            'annex_c/c_8_3_7.f03',
+            'bug-reports/bug-1874171.f',
+            'rule-tests/R826.f03',
+            'rule-tests/R835.f03',
+            'rule-tests/R843.f03']]
+        self._check_cases(input_paths)
+
+    def test_ofp_do_concurrent_and_forall(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'annex_c/c_4_5.f03',
+            'annex_c/c_4_6.f03',
+            'bug-reports/bug-3076097.f90',
+            'f08-tests/R818-F08.f08',
+            'LOPe/multigrid.f90',
+            'rule-tests/R755.f03',
+            'rule-tests/R917.f03']]
+        self._check_cases(input_paths)
 
     def test_ofp_implied_do(self):
         input_paths = [pathlib.Path(_) for _ in [
@@ -214,12 +271,12 @@ class Tests(unittest.TestCase):
 
     def test_ofp_module_contains(self):
         input_paths = [pathlib.Path(_) for _ in [
-            'rule-f08-tests/R1101.f90',
+            'bug-reports/bug-3053141.f90',
             'rule-f08-tests/R1104.f90',
             'f08-tests/R1237-F08.f08',
+            'rule-f08-tests/R1101.f90',
             'rule-tests/R455.f90',
-            'rule-tests/R1104.f90',
-            'bug-reports/bug-3053141.f90']]
+            'rule-tests/R1104.f90']]
         self.check_cases(input_paths)
 
     def test_ofp_select_case(self):
@@ -228,12 +285,13 @@ class Tests(unittest.TestCase):
             'rule-tests/R814.f03']]
         self.check_cases(input_paths)
 
-    @unittest.skip('not ready')
     def test_ofp_interface(self):
         input_paths = [pathlib.Path(_) for _ in [
+            'annex_c/c_8_3_7.f03',
+            'rule-f08-tests/R1207.f90',
             'rule-tests/R310.f03',
             'rule-tests/R311.f03',
-            'annex_c/c_8_3_7.f03']]
+            'rule-tests/R1207.f90']]
         self.check_cases(input_paths)
 
     def test_ofp_all_cases(self):
@@ -243,4 +301,4 @@ class Tests(unittest.TestCase):
 
         self.check_cases_and_report(
             'OFP', failure_reports_path, success_reports_path, tests_absolute_path,
-            ALL_OFP_TEST_PATHS, 396)
+            ALL_OFP_TEST_PATHS, 398)
