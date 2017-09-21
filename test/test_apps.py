@@ -21,18 +21,18 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
-    def test_parse(self):
-        failure_reports_path = _HERE.joinpath('ffbmini_failure')
-        success_reports_path = _HERE.joinpath('ffbmini_success')
+    def test_ffb_mini(self):
+        failure_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'failure')
+        success_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'success')
 
         from .test_compatibility import Tests as CompTests
         CompTests.check_cases_and_report(
             self, 'FFB-MINI', failure_reports_path, success_reports_path, _FFBMINI_SRC_DIR,
             ALL_FFBMINI_SRC_PATHS, 25)
 
-    def test_parse_with_ofc(self):
-        failure_reports_path = _HERE.joinpath('ffbmini_ofc_failure')
-        success_reports_path = _HERE.joinpath('ffbmini_ofc_success')
+    def test_ffb_mini_with_ofc(self):
+        failure_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'failure_ofc')
+        success_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'success_ofc')
 
         from .test_compatibility import Tests as CompTests
         CompTests.check_cases_and_report(

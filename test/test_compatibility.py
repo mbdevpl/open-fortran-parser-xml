@@ -55,8 +55,8 @@ class Tests(unittest.TestCase):
         if relative:
             cases = [_OFP_TESTS_DIR.joinpath(input_path).resolve() for input_path in cases]
         tests_absolute_path = _OFP_TESTS_DIR.resolve()
-        failure_reports_path = _HERE.joinpath('compatibility_failure')
-        success_reports_path = _HERE.joinpath('compatibility_success')
+        failure_reports_path = _HERE.joinpath('results', 'compatibility', 'failure')
+        success_reports_path = _HERE.joinpath('results', 'compatibility', 'success')
         self.check_cases_and_report(
             'some', failure_reports_path, success_reports_path, tests_absolute_path, cases)
 
@@ -246,7 +246,7 @@ class Tests(unittest.TestCase):
             'rule-tests/R826.f03',
             'rule-tests/R835.f03',
             'rule-tests/R843.f03']]
-        self._check_cases(input_paths)
+        self.check_cases(input_paths)
 
     def test_ofp_do_concurrent_and_forall(self):
         input_paths = [pathlib.Path(_) for _ in [
@@ -257,7 +257,7 @@ class Tests(unittest.TestCase):
             'LOPe/multigrid.f90',
             'rule-tests/R755.f03',
             'rule-tests/R917.f03']]
-        self._check_cases(input_paths)
+        self.check_cases(input_paths)
 
     def test_ofp_implied_do(self):
         input_paths = [pathlib.Path(_) for _ in [
@@ -296,8 +296,8 @@ class Tests(unittest.TestCase):
 
     def test_ofp_all_cases(self):
         tests_absolute_path = _OFP_TESTS_DIR.resolve()
-        failure_reports_path = _HERE.joinpath('compatibility_failure')
-        success_reports_path = _HERE.joinpath('compatibility_success')
+        failure_reports_path = _HERE.joinpath('results', 'compatibility', 'failure')
+        success_reports_path = _HERE.joinpath('results', 'compatibility', 'success')
 
         self.check_cases_and_report(
             'OFP', failure_reports_path, success_reports_path, tests_absolute_path,

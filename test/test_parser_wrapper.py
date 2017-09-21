@@ -27,7 +27,7 @@ class Tests(unittest.TestCase):
                     execute_parser(input_path, output_path, verbosity)
 
     def test_generate_xml(self):
-        transformations_path = _HERE.joinpath('transformations')
+        transformations_path = _HERE.joinpath('results', 'examples')
         transformations_path.mkdir(exist_ok=True)
         for input_path in INPUT_PATHS:
             for verbosity in VERBOSITIES:
