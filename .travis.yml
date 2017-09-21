@@ -1,7 +1,6 @@
 sudo: false
 language: python
-os:
-  - linux
+os: linux
 python:
   - "3.6"
   - "3.6-dev"
@@ -37,10 +36,6 @@ install:
   - export CLASSPATH="${CLASSPATH}:$(pwd)/lib/*"
   - ant
   - export CLASSPATH="${CLASSPATH}:$(pwd)/dist/*"
-  # Python
-  - python setup.py sdist --formats=gztar,zip
-  - python setup.py bdist_wheel
-  - pip install .
 
 script:
   - TEST_PACKAGING=1 TEST_DEPENDENCIES=1 python -m coverage run --branch --source . -m unittest discover --verbose
