@@ -23,6 +23,10 @@ XML output generator for Open Fortran Parser
     :target: https://travis-ci.org/mbdevpl/open-fortran-parser-xml/blob/master/NOTICE
     :alt: license
 
+.. image:: https://codecov.io/gh/mbdevpl/open-fortran-parser-xml/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/mbdevpl/open-fortran-parser-xml
+    :alt: test coverage from Codecov
+
 Implementation has 2 parts: the XML generator written in Java, and Python wrapper for the generator.
 
 In this file, first the Java implementation is described and then the Python wrapper.
@@ -149,10 +153,6 @@ Python wrapper for the generator
 .. image:: https://img.shields.io/pypi/v/open-fortran-parser.svg
     :target: https://pypi.python.org/pypi/open-fortran-parser
     :alt: package version from PyPI
-
-.. image:: https://coveralls.io/repos/github/mbdevpl/open-fortran-parser-xml/badge.svg?branch=master
-    :target: https://coveralls.io/github/mbdevpl/open-fortran-parser-xml
-    :alt: test coverage from Coveralls
 
 Using the wrapper should not require any special knowledge about the generator itself, other than
 knowing the abstract syntax tree (AST) specification.

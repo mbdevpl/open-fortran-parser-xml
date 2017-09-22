@@ -9,8 +9,8 @@
 
 # Java coverage
 /jacoco
-/jacoco.csv
 /jacoco.exec
+/jacoco.xml
 
 # Python
 /build
