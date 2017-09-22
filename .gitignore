@@ -1,12 +1,29 @@
-/.classpath
-/.coverage
-/.externalToolBuilders
-/.*project
+# Eclipse
 /.settings
-/bin
+/.*project
+
+# Java
+/.classpath
+/.externalToolBuilders
+*.class
+
+# Java coverage
+/jacoco
+/jacoco.csv
+/jacoco.exec
+
+# Python
 /build
 /dist
-/htmlcov
-/lib
-/*.egg-info
+/.cache
 __pycache__
+*.egg
+*.egg-info
+*.pyc
+
+# Python coverage
+/htmlcov
+/.coverage
+
+# other
+/lib
