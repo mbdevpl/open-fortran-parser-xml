@@ -1,21 +1,66 @@
-sudo: false
-language: python
-os: linux
-python:
-  - "3.6"
-  - "3.6-dev"
-  - "3.7-dev"
+sudo: required
+language: generic
 matrix:
+  include:
+    - os: linux
+      language: python
+      python: "3.6"
+      env: JDK=oraclejdk8
+    - os: linux
+      language: python
+      python: "3.6"
+      env: JDK=openjdk8
+    - os: linux
+      language: python
+      python: "3.6-dev"
+      env: JDK=oraclejdk8
+    - os: linux
+      language: python
+      python: "3.6-dev"
+      env: JDK=openjdk8
+    - os: linux
+      language: python
+      python: "3.7-dev"
+      env: JDK=oraclejdk8
+    - os: linux
+      language: python
+      python: "3.7-dev"
+      env: JDK=openjdk8
+    - os: osx
+      language: generic
+      env: TRAVIS_PYTHON_VERSION="3.6.1"
+      jdk: oraclejdk8
+    - os: osx
+      language: generic
+      env: TRAVIS_PYTHON_VERSION="3.6-dev"
+      jdk: oraclejdk8
+    - os: osx
+      language: generic
+      env: TRAVIS_PYTHON_VERSION="3.7-dev"
+      jdk: oraclejdk8
   allow_failures:
     - python: "3.6-dev"
     - python: "3.7-dev"
-
-env:
-  - JDK=oraclejdk8
-  - JDK=openjdk8
+    - env: TRAVIS_PYTHON_VERSION="3.6-dev"
+    - env: TRAVIS_PYTHON_VERSION="3.7-dev"
 
 before_install:
-  - jdk_switcher use $JDK
+  - |
+    set -e
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      brew update
+      brew install pyenv || brew upgrade pyenv
+      pyenv install "${TRAVIS_PYTHON_VERSION}"
+      export PATH="$HOME/.pyenv/versions/${TRAVIS_PYTHON_VERSION}/bin:${PATH}"
+      brew install ant || brew upgrade ant
+    fi
+    set +e
+  - |
+    set -e
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      jdk_switcher use $JDK
+    fi
+    set +e
   - java -version
   - python --version
   # Open Fortran Parser
