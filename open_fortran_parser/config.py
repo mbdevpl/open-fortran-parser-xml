@@ -5,6 +5,7 @@ import pathlib
 JAVA = {
     'executable': pathlib.Path('java'),
     'classpath': None,
+    'options': None,
     'ofp_class': 'fortran.ofp.FrontEnd',
     'ofp_xml_class': 'fortran.ofp.XMLPrinter'}
 

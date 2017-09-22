@@ -19,6 +19,8 @@ def execute_parser(
     command = [str(java_config['executable'])]
     if java_config['classpath'] is not None:
         command += ['-cp', str(java_config['classpath'])]
+    if java_config['options'] is not None:
+        command += java_config['options']
     command.append(java_config['ofp_class'])
     command += ['--class', java_config['ofp_xml_class'], '--verbosity', str(verbosity)]
     if output_path is not None:
