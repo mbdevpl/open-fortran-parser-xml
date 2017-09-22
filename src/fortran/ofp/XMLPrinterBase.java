@@ -240,6 +240,14 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		return contextAttributes(context);
 	}
 
+	protected Attr contextAttribute(Element context, String name) {
+		return (Attr) context.getAttributes().getNamedItem(name);
+	}
+
+	protected Attr contextAttribute(String name) {
+		return contextAttribute(context, name);
+	}
+
 	/**
 	 * Collection of children nodes of given XML context.
 	 *

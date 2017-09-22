@@ -58,7 +58,7 @@ class Tests(unittest.TestCase):
         failure_reports_path = _HERE.joinpath('results', 'compatibility', 'failure')
         success_reports_path = _HERE.joinpath('results', 'compatibility', 'success')
         self.check_cases_and_report(
-            'some', failure_reports_path, success_reports_path, tests_absolute_path, cases)
+            'OFP', failure_reports_path, success_reports_path, tests_absolute_path, cases)
 
     def check_cases_and_report(
             self, scenario_name: str, failure_reports_path: pathlib.Path,
@@ -263,6 +263,13 @@ class Tests(unittest.TestCase):
         input_paths = [pathlib.Path(_) for _ in [
             'bug-reports/bug-1759956.f90']]
         self.check_cases(input_paths)
+
+    def test_ofp_stop(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'bug-reports/rose/bug-3385969.f90',
+            'f08-tests/R856-F08.f08',
+            'rule-tests/R849.f03']]
+        self._check_cases(input_paths)
 
     def test_ofp_associate(self):
         input_paths = [pathlib.Path(_) for _ in [

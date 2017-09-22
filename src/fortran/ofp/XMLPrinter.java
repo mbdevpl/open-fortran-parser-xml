@@ -6,7 +6,6 @@ import java.util.Arrays;
 import org.antlr.runtime.Token;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 import fortran.ofp.parser.java.IFortranParser;
 
@@ -1551,11 +1550,8 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void label_do_stmt(Token label, Token id, Token doKeyword, Token digitString, Token eos,
 			boolean hasLoopControl) {
-		cleanUpAfterError("didn't expect label-do-stmt");
-		contextClose("header");
 		super.label_do_stmt(label, id, doKeyword, digitString, eos, hasLoopControl);
-		contextOpen("body");
-		contextOpen("statement");
+		cleanUpAfterError("didn't expect label-do-stmt");
 	}
 
 	public void loop_control(Token whileKeyword, int doConstructType, boolean hasOptExpr) {
@@ -1616,8 +1612,8 @@ public class XMLPrinter extends XMLPrinterBase {
 			Element value = contextNode(-1);
 			contextOpen("stop");
 			moveHere(value);
-			Node stopCode = value.getAttributes().getNamedItem("digitString");
-			setAttribute("code", stopCode.getNodeValue());
+			Attr stopCode = contextAttribute(value, "digitString");
+			setAttribute("code", stopCode.getValue());
 		} else {
 			contextOpen("stop");
 			setAttribute("code", "");
