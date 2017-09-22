@@ -2,6 +2,7 @@
 
 import logging
 import pathlib
+import platform
 import unittest
 
 from .test_compatibility import all_fortran_paths
@@ -30,6 +31,7 @@ class Tests(unittest.TestCase):
             self, 'FFB-MINI', failure_reports_path, success_reports_path, _FFBMINI_SRC_DIR,
             ALL_FFBMINI_SRC_PATHS, 25)
 
+    @unittest.skipIf(platform.system() == 'Windows', 'OFC not available on Windows')
     def test_ffb_mini_with_ofc(self):
         failure_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'failure_ofc')
         success_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'success_ofc')

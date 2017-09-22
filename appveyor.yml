@@ -1,0 +1,49 @@
+version: "{build}"
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python36"
+      JAVA: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
+    - PYTHON: "C:\\Python36-x64"
+      JAVA: "C:\\Program Files\\Java\\jdk1.8.0"
+
+init:
+  - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
+  - set JAVA_HOME=%JAVA%
+  - set PATH=%JAVA%\\bin;%PATH%
+  # Open Fortran Parser
+  - git clone "https://github.com/OpenFortranProject/open-fortran-parser" "..\\open-fortran-parser"
+  # Open Fortran Compiler
+  #- git clone "https://github.com/codethinklabs/ofc" "../open-fortran-compiler"
+  #- cd "..\\open-fortran-compiler" && make && cd -
+  #- set PATH=%PATH%;%cd%\\..\\open-fortran-compiler
+  # FFB-MINI app
+  - git clone "https://github.com/mbdevpl/ffb-mini" "..\\ffb-mini" --branch ofp_tests
+  # ant
+  - ps: Invoke-WebRequest "https://www.apache.org/dist/ant/binaries/apache-ant-1.10.1-bin.zip" -OutFile "..\\apache-ant-1.10.1-bin.zip"
+  - ps: Expand-Archive -Path "..\\apache-ant-1.10.1-bin.zip" -DestinationPath "C:\\"
+  - set PATH=C:\\apache-ant-1.10.1\\bin;%PATH%
+
+install:
+  - pip install -U pip
+  - pip install -U -r dev_requirements.txt
+  # Java
+  - python open_fortran_parser\\dev_dependencies.py
+  - set CLASSPATH=%CLASSPATH%;%cd%\\lib\\*
+  - ant
+  - set CLASSPATH=%CLASSPATH%;%cd%\\dist\\*
+  # Java tests
+  - ps: Invoke-WebRequest "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.7.9/org.jacoco.agent-0.7.9-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.7.9-runtime.jar"
+  - ps: Invoke-WebRequest "https://oss.sonatype.org/content/repositories/snapshots/org/jacoco/org.jacoco.cli/0.7.10-SNAPSHOT/org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar" -OutFile "lib\\org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar"
+
+build: off
+
+test_script:
+  - set TEST_PACKAGING=1
+  - set TEST_DEPENDENCIES=1 
+  - python -m coverage run --branch --source . -m unittest discover --verbose
+
+after_test:
+  - python -m coverage report --show-missing
+  - java -jar "lib\\org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar" report "jacoco.exec" --classfiles "bin\\" --sourcefiles "src\\" --xml jacoco.xml
+  - codecov

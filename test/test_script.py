@@ -2,7 +2,6 @@
 
 import contextlib
 import io
-import logging
 import os
 import pathlib
 import runpy
@@ -10,10 +9,16 @@ import sys
 import tempfile
 import unittest
 
-_LOG = logging.getLogger(__name__)
+INPUT_PATH = pathlib.Path('test', 'examples', 'empty.f')
+
+
+def normalize_newlines(text: str) -> str:
+    return text.replace('\r\n', '\n').replace('\r', '\n')
 
 
 class Tests(unittest.TestCase):
+
+    maxDiff = None
 
     def run_script(self, *args):
         sys.argv = ['open_fortran_parser'] + list(args)
@@ -24,24 +29,26 @@ class Tests(unittest.TestCase):
         with contextlib.redirect_stderr(f):
             with self.assertRaises(SystemExit):
                 self.run_script()
-        _LOG.warning('%s', f.getvalue())
+        text = f.getvalue()
+        self.assertIn('usage', text)
+        self.assertIn('open_fortran_parser', text)
 
     def test_verbosity_flag(self):
-        input_path = pathlib.Path('test', 'examples', 'miranda_io.f90')
         verbosities = (0, 20, 40, 60, 80, 100)
         for verbosity in verbosities:
             f = io.StringIO()
             with contextlib.redirect_stdout(f):
-                self.run_script(str(input_path))
+                self.run_script('-v', str(verbosity), str(INPUT_PATH))
+            self.assertGreater(len(f.getvalue()), 0)
 
     def test_output_flag(self):
-        input_path = pathlib.Path('test', 'examples', 'miranda_io.f90')
         output_file = tempfile.NamedTemporaryFile(delete=False)
         output_file.close()
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
-            self.run_script(str(input_path))
-        self.run_script(str(input_path), output_file.name)
+            self.run_script(str(INPUT_PATH))
+        self.run_script(str(INPUT_PATH), output_file.name)
         with open(output_file.name) as output_file:
-            self.assertEqual(f.getvalue(), output_file.read())
+            self.assertEqual(normalize_newlines(f.getvalue()),
+                             normalize_newlines(output_file.read()))
         os.remove(output_file.name)

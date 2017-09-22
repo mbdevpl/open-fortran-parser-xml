@@ -2,6 +2,7 @@
 
 import logging
 import pathlib
+import platform
 import unittest
 
 from open_fortran_parser.ofc_wrapper import CodeForm, execute_compiler, transpile
@@ -20,6 +21,7 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
+    @unittest.skipIf(platform.system() == 'Windows', 'OFC not available on Windows')
     def test_execute_compiler(self):
         for input_path in INPUT_PATHS:
             for output_path in OUTPUT_PATHS:
@@ -29,6 +31,7 @@ class Tests(unittest.TestCase):
                                           indent=indent, form=form):
                             execute_compiler(input_path, output_path, indent, form)
 
+    @unittest.skipIf(platform.system() == 'Windows', 'OFC not available on Windows')
     def test_transpile(self):
         for input_path in INPUT_PATHS:
             for indent in INDENTS:
