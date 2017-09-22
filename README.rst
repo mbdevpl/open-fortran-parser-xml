@@ -19,13 +19,17 @@ XML output generator for Open Fortran Parser
     :target: https://travis-ci.org/mbdevpl/open-fortran-parser-xml
     :alt: build status from Travis CI
 
-.. image:: https://img.shields.io/pypi/l/open-fortran-parser.svg
-    :target: https://travis-ci.org/mbdevpl/open-fortran-parser-xml/blob/master/NOTICE
-    :alt: license
+.. image:: https://api.codacy.com/project/badge/Grade/1e5602a9efed41998eca0437d84cc1db
+    :target: https://www.codacy.com/app/mbdevpl/open-fortran-parser-xml
+    :alt: grade from Codacy
 
 .. image:: https://codecov.io/gh/mbdevpl/open-fortran-parser-xml/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/mbdevpl/open-fortran-parser-xml
     :alt: test coverage from Codecov
+
+.. image:: https://img.shields.io/pypi/l/open-fortran-parser.svg
+    :target: https://travis-ci.org/mbdevpl/open-fortran-parser-xml/blob/master/NOTICE
+    :alt: license
 
 Implementation has 2 parts: the XML generator written in Java, and Python wrapper for the generator.
 
@@ -35,6 +39,10 @@ In this file, first the Java implementation is described and then the Python wra
 ==========================
 Java XML generator for OFP
 ==========================
+
+.. image:: https://img.shields.io/github/release/mbdevpl/open-fortran-parser-xml.svg
+    :target: https://github.com/mbdevpl/open-fortran-parser-xml/releases
+    :alt: latest GitHub release
 
 This is an extension of Open Fortran Parser (OFP), which outputs abstract syntaxt tree (AST)
 of parsed Fortran file in XML format - to a file or to :java:`System.out`.
@@ -48,7 +56,7 @@ dependencies
 
 *   Open Fortran Parser 0.8.4-1
 
-    https://github.com/mbdevpl/open-fortran-parser/releases/tag/v0.8.4-1
+    https://github.com/mbdevpl/open-fortran-parser/releases
 
     This is a patched version of OFP. Specifically, `FortranParserActionPrint` class in OFP
     could not be properly subclassed due to access levels of members of that class, so for example
