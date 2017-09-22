@@ -45,9 +45,13 @@ script:
 
 after_success:
   - python -m coverage report --show-missing
+  #- bash <(curl -s https://codecov.io/bash) -cF python
   - coveralls
-  - java -jar "lib/org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --csv "jacoco.csv" --html "jacoco/" --sourcefiles "src/"
+  - pip install -U codecov
+  - java -jar "lib/org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --csv "jacoco.csv" --html "jacoco/" --sourcefiles "src/" --xml jacoco.xml
   - cat "jacoco.csv"
+  #- bash <(curl -s https://codecov.io/bash) -cF java
+  - codecov
   - python -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y --output-format colorized  --reports y $(find . -name "*.py")
 
 notifications:
