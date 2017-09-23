@@ -11,13 +11,16 @@
     :language: xml
 
 
-============================================
 XML output generator for Open Fortran Parser
 ============================================
 
 .. image:: https://travis-ci.org/mbdevpl/open-fortran-parser-xml.svg?branch=master
     :target: https://travis-ci.org/mbdevpl/open-fortran-parser-xml
     :alt: build status from Travis CI
+
+.. image:: https://ci.appveyor.com/api/projects/status/github/mbdevpl/open-fortran-parser-xml?branch=master&svg=true
+    :target: https://ci.appveyor.com/project/mbdevpl/open-fortran-parser-xml
+    :alt: build status from AppVeyor
 
 .. image:: https://api.codacy.com/project/badge/Grade/1e5602a9efed41998eca0437d84cc1db
     :target: https://www.codacy.com/app/mbdevpl/open-fortran-parser-xml
@@ -33,10 +36,11 @@ XML output generator for Open Fortran Parser
 
 Implementation has 2 parts: the XML generator written in Java, and Python wrapper for the generator.
 
+The implementation is tested on Linux, OS X and Windows.
+
 In this file, first the Java implementation is described and then the Python wrapper.
 
 
-==========================
 Java XML generator for OFP
 ==========================
 
@@ -48,7 +52,6 @@ This is an extension of Open Fortran Parser (OFP), which outputs abstract syntax
 of parsed Fortran file in XML format - to a file or to :java:`System.out`.
 
 
-------------
 dependencies
 ------------
 
@@ -74,7 +77,6 @@ dependencies
     https://commons.apache.org/proper/commons-cli/download_cli.cgi
 
 
-------------
 how to build
 ------------
 
@@ -95,7 +97,6 @@ Build:
 This will create a `.jar` file in `dist` directory.
 
 
-----------
 how to run
 ----------
 
@@ -135,26 +136,67 @@ And to dump XML with maximum verbosity to console:
       --verbosity 100 some_fortran_file.f
 
 
------------------
 AST specification
 -----------------
 
 Root node is :xml:`<ofp>`, it has one subnode :xml:`<file>`.
 
-Combound statements, e.g.:
+Inside the :xml:`<file>`, there might be one or many of the following nodes:
+
+*   :xml:`<program>`
+*   :xml:`<subroutine>`
+*   :xml:`<module>`
+*   :xml:`<interface>`
+*   ...
+
+Each of which has :xml:`<header>` and :xml:`<body>`.
+Additionally, :xml:`<module>` has :xml:`<members>`.
+
+In the body, a special node :xml:`<specification>`, followed by a collection of statements can be found.
+
+The :xml:`<specification>` contains a collection of :xml:`<declaraion>` nodes.
+
+And, each of the statements listed after the specification, can be either compound or simple.
+
+Compound statements, e.g.:
 
 *   :xml:`<if>`
 *   :xml:`<loop>`
+*   :xml:`<select>`
+*   ...
 
 each have :xml:`<header>` and :xml:`<body>`.
 
 In the header of the :xml:`<loop>`, at least one :xml:`<index-variable>` is present.
 It has :xml:`<lower-bound>`, :xml:`<upper-bound>`  and :xml:`<step>`.
 
-Remaining specification is being prepared.
+In the header of :xml:`<if>`, an expression is present.
+
+Expressions are built from the :xml:`<operation>` nodes, each of which contains a collection of
+:xml:`<operand>` and :xml:`<operator>` nodes. Each operand can be also an expression,
+or a simple node like:
+
+*   :xml:`<name>`
+*   :xml:`<literal>`
+*   ...
+
+All simple statements are using :xml:`<statement>` node, which wraps around nodes like:
+
+*   :xml:`<assignment>`
+*   :xml:`<call>`
+*   :xml:`<open>`
+*   :xml:`<close>`
+*   :xml:`<write>`
+*   :xml:`<return>`
+*   :xml:`<stop>`
+*   :xml:`<continue>`
+*   :xml:`<cycle>`
+*   ...
+
+Remaining details of AST are not decided yet. For the time being, to see implementation details,
+please take a look into `<src/fortran/ofp/XMLPrinter.java>`_.
 
 
-================================
 Python wrapper for the generator
 ================================
 
@@ -166,11 +208,10 @@ Using the wrapper should not require any special knowledge about the generator i
 knowing the abstract syntax tree (AST) specification.
 
 
-------------
 dependencies
 ------------
 
-Java 1.8.
+All dependencies of Java XML generator for OFP.
 
 Python version >= 3.6.
 
@@ -179,7 +220,6 @@ Python libraries as specified in `<requirements.txt>`_.
 Building and running tests additionally requires packages listed in `<dev_requirements.txt>`_.
 
 
-------------
 how to build
 ------------
 
@@ -190,7 +230,6 @@ how to build
     python3 setup.py bdist_wheel
 
 
-----------
 how to run
 ----------
 
@@ -238,7 +277,6 @@ as library
     xml = parse('my_legacy_code.f', verbosity=0)
 
 
--------
 testing
 -------
 
