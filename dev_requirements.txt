@@ -2,6 +2,4 @@ codecov
 coverage
 pylint
 twine
-typed_ast
-typed_astunparse
 -rtest_requirements.txt
