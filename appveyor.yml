@@ -19,6 +19,8 @@ init:
   #- set PATH=%PATH%;%cd%\\..\\open-fortran-compiler
   # FFB-MINI app
   - git clone "https://github.com/mbdevpl/ffb-mini" "..\\ffb-mini" --branch ofp_tests
+  # miranda_io app
+  - git clone "https://github.com/mbdevpl/miranda_io" "..\\miranda_io"
   # ant
   - ps: Invoke-WebRequest "https://www.apache.org/dist/ant/binaries/apache-ant-1.10.1-bin.zip" -OutFile "..\\apache-ant-1.10.1-bin.zip"
   - ps: Expand-Archive -Path "..\\apache-ant-1.10.1-bin.zip" -DestinationPath "C:\\"

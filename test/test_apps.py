@@ -22,6 +22,19 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
+    def test_miranda_io(self):
+        miranda_io_relative_repo_path = pathlib.Path('..', 'miranda_io')
+        miranda_io_src_dir = _HERE.parent.joinpath(miranda_io_relative_repo_path).resolve()
+        all_miranda_io_src_paths = all_fortran_paths(miranda_io_src_dir)
+
+        failure_reports_path = _HERE.joinpath('results', 'apps', 'mirnada_io', 'failure')
+        success_reports_path = _HERE.joinpath('results', 'apps', 'mirnada_io', 'success')
+
+        from .test_compatibility import Tests as CompTests
+        CompTests.check_cases_and_report(
+            self, 'miranda_io', failure_reports_path, success_reports_path, miranda_io_src_dir,
+            all_miranda_io_src_paths, 1)
+
     def test_ffb_mini(self):
         failure_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'failure')
         success_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'success')
