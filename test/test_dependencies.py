@@ -35,6 +35,8 @@ class Tests(unittest.TestCase):
         shutil.rmtree(str(self.test_root_path), ignore_errors=True)
         ensure_dependencies(DEV_DEPENDENCIES, self.test_root_path)
 
+        shutil.rmtree(str(self.test_root_path), ignore_errors=True)
+
     @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
     def test_deps(self):
         # as script
@@ -44,7 +46,13 @@ class Tests(unittest.TestCase):
         from open_fortran_parser.dependencies import DEPENDENCIES, ensure_dependencies
         for silent in (True, False):
             ensure_dependencies(DEPENDENCIES, silent=silent)
+        from open_fortran_parser.dev_dependencies import ROOT_PATH, DEV_DEPENDENCIES
+        new_deps = {key: DEPENDENCIES[key] for key in set(DEPENDENCIES) ^ set(DEV_DEPENDENCIES)}
+        for _, new_dep in new_deps.items():
+            pathlib.Path(ROOT_PATH, new_dep[1]).unlink()
 
         # create folder
         shutil.rmtree(str(self.test_root_path), ignore_errors=True)
         ensure_dependencies(DEPENDENCIES, self.test_root_path)
+
+        shutil.rmtree(str(self.test_root_path), ignore_errors=True)
