@@ -99,16 +99,16 @@ class Tests(unittest.TestCase):
                 except subprocess.CalledProcessError as parser_err:
                     if not fall_back_to_ofc:
                         raise parser_err
+                    transpiled_path = pathlib.Path('/tmp', flat_relative_input_path)
                     code = None
                     try:
                         code = transpile(input_path, raise_on_error=True)
                         self.assertIsInstance(code, str)
-                        transpiled_path = pathlib.Path('/tmp', flat_relative_input_path)
                         with open(str(transpiled_path), 'w') as transpiled_file:
                             transpiled_file.write(code)
                         result = parse(transpiled_path, verbosity=100, raise_on_error=True)
                         self.assertIsNotNone(result)
-                        _LOG.warning('OFC definitely fixed something, see %s', transpiled_path)
+                        _LOG.info('OFC definitely fixed something, see %s', transpiled_path)
                     except subprocess.CalledProcessError as err3:
                         if code is not None:
                             _LOG.warning('OFC succeeded but parser failed %s', transpiled_path)

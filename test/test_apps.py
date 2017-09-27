@@ -33,7 +33,7 @@ class Tests(unittest.TestCase):
         from .test_compatibility import Tests as CompTests
         CompTests.check_cases_and_report(
             self, 'miranda_io', failure_reports_path, success_reports_path, miranda_io_src_dir,
-            all_miranda_io_src_paths, 1)
+            all_miranda_io_src_paths)
 
     def test_ffb_mini(self):
         failure_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'failure')
