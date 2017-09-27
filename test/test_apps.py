@@ -35,6 +35,23 @@ class Tests(unittest.TestCase):
             self, 'miranda_io', failure_reports_path, success_reports_path, miranda_io_src_dir,
             all_miranda_io_src_paths)
 
+    def test_flash(self):
+        flash_relative_repo_path = pathlib.Path('..', 'flash-subset')
+        flash_src_dir = _HERE.parent.joinpath(flash_relative_repo_path, 'FLASH4.4', 'source').resolve()
+        if not flash_src_dir.is_dir():
+            self.skipTest('FLASH directory not found')
+        tested_flash_kernel_paths = [
+            pathlib.Path(flash_src_dir, pathlib.Path(input_path)) for input_path in [
+                'physics/Hydro/HydroMain/simpleUnsplit/HLL/hy_hllUnsplit.F90']]
+
+        failure_reports_path = _HERE.joinpath('results', 'apps', 'flash', 'failure')
+        success_reports_path = _HERE.joinpath('results', 'apps', 'flash', 'success')
+
+        from .test_compatibility import Tests as CompTests
+        CompTests.check_cases_and_report(
+            self, 'FLASH', failure_reports_path, success_reports_path, flash_src_dir,
+            tested_flash_kernel_paths)
+
     def test_ffb_mini(self):
         failure_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'failure')
         success_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'success')
