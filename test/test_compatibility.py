@@ -79,7 +79,9 @@ class Tests(unittest.TestCase):
         failed_test_cases = []
         new_failed_cases = []
 
-        for input_path in input_paths:
+        for i, input_path in enumerate(input_paths):
+            if i % 50 == 49:
+                _LOG.warning('%s: testing case %i of %i', scenario_name, i + 1, len(input_paths))
             #with self.subTest(input_path=input_path):
 
             relative_input_path = input_path.relative_to(input_paths_root)
