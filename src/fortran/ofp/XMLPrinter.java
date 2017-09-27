@@ -1559,7 +1559,7 @@ public class XMLPrinter extends XMLPrinterBase {
 		if(hasOptExpr)
 			cleanUpAfterError("didn't expect hasOptExpr=" + hasOptExpr);
 		*/
-		if (doConstructType != 1700)
+		if (doConstructType == 1701)
 			genericLoopControl(hasOptExpr);
 		contextRename("statement", "loop");
 		String loopType = "";
