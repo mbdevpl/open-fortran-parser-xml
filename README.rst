@@ -55,7 +55,7 @@ of parsed Fortran file in XML format - to a file or to :java:`System.out`.
 dependencies
 ------------
 
-*   Java 1.8
+*   Java 1.7 or later
 
 *   Open Fortran Parser 0.8.4-1
 

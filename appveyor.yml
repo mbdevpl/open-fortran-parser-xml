@@ -3,9 +3,17 @@ version: "{build}"
 environment:
   matrix:
     - PYTHON: "C:\\Python36"
+      JAVA: "C:\\Program Files (x86)\\Java\\jdk1.7.0"
+      ANT: "1.9.9"
+    - PYTHON: "C:\\Python36-x64"
+      JAVA: "C:\\Program Files\\Java\\jdk1.7.0"
+      ANT: "1.9.9"
+    - PYTHON: "C:\\Python36"
       JAVA: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
+      ANT: "1.10.1"
     - PYTHON: "C:\\Python36-x64"
       JAVA: "C:\\Program Files\\Java\\jdk1.8.0"
+      ANT: "1.10.1"
 
 init:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
@@ -22,18 +30,18 @@ init:
   # miranda_io app
   - git clone "https://github.com/mbdevpl/miranda_io" "..\\miranda_io"
   # ant
-  - ps: Invoke-WebRequest "https://www.apache.org/dist/ant/binaries/apache-ant-1.10.1-bin.zip" -OutFile "..\\apache-ant-1.10.1-bin.zip"
-  - ps: Expand-Archive -Path "..\\apache-ant-1.10.1-bin.zip" -DestinationPath "C:\\"
-  - set PATH=C:\\apache-ant-1.10.1\\bin;%PATH%
+  - ps: Invoke-WebRequest "https://www.apache.org/dist/ant/binaries/apache-ant-$Env:ANT-bin.zip" -OutFile "..\\apache-ant-$Env:ANT-bin.zip"
+  - ps: Expand-Archive -Path "..\\apache-ant-$Env:ANT-bin.zip" -DestinationPath "C:\\"
+  - set PATH=C:\\apache-ant-%ANT%\\bin;%PATH%
 
 install:
   - pip install -U pip
   - pip install -U -r dev_requirements.txt
   # Java
   - python open_fortran_parser\\dev_dependencies.py
-  - set CLASSPATH=%CLASSPATH%;%cd%\\lib\\*
+  - set CLASSPATH=%cd%\\lib\\*;%CLASSPATH%
   - ant
-  - set CLASSPATH=%CLASSPATH%;%cd%\\dist\\*
+  - set CLASSPATH=%cd%\\dist\\*;%CLASSPATH%
   # Java tests
   - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.7.9-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.7.9-runtime.jar"
   - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" -OutFile "lib\\org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar"

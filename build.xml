@@ -2,8 +2,6 @@
 <project name="open-fortran-parser-xml" default="jar">
 
 	<property name="debuglevel" value="source,lines,vars" />
-	<property name="target" value="1.8" />
-	<property name="source" value="1.8" />
 
 	<loadfile srcfile="open_fortran_parser/_version.py" property="version">
 		<filterchain>
@@ -45,7 +43,7 @@
 
 	<target name="build" depends="clean,init">
 		<echo message="${ant.project.name}: ${ant.file}" />
-		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.dir}" includeantruntime="false" source="${source}" target="${target}" encoding="UTF-8">
+		<javac debug="true" debuglevel="${debuglevel}" destdir="${bin.dir}" includeantruntime="false" encoding="UTF-8">
 			<src path="${src.dir}" />
 			<classpath refid="ofp.classpath" />
 		</javac>
