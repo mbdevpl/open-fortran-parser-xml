@@ -23,13 +23,16 @@
 	<property name="mainclass" value="fortran.ofp.Xml" />
 
 	<path id="ofp.classpath">
-		<pathelement location="bin" />
+		<pathelement location="${bin.dir}" />
 		<fileset dir="${lib.dir}" includes="*.jar" />
 	</path>
 
 	<target name="clean">
 		<delete dir="${bin.dir}" />
-		<delete file="${jar.name}" />
+		<delete file="dist/${jar.name}" />
+		<delete>
+			<fileset dir="open_fortran_parser" includes="*.jar" />
+		</delete>
 	</target>
 
 	<target name="init">
@@ -57,6 +60,10 @@
 			<metainf file="LICENSE" />
 			<metainf file="NOTICE" />
 		</jar>
+		<copy file="${dist.dir}/${jar.name}" tofile="open_fortran_parser/${jar.name}" />
+		<copy todir="open_fortran_parser">
+			<fileset dir="${lib.dir}" includes="*.jar" />
+		</copy>
 	</target>
 
 </project>

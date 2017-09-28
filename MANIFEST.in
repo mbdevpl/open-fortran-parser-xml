@@ -4,4 +4,5 @@ include test_requirements.txt
 include dev_requirements.txt
 include LICENSE
 include NOTICE
+include open_fortran_parser/*.jar
 recursive-include test/examples *.*
