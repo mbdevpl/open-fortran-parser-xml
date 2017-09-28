@@ -84,15 +84,15 @@ install:
   - ant
   - export CLASSPATH="${CLASSPATH}:$(pwd)/dist/*"
   # Java tests
-  - wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.7.9/org.jacoco.agent-0.7.9-runtime.jar" -O "lib/org.jacoco.agent-0.7.9-runtime.jar"
-  - wget "https://oss.sonatype.org/content/repositories/snapshots/org/jacoco/org.jacoco.cli/0.7.10-SNAPSHOT/org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar" -O "lib/org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar"
+  - wget "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.7.9-runtime.jar" -O "lib/org.jacoco.agent-0.7.9-runtime.jar"
+  - wget "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" -O "lib/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar"
 
 script:
   - TEST_PACKAGING=1 TEST_DEPENDENCIES=1 python -m coverage run --branch --source . -m unittest discover --verbose
 
 after_success:
   - python -m coverage report --show-missing
-  - java -jar "lib/org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --xml jacoco.xml
+  - java -jar "lib/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --xml jacoco.xml
   - codecov
   - python -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y --output-format colorized  --reports y $(find . -name "*.py")
 

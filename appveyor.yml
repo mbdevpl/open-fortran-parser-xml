@@ -35,8 +35,8 @@ install:
   - ant
   - set CLASSPATH=%CLASSPATH%;%cd%\\dist\\*
   # Java tests
-  - ps: Invoke-WebRequest "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.7.9/org.jacoco.agent-0.7.9-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.7.9-runtime.jar"
-  - ps: Invoke-WebRequest "https://oss.sonatype.org/content/repositories/snapshots/org/jacoco/org.jacoco.cli/0.7.10-SNAPSHOT/org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar" -OutFile "lib\\org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar"
+  - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.7.9-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.7.9-runtime.jar"
+  - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" -OutFile "lib\\org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar"
 
 build: off
 
@@ -47,5 +47,5 @@ test_script:
 
 after_test:
   - python -m coverage report --show-missing
-  - java -jar "lib\\org.jacoco.cli-0.7.10-20170921.145522-19-nodeps.jar" report "jacoco.exec" --classfiles "bin\\" --sourcefiles "src\\" --xml jacoco.xml
+  - java -jar "lib\\org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" report "jacoco.exec" --classfiles "bin\\" --sourcefiles "src\\" --xml jacoco.xml
   - codecov
