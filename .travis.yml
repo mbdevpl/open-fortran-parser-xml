@@ -5,27 +5,27 @@ matrix:
     - os: linux
       language: python
       python: "3.6"
-      env: JDK=oraclejdk8
+      env: TRAVIS_JDK_VERSION=oraclejdk8
     - os: linux
       language: python
       python: "3.6"
-      env: JDK=oraclejdk9
+      env: TRAVIS_JDK_VERSION=oraclejdk9
     - os: linux
       language: python
       python: "3.6"
-      env: JDK=openjdk7
+      env: TRAVIS_JDK_VERSION=openjdk7
     - os: linux
       language: python
       python: "3.6"
-      env: JDK=openjdk8
+      env: TRAVIS_JDK_VERSION=openjdk8
     - os: linux
       language: python
       python: "3.6-dev"
-      env: JDK=oraclejdk9
+      env: TRAVIS_JDK_VERSION=oraclejdk9
     - os: linux
       language: python
       python: "3.7-dev"
-      env: JDK=oraclejdk9
+      env: TRAVIS_JDK_VERSION=oraclejdk9
     - os: osx
       language: generic
       env: TRAVIS_PYTHON_VERSION="3.6.2"
@@ -58,7 +58,7 @@ before_install:
   - |
     set -e
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      jdk_switcher use $JDK
+      jdk_switcher use $TRAVIS_JDK_VERSION
     fi
     set +e
   - java -version
