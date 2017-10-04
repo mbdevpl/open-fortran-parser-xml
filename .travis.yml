@@ -96,6 +96,21 @@ after_success:
   - codecov
   - python -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y --output-format colorized  --reports y $(find . -name "*.py")
 
+before_deploy:
+  - pip3 install version_query
+  - wget https://gist.githubusercontent.com/mbdevpl/cdbc3dab3ae1941870dcaa5bb1b358bc/raw/travis_bintray_descriptor_gen.py
+  - python3 travis_bintray_descriptor_gen.py "$(python3 -m version_query -p .)" "$TRAVIS_OS_NAME-$TRAVIS_JDK_VERSION-python$TRAVIS_PYTHON_VERSION" "dist/*.jar" "dist/*.whl"
+  - cat ".bintray.json"
+
+deploy:
+  - provider: bintray
+    file: ".bintray.json"
+    user: "mbdevpl"
+    key:
+      secure: "fOh3tYXF1Hum2hOAHy9r6KgY4ZucZWgAbq+u7KhE5nHn78JoKG+oZS1PvVi78MYDgkV/Z2zEr3refPTXUQ/GFtdNo3iKnr2aCHqjcE7JZ/UwdK1+ENPatBR4o8ydGdKovXXM7eikjzRak3RvarxkiTknKjLBv92QZ78yxz+fJdv33m8Ayt+3r0oVYeK4n/uxPoME4RWmONRxEc7TpNduIBGVPF9luPbUzCPyxGdkELrl+xJMShP0yBF3DVNlJehBk6yiGiDQcDeEQcDWWKRKXIgvLmo23zmcqS42Vq+pk3H62Ce6+CADTLuNrmh8nciOw0JZlKG5/ljrFPMucKcg6YQeA6o3/UviMmc2tZODg8jlGeoHOE3g3K9uj6xZKL0T5r+qpHUc6d3ooZLIpgsqaHguu11pPlmvS/sF9PXd5ha5bXCReWiVh0So4p4dLrTqOrdfIE/kRCyIFlSZ6Te2g7KSX9Z/s+X8PGdgvJvizfgXv/CvFUmJAMU7zXSYSQec0nO9Es8GoRn7eVFCyBcvJzWExlBI2WVkXFAaLJ4MHFLcrFhfj26HocFxTDjk5Q7c7YntwU10lodtU3Ifld9g1quSiDGkEKWzKa4RM3hXMG2qd5N1W9IITNqqJS2zeqj/LnocUeXRN0++M0Rlx3Qey5UjkSHhw+Z+WTdw/+V5nmA="
+    on:
+      all_branches: true
+
 notifications:
   slack:
     secure: "OiXc/9CvAVd1l3xWTP554GzPe7ba6cBUHzLLHi4siEW0TDCDeJAzRrFbA/Ei2OTBqVX5p6b4uqeuPCc+IIYhcNDZa4tvEAAyfMIttKEEiEE7qMESxaqXkYQo0IIDu2FVjNjvqZlOfzc9kjFL2J2W3uCd/yivd/WOIoIijkU1HiFfN7wk6e+1ATUIyPXrNJNDYpE2/gKJhMVNHexjEQkeNgGN4eoAU/2cTdwI23SkHCsPgxbgCSMCUn0N/ZsTEgu/zzVFUBlqzzDZKR+fHmrCv7pLHSkIe2WROlbAFyg0AzIEJwhTLbZLOC9Xh1FLhigYvNDaZsOFUnlSEwmSjegvtnXLQkJ2vtSS7xf2UaLdc4w+kgv6If7369IICHgi59X97C8dT9W+YeZoidkINiMuijmCkTKqKF+DhpOx6x2bt6Pk91RscIjwqamb1a0SvMhgqtfpYQz/UkyDadC3g2BsHdg0l+K6ZmEWtfJUMAVctsr8dvwg2KlwrfX5V4+ecwzluz5aL7jYBzXRlgO83ulvM+xaS/9+CGMn08w6ipCjK2xrD4ZKMnoHBr2s+ijceoYINg9nDefNknV9C2Ja/pjgMCtWKZNlX/PkhbOq0oLBBsoUM3Mp1JgP86I88H6TSCRFk8ASV/ghZeaAr8k7AzZi2TAzGFh90KGrlw6aNzvqVak="

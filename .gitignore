@@ -1,3 +1,7 @@
+# Bintray deployment
+/travis_bintray_descriptor_gen.py
+/.bintray.json
+
 # Eclipse
 /.settings
 /.*project
@@ -23,6 +27,7 @@ __pycache__
 
 # Python coverage
 /htmlcov
+/coverage.xml
 /.coverage
 
 # other
