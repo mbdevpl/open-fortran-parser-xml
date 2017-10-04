@@ -99,7 +99,7 @@ after_success:
 before_deploy:
   - pip3 install version_query
   - wget https://gist.githubusercontent.com/mbdevpl/cdbc3dab3ae1941870dcaa5bb1b358bc/raw/travis_bintray_descriptor_gen.py
-  - python3 travis_bintray_descriptor_gen.py "$(python3 -m version_query -p .)" "$TRAVIS_OS_NAME-$TRAVIS_JDK_VERSION-python$TRAVIS_PYTHON_VERSION" "dist/*.jar" "dist/*.whl"
+  - python3 travis_bintray_descriptor_gen.py "$(python3 -m version_query -p .)" "$TRAVIS_OS_NAME-$TRAVIS_JDK_VERSION-python$TRAVIS_PYTHON_VERSION" "dist/*.jar" "dist/*.tar.gz" "dist/*.whl" "dist/*.zip"
   - cat ".bintray.json"
 
 deploy:
