@@ -57,7 +57,7 @@ dependencies
 
 *   Java 1.7 or later
 
-*   Open Fortran Parser 0.8.4-1
+*   Open Fortran Parser 0.8.4-2
 
     https://github.com/mbdevpl/open-fortran-parser/releases
 
@@ -211,7 +211,7 @@ knowing the abstract syntax tree (AST) specification.
 dependencies
 ------------
 
-All dependencies of Java XML generator for OFP.
+Java XML generator for OFP and all of its dependencies.
 
 Python version >= 3.6.
 

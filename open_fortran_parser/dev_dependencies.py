@@ -19,10 +19,10 @@ DEV_DEPENDENCIES = {
         urllib.parse.urlparse(
             'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.4-1/'),
         pathlib.Path('antlr-3.3-complete.jar')),
-    'Open Fortran Parser 0.8.4.1': (
+    'Open Fortran Parser 0.8.4-2': (
         urllib.parse.urlparse(
-            'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.4-1/'),
-        pathlib.Path('OpenFortranParser-0.8.4-1.jar')),
+            'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.4-2/'),
+        pathlib.Path('OpenFortranParser-0.8.4-2.jar')),
     'Apache Commons CLI 1.4': (
         urllib.parse.urlparse(
             'https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.1.0/'),
