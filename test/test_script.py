@@ -4,10 +4,10 @@ import contextlib
 import io
 import os
 import pathlib
-import runpy
-import sys
 import tempfile
 import unittest
+
+from .test_setup import run_module
 
 INPUT_PATH = pathlib.Path('test', 'examples', 'empty.f')
 
@@ -20,15 +20,11 @@ class Tests(unittest.TestCase):
 
     maxDiff = None
 
-    def run_script(self, *args):
-        sys.argv = ['open_fortran_parser'] + list(args)
-        runpy.run_module('open_fortran_parser', run_name='__main__')
-
     def test_help(self):
         f = io.StringIO()
         with contextlib.redirect_stderr(f):
             with self.assertRaises(SystemExit):
-                self.run_script()
+                run_module('open_fortran_parser')
         text = f.getvalue()
         self.assertIn('usage', text)
         self.assertIn('open_fortran_parser', text)
@@ -38,7 +34,7 @@ class Tests(unittest.TestCase):
         for verbosity in verbosities:
             f = io.StringIO()
             with contextlib.redirect_stdout(f):
-                self.run_script('-v', str(verbosity), str(INPUT_PATH))
+                run_module('open_fortran_parser', '-v', str(verbosity), str(INPUT_PATH))
             self.assertGreater(len(f.getvalue()), 0)
 
     def test_output_flag(self):
@@ -46,8 +42,8 @@ class Tests(unittest.TestCase):
         output_file.close()
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
-            self.run_script(str(INPUT_PATH))
-        self.run_script(str(INPUT_PATH), output_file.name)
+            run_module('open_fortran_parser', str(INPUT_PATH))
+        run_module('open_fortran_parser', str(INPUT_PATH), output_file.name)
         with open(output_file.name) as output_file:
             self.assertEqual(normalize_newlines(f.getvalue()),
                              normalize_newlines(output_file.read()))

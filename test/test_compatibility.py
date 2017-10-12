@@ -22,7 +22,8 @@ def all_fortran_paths(root_path: pathlib.Path):
     if not root_path.exists():
         return []
     all_input_paths = []
-    for extension in itertools.chain(*[(_, _.upper()) for _ in ('.f', '.f90', '.f03', '.f08', '.h')]):
+    for extension in itertools.chain(
+            *[(_, _.upper()) for _ in ('.f', '.f90', '.f03', '.f08', '.h')]):
         input_paths = root_path.glob(
             f'**/*{extension}')
         for input_path in input_paths:
@@ -41,6 +42,7 @@ class Tests(unittest.TestCase):
     maxDiff = None
 
     def check_cases(self, input_paths, relative=True):
+        """Try to parse all given files, fail on first failure."""
         for input_path in input_paths:
             if relative:
                 input_path = _OFP_TESTS_DIR.joinpath(input_path).resolve()
@@ -65,6 +67,7 @@ class Tests(unittest.TestCase):
             success_reports_path: pathlib.Path, input_paths_root: pathlib.Path,
             input_paths: t.Sequence[pathlib.Path], minimum_passed_cases: int = None,
             fall_back_to_ofc: bool = False):
+        """Try to parse all given files, fail if there are not enough successes."""
         all_count = len(input_paths)
         if minimum_passed_cases is None:
             minimum_passed_cases = all_count
@@ -250,7 +253,7 @@ class Tests(unittest.TestCase):
             'rule-tests/R843.f03']]
         self.check_cases(input_paths)
 
-    def test_ofp_do_concurrent_and_forall(self):
+    def test_ofp_do_concurr_and_forall(self):
         input_paths = [pathlib.Path(_) for _ in [
             'annex_c/c_4_5.f03',
             'annex_c/c_4_6.f03',

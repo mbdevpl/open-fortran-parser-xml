@@ -20,6 +20,7 @@ class CodeForm(enum.IntEnum):
 def execute_compiler(
         input_path: pathlib.Path, output_path: t.Optional[pathlib.Path],
         indent: int = 4, form: t.Optional[CodeForm] = None) -> subprocess.CompletedProcess:
+    """Run Open Fortran Compiler with given parameters."""
     assert isinstance(input_path, pathlib.Path), type(input_path)
     assert output_path is None or isinstance(output_path, pathlib.Path), type(output_path)
     assert isinstance(indent, int), type(indent)

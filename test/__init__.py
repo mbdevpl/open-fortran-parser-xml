@@ -1,3 +1,4 @@
+"""Tests for open_fortran_parser package."""
 
 import pathlib
 

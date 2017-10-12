@@ -5,7 +5,8 @@ import pathlib
 import platform
 import unittest
 
-from open_fortran_parser.ofc_wrapper import CodeForm, execute_compiler, transpile
+# CodeForm,
+from open_fortran_parser.ofc_wrapper import execute_compiler, transpile
 
 _LOG = logging.getLogger(__name__)
 
