@@ -23,8 +23,8 @@ def execute_compiler(
     """Run Open Fortran Compiler with given parameters."""
     assert isinstance(input_path, pathlib.Path), type(input_path)
     assert output_path is None or isinstance(output_path, pathlib.Path), type(output_path)
-    assert isinstance(indent, int), type(indent)
-    assert indent >= 0, indent
+    assert indent is None or isinstance(indent, int), type(indent)
+    assert indent is None or indent > 0, indent
     assert form is None or isinstance(form, CodeForm), type(form)
 
     if ofc_config['path'] is not None:
@@ -53,8 +53,8 @@ def transpile(
         raise_on_error: bool = False) -> str:
     """Parse given (possibly non-standard) Fortran code and return standard-compliant code."""
     assert isinstance(input_path, pathlib.Path), type(input_path)
-    assert isinstance(indent, int), type(indent)
-    assert indent >= 0, indent
+    assert indent is None or isinstance(indent, int), type(indent)
+    assert indent is None or indent > 0, indent
     assert form is None or isinstance(form, CodeForm), type(form)
 
     process = execute_compiler(input_path, None, indent, form)

@@ -18,9 +18,10 @@ class Tests(unittest.TestCase):
     @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
     def test_deps(self):
         from open_fortran_parser.dependencies import DEV_DEPENDENCIES, ensure_dependencies
-        for silent in (False, True):
-            with tempfile.TemporaryDirectory() as temp_dir:
-                ensure_dependencies(DEV_DEPENDENCIES, pathlib.Path(temp_dir), silent=silent)
-                self.assertGreater(len(os.listdir(temp_dir)), 0)
-
-        return
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ensure_dependencies(DEV_DEPENDENCIES, pathlib.Path(temp_dir), silent=False)
+            self.assertGreater(len(os.listdir(temp_dir)), 0)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.rmdir(temp_dir)
+            ensure_dependencies(DEV_DEPENDENCIES, pathlib.Path(temp_dir), silent=True)
+            self.assertGreater(len(os.listdir(temp_dir)), 0)
