@@ -11,7 +11,7 @@ import tempfile
 import typing as t
 import unittest
 
-__updated__ = '2017-09-23'
+__updated__ = '2017-10-12'
 
 
 def run_program(*args, glob: bool = False):
@@ -34,9 +34,10 @@ def run_pip(*args, **kwargs):
     run_program(pip_exec_name, *args, **kwargs)
 
 
-def run_module(name: str, *args, run_name: str = '__main__') -> None:
+def run_module(name: str, *args, run_name: str = '__main__'):
+    """Execute module with given name after rewriting sys.argv to given values."""
     backup_sys_argv = sys.argv
-    sys.argv = [name + '.py'] + list(args)
+    sys.argv = [name.replace('.', os.sep) + '.py'] + list(args)
     runpy.run_module(name, run_name=run_name)
     sys.argv = backup_sys_argv
 
@@ -156,8 +157,7 @@ class UnitTests(unittest.TestCase):
         parse_requirements = import_module_member('setup_boilerplate', 'parse_requirements')
         results = parse_requirements()
         self.assertIsInstance(results, list)
-        for result in results:
-            self.assertIsInstance(result, str)
+        self.assertTrue(all(isinstance(result, str) for result in results), msg=results)
 
     def test_parse_reqs_empty(self):
         parse_requirements = import_module_member('setup_boilerplate', 'parse_requirements')
