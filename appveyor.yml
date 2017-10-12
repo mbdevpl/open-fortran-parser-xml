@@ -38,7 +38,7 @@ install:
   - pip install -U pip
   - pip install -U -r dev_requirements.txt
   # Java
-  - python open_fortran_parser\\dev_dependencies.py
+  - python -m open_fortran_parser --dev-deps
   - set CLASSPATH=%cd%\\lib\\*;%CLASSPATH%
   - ant
   - set CLASSPATH=%cd%\\dist\\*;%CLASSPATH%

@@ -3,8 +3,12 @@
 import argparse
 import logging
 import pathlib
+import sys
 
+from ._version import VERSION
 from .parser_wrapper import execute_parser
+from .dependencies import \
+    DEV_DEPENDENCIES, DEV_DEPENDENCIES_PATH, DEPENDENCIES, DEPENDENCIES_PATH, ensure_dependencies
 
 logging.basicConfig()
 
@@ -15,19 +19,41 @@ def main(args=None, namespace=None):
     """Launch Open Fortran Parser."""
     parser = argparse.ArgumentParser(
         prog='open_fortran_parser',
-        description='''Python wrapper around XML generator for Open Fortran Parser 0.8.4''',
+        description='''Python wrapper around XML generator for Open Fortran Parser''',
         epilog='''Copyright 2017 Mateusz Bysiek https://mbdevpl.github.io/, Apache License 2.0''',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('input', type=pathlib.Path, help='''path to Fortran source code file''')
+    parser.version = VERSION
+    parser.add_argument('--version', action='version')
+
+    parser.add_argument(
+        'input', nargs='?', type=pathlib.Path, help='''path to Fortran source code file''')
     parser.add_argument(
         'output', nargs='?', type=pathlib.Path, default=None,
         help='''writable path for where to store resulting XML, defaults to stdout
             if no path provided''')
     parser.add_argument(
         '-v', '--verbosity', type=int, default=100, help='''level of verbosity, from 0 to 100''')
+    parser.add_argument(
+        '--get-dependencies', '--deps', action='store_true',
+        help='''download dependencies and exit''')
+    parser.add_argument(
+        '--get-development-dependencies', '--dev-deps', action='store_true',
+        help=argparse.SUPPRESS)
 
     args = parser.parse_args(args, namespace)
+
+    if args.get_development_dependencies:
+        ensure_dependencies(DEV_DEPENDENCIES, DEV_DEPENDENCIES_PATH)
+        return
+
+    if args.get_dependencies:
+        ensure_dependencies(DEPENDENCIES, DEPENDENCIES_PATH)
+        return
+
+    if not args.input:
+        parser.print_help(sys.stderr)
+        parser.exit(2)
 
     process = execute_parser(args.input, args.output, args.verbosity)
     if process.stderr:

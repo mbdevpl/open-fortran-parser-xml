@@ -84,7 +84,8 @@ Get dependencies, either manually, or using the provided script:
 
 .. code:: bash
 
-    python3 open_fortran_parser/dev_dependencies.py
+    pip3 install -U -r requirements.txt
+    python3 -m open_fortran_parser --dev-deps
     export CLASSPATH="${CLASSPATH}:$(pwd)/lib/*"
 
 Build:
@@ -217,7 +218,7 @@ Python version >= 3.6.
 
 Python libraries as specified in `<requirements.txt>`_.
 
-Building and running tests additionally requires packages listed in `<dev_requirements.txt>`_.
+Building and running tests additionally requires packages listed in `<test_requirements.txt>`_.
 
 
 how to build
@@ -225,9 +226,27 @@ how to build
 
 .. code:: bash
 
-    pip3 install -U -r dev_requirements.txt
+    pip3 install -U -r test_requirements.txt
     python3 setup.py sdist --formats=gztar,zip
     python3 setup.py bdist_wheel
+
+how to install
+--------------
+
+You can simply install from PyPI:
+
+.. code:: bash
+
+    pip3 install open_fortran parser
+
+Or using any of below commands, when installing from source:
+
+.. code:: bash
+
+    pip3 install .
+    pip3 install dist/<filename>.whl
+    pip3 install dist/<filename>.tar.gz
+    pip3 install dist/<filename>.zip
 
 
 how to run
@@ -235,14 +254,17 @@ how to run
 
 The wrapper can be used as a script, or as a library.
 
-Before running, however, please make sure that dependencies are configured correctly.
-You can do that by either following the "how to build" section for Java implementation above,
-or by executing this:
+When running any installed version, even if installed from source, dependencies are automatically
+installed together with the wrapper.
+
+Before running from source (without installation), however, please follow "how to build" section
+for Java implementation above.
+You can make sure that dependencies are configured correctly by running:
 
 .. code:: bash
 
-    python3 open_fortran_parser/dependencies.py
-    export CLASSPATH="${CLASSPATH}:$(pwd)/lib/*"
+    python3 -m open_fortran_parser --deps
+
 
 as script
 ~~~~~~~~~
@@ -250,19 +272,24 @@ as script
 .. code:: bash
 
     $ python3 -m open_fortran_parser -h
-    usage: open_fortran_parser [-h] [-v VERBOSITY] input [output]
+    usage: open_fortran_parser [-h] [--version] [-v VERBOSITY]
+                               [--get-dependencies]
+                               [input] [output]
 
-    Python wrapper around XML generator for Open Fortran Parser 0.8.4
+    Python wrapper around XML generator for Open Fortran Parser
 
     positional arguments:
-      input                 path to Fortran source code file
+      input                 path to Fortran source code file (default: None)
       output                writable path for where to store resulting XML,
                             defaults to stdout if no path provided (default: None)
 
     optional arguments:
       -h, --help            show this help message and exit
+      --version             show program's version number and exit
       -v VERBOSITY, --verbosity VERBOSITY
                             level of verbosity, from 0 to 100 (default: 100)
+      --get-dependencies, --deps
+                            download dependencies and exit (default: False)
 
     Copyright 2017 Mateusz Bysiek https://mbdevpl.github.io/, Apache License 2.0
 
@@ -285,6 +312,6 @@ testing
     python3 -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 \
       --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y \
       --output-format colorized  --reports y $(find . -name "*.py")
-    python3 -m coverage run --branch -m unittest discover --verbose
+    python3 -m coverage run --branch --source . -m unittest discover --verbose
     python3 -m coverage report --show-missing
     python3 -m coverage html

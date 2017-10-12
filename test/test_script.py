@@ -21,30 +21,38 @@ class Tests(unittest.TestCase):
     maxDiff = None
 
     def test_help(self):
-        f = io.StringIO()
-        with contextlib.redirect_stderr(f):
+        sio = io.StringIO()
+        with contextlib.redirect_stderr(sio):
             with self.assertRaises(SystemExit):
                 run_module('open_fortran_parser')
-        text = f.getvalue()
+        text = sio.getvalue()
         self.assertIn('usage', text)
         self.assertIn('open_fortran_parser', text)
+
+    def test_deps_flag(self):
+        sio = io.StringIO()
+        with contextlib.redirect_stderr(sio):
+            run_module('open_fortran_parser', '--deps')
+        self.assertGreater(len(sio.getvalue()), 0)
+
+        run_module('open_fortran_parser', '--dev-deps')
 
     def test_verbosity_flag(self):
         verbosities = (0, 20, 40, 60, 80, 100)
         for verbosity in verbosities:
-            f = io.StringIO()
-            with contextlib.redirect_stdout(f):
+            sio = io.StringIO()
+            with contextlib.redirect_stdout(sio):
                 run_module('open_fortran_parser', '-v', str(verbosity), str(INPUT_PATH))
-            self.assertGreater(len(f.getvalue()), 0)
+            self.assertGreater(len(sio.getvalue()), 0)
 
     def test_output_flag(self):
         output_file = tempfile.NamedTemporaryFile(delete=False)
         output_file.close()
-        f = io.StringIO()
-        with contextlib.redirect_stdout(f):
+        sio = io.StringIO()
+        with contextlib.redirect_stdout(sio):
             run_module('open_fortran_parser', str(INPUT_PATH))
         run_module('open_fortran_parser', str(INPUT_PATH), output_file.name)
         with open(output_file.name) as output_file:
-            self.assertEqual(normalize_newlines(f.getvalue()),
+            self.assertEqual(normalize_newlines(sio.getvalue()),
                              normalize_newlines(output_file.read()))
         os.remove(output_file.name)
