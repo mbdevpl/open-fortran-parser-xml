@@ -44,10 +44,10 @@ matrix:
   allow_failures:
     - python: "3.6-dev"
     - python: "3.7-dev"
-      env:
+    - env:
         - TRAVIS_PYTHON_VERSION="3.6-dev"
         - TRAVIS_JDK_VERSION=oraclejdk8
-      env:
+    - env:
         - TRAVIS_PYTHON_VERSION="3.7-dev"
         - TRAVIS_JDK_VERSION=oraclejdk8
 
