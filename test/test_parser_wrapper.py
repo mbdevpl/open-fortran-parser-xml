@@ -32,27 +32,30 @@ class Tests(unittest.TestCase):
         for classpath, verbosity, invalid_options in itertools.product(
                 (None, java_config['classpath']), (0, 100, 'invalid'),
                 ([], ['--invalid', 'option'], ['--help', 'true'])):
-            with tempfile.NamedTemporaryFile() as output_file:
-                for output_path in (None, output_file.name):
-                    with self.subTest(classpath=classpath, verbosity=verbosity,
-                                      invalid_options=invalid_options, output_path=output_path):
-                        command = [str(executable)]
-                        if classpath is not None:
-                            command += ['-cp', str(classpath)]
-                        if options is not None:
-                            command += options
-                        command.append(ofp_class)
-                        command += ['--class', ofp_xml_class, '--verbosity', str(verbosity)]
-                        if output_path is not None:
-                            command += ['--output', str(output_path)]
-                        command += invalid_options
-                        command.append(str(input_path))
+            output_file = tempfile.NamedTemporaryFile(delete=False)
+            output_file_name = pathlib.Path(output_file.name)
+            output_file.close()
+            for output_path in (None, output_file_name):
+                with self.subTest(classpath=classpath, verbosity=verbosity,
+                                  invalid_options=invalid_options, output_path=output_path):
+                    command = [str(executable)]
+                    if classpath is not None:
+                        command += ['-cp', str(classpath)]
+                    if options is not None:
+                        command += options
+                    command.append(ofp_class)
+                    command += ['--class', ofp_xml_class, '--verbosity', str(verbosity)]
+                    if output_path is not None:
+                        command += ['--output', str(output_path)]
+                    command += invalid_options
+                    command.append(str(input_path))
 
-                        if invalid_options or verbosity == 'invalid':
-                            with self.assertRaises(AssertionError):
-                                run_program(*command)
-                            continue
-                        run_program(*command)
+                    if invalid_options or verbosity == 'invalid':
+                        with self.assertRaises(AssertionError):
+                            run_program(*command)
+                        continue
+                    run_program(*command)
+            output_file_name.unlink()
 
     def test_unset_config(self):
         classpath = java_config['classpath']
