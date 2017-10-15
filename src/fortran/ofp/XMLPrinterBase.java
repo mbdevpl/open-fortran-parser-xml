@@ -60,7 +60,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		super(args, parser, filename);
 
 		// System.err.println(Arrays.toString(args));
-		cmd = new ArgsParser().parse(args);
+		cmd = new XmlPrinterArgsParser().parse(args);
 		verbosity = Integer.parseInt(cmd.getOptionValue("verbosity", "100"));
 		if (verbosity >= 100) {
 			setVerbose(true);
