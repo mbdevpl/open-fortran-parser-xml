@@ -237,7 +237,7 @@ You can simply install from PyPI:
 
 .. code:: bash
 
-    pip3 install open_fortran parser
+    pip3 install open-fortran-parser
 
 Or using any of below commands, when installing from source:
 
