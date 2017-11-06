@@ -1263,10 +1263,22 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void forall_assignment_stmt(boolean isPointerAssignment) {
-		context = contextNode(-1); // temporarily reopen previously-closed context
+		Element assignment = contextNode(-1);
+		if (!context.getTagName().equals("header"))
+			cleanUpAfterError("didn't expect <" + context.getTagName() + ">");
+		contextClose();
+		contextOpen("body");
+		contextOpen("statement");
+		moveHere(assignment);
+		context = assignment; // temporarily reopen assignment context
+		if (!context.getTagName().equals("assignment"))
+			cleanUpAfterError("didn't expect <" + context.getTagName() + ">");
 		if (verbosity >= 100)
 			super.forall_assignment_stmt(isPointerAssignment);
-		contextClose(); // re-close previously closed context
+		contextClose(); // re-close assignment context
+		contextClose();
+		contextClose();
+
 	}
 
 	public void end_forall_stmt(Token label, Token endKeyword, Token forallKeyword, Token id, Token eos) {
