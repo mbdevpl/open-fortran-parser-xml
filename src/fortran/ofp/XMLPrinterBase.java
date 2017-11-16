@@ -9,6 +9,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -312,9 +313,12 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	}
 
 	protected void contextPrint(Element context) {
-		System.err.println(context);
-		System.err.println(contextAttributes(context));
-		System.err.println(contextNodes(context));
+		System.err.println("context: " + context.getTagName());
+		System.err.println("  attributes: " + contextAttributes(context));
+		ArrayList<String> names = new ArrayList<String>();
+		for (Element node : contextNodes(context))
+			names.add(node.getTagName());
+		System.err.println("  sub-contexts: " + names);
 	}
 
 	protected Attr getAttribute(String name, Element context) {
@@ -336,8 +340,12 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		String valueString = null;
 		if (value == null)
 			valueString = "";
-		else if (value instanceof Token)
-			valueString = ((Token) value).getText();
+		else if (value instanceof Token) {
+			Token token = (Token) value;
+			valueString = token.getText();
+			if (verbosity >= 100)
+				updateBounds(context, token);
+		}
 		else
 			valueString = value.toString();
 		context.setAttribute(name, valueString);
@@ -349,6 +357,73 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 
 	protected void setAttribute(String name, Object value) {
 		setAttribute(name, value, context);
+	}
+
+	protected static String Y_MIN = "line_begin";
+	protected static String X_MIN = "col_begin";
+	protected static String Y_MAX = "line_end";
+	protected static String X_MAX = "col_end";
+
+	protected Integer[] getBounds(Element context) {
+		Integer line_begin = null;
+		if (context.hasAttribute(Y_MIN))
+			line_begin = Integer.valueOf(context.getAttribute(Y_MIN));
+		Integer col_begin = null;
+		if (context.hasAttribute(X_MIN))
+			col_begin = Integer.valueOf(context.getAttribute(X_MIN));
+		Integer line_end = null;
+		if (context.hasAttribute(Y_MAX))
+			line_end = Integer.valueOf(context.getAttribute(Y_MAX));
+		Integer col_end = null;
+		if (context.hasAttribute(X_MAX))
+			col_end = Integer.valueOf(context.getAttribute(X_MAX));
+		return new Integer[]{line_begin, col_begin, line_end, col_end};
+	}
+
+	protected void updateBounds(Element context, Integer[] bounds) {
+		updateBounds(context, bounds[0], bounds[1], bounds[2], bounds[3]);
+	}
+
+	protected void updateBounds(
+			Element context, Integer new_line_begin, Integer new_col_begin, Integer new_line_end,
+			Integer new_col_end) {
+		Integer[] bounds = getBounds(context);
+		Integer line_begin = bounds[0], col_begin = bounds[1],
+			line_end = bounds[2], col_end = bounds[3];
+		if (new_line_begin != null && (line_begin == null || new_line_begin < line_begin))
+			context.setAttribute(Y_MIN, new_line_begin.toString());
+		if (new_col_begin != null && (col_begin == null || new_line_begin < line_begin
+				|| new_line_begin == line_begin && new_col_begin < col_begin))
+			context.setAttribute(X_MIN, new_col_begin.toString());
+		if (new_line_end != null && (line_end == null || new_line_end > line_end))
+			context.setAttribute(Y_MAX, new_line_end.toString());
+		if (new_col_end != null && (col_end == null || new_line_end > line_end
+				|| new_line_end == line_end && new_col_end > col_end))
+			context.setAttribute(X_MAX, new_col_end.toString());
+	}
+
+	protected void updateBounds(Element context, Token... newTokens) {
+		for (Token newToken : newTokens) {
+			if (newToken == null)
+				continue;
+			Integer new_line = newToken.getLine();
+			Integer new_col_begin = newToken.getCharPositionInLine();
+			Integer new_col_end = new_col_begin + newToken.getText().length();
+			updateBounds(context, new_line, new_col_begin, new_line, new_col_end);
+		}
+	}
+
+	protected void updateBounds(Token... newTokens) {
+		updateBounds(context, newTokens);
+	}
+
+	protected void calculateBounds(Element context) {
+		ArrayList<Element> nodes = contextNodes(context);
+		for(Element node : nodes) {
+			calculateBounds(node);
+			if (context != root)
+				updateBounds(context, getBounds(node));
+		}
 	}
 
 	protected void moveTo(Element targetContext, Element element) {
@@ -399,6 +474,20 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		setAttribute(name, param);
 	}
 
+	public void persist() throws TransformerException {
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+		DOMSource source = new DOMSource(doc);
+		StreamResult result;
+		if (cmd.hasOption("output"))
+			result = new StreamResult(new File(cmd.getOptionValue("output")));
+		else
+			result = new StreamResult(System.out);
+		transformer.transform(source, result);
+	}
+
 	public void cleanUpAfterError(String comment, Exception error) {
 		if (comment != null)
 			System.err.println(comment);
@@ -422,18 +511,9 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	public void cleanUp() {
 		while (context != root)
 			contextClose(context);
+		calculateBounds(context);
 		try {
-			TransformerFactory transformerFactory = TransformerFactory.newInstance();
-			Transformer transformer = transformerFactory.newTransformer();
-			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-			DOMSource source = new DOMSource(doc);
-			StreamResult result;
-			if (cmd.hasOption("output"))
-				result = new StreamResult(new File(cmd.getOptionValue("output")));
-			else
-				result = new StreamResult(System.out);
-			transformer.transform(source, result);
+			persist();
 		} catch (Exception error) {
 			error.printStackTrace();
 			System.exit(1);

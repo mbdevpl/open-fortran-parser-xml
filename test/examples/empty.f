@@ -1,4 +1,6 @@
 
+C minimalistic Fortran program
+
       program empty
 
       implicit none

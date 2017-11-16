@@ -621,6 +621,8 @@ public class XMLPrinter extends XMLPrinterBase {
 			contextOpen("declaration");
 		if (verbosity >= 20)
 			super.implicit_stmt(label, implicitKeyword, noneKeyword, eos, hasImplicitSpecList);
+		if (verbosity >= 100)
+			updateBounds(label, implicitKeyword, noneKeyword, eos);
 		setAttribute("type", "implicit");
 		setAttribute("subtype", noneKeyword == null ? "some" : "none");
 		contextClose("declaration");
@@ -1884,6 +1886,8 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose("header");
 		if (verbosity >= 20)
 			super.program_stmt(label, programKeyword, id, eos);
+		if (verbosity >= 100)
+			updateBounds(label, programKeyword, id, eos);
 		setAttribute("name", id);
 		contextOpen("body");
 		contextOpen("specification");
@@ -1899,6 +1903,8 @@ public class XMLPrinter extends XMLPrinterBase {
 		}
 		contextCloseAllInner("program");
 		super.end_program_stmt(label, endKeyword, programKeyword, id, eos);
+		if (verbosity >= 100)
+			updateBounds(label, endKeyword, programKeyword, id, eos);
 	}
 
 	public void module() {
@@ -1919,6 +1925,8 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose("header");
 		setAttribute("name", id);
 		super.module_stmt(label, moduleKeyword, id, eos);
+		if (verbosity >= 100)
+			updateBounds(label, moduleKeyword, id, eos);
 		contextOpen("body");
 		contextOpen("specification");
 		contextOpen("declaration");
@@ -1940,6 +1948,8 @@ public class XMLPrinter extends XMLPrinterBase {
 		}
 		contextClose("members");
 		super.end_module_stmt(label, endKeyword, moduleKeyword, id, eos);
+		if (verbosity >= 100)
+			updateBounds(label, endKeyword, moduleKeyword, id, eos);
 	}
 
 	public void module_subprogram(boolean hasPrefix) {
@@ -1954,6 +1964,8 @@ public class XMLPrinter extends XMLPrinterBase {
 			contextOpen("use");
 		setAttribute("name", id);
 		super.use_stmt(label, useKeyword, id, onlyKeyword, eos, hasModuleNature, hasRenameList, hasOnly);
+		if (verbosity >= 100)
+			updateBounds(label, useKeyword, id, onlyKeyword, eos);
 		contextClose("use");
 		contextOpen("declaration");
 	}
