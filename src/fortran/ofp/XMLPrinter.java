@@ -1614,6 +1614,20 @@ public class XMLPrinter extends XMLPrinterBase {
 			super.end_do_stmt(label, endKeyword, doKeyword, id, eos);
 	}
 
+	public void cycle_stmt(Token label, Token cycleKeyword, Token id, Token eos) {
+		contextOpen("cycle");
+		if (verbosity >= 80)
+			super.cycle_stmt(label, cycleKeyword, id, eos);
+		contextClose();
+	}
+
+	public void exit_stmt(Token label, Token exitKeyword, Token id, Token eos) {
+		contextOpen("exit");
+		if (verbosity >= 80)
+			super.exit_stmt(label, exitKeyword, id, eos);
+		contextClose();
+	}
+
 	public void continue_stmt(Token label, Token continueKeyword, Token eos) {
 		contextOpen("statement");
 		super.continue_stmt(label, continueKeyword, eos);
@@ -1934,14 +1948,19 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void use_stmt(Token label, Token useKeyword, Token id, Token onlyKeyword, Token eos, boolean hasModuleNature,
 			boolean hasRenameList, boolean hasOnly) {
-		if (!context.getTagName().equals("use")) {
+		if (context.getTagName().equals("declaration"))
+			contextClose("declaration");
+		if (!context.getTagName().equals("use"))
 			contextOpen("use");
-		}
+		setAttribute("name", id);
 		super.use_stmt(label, useKeyword, id, onlyKeyword, eos, hasModuleNature, hasRenameList, hasOnly);
 		contextClose("use");
+		contextOpen("declaration");
 	}
 
 	public void rename_list__begin() {
+		if (context.getTagName().equals("declaration"))
+			contextClose("declaration");
 		contextOpen("use");
 		contextOpen("rename");
 		if (verbosity >= 100)
@@ -1954,6 +1973,8 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void only_list__begin() {
+		if (context.getTagName().equals("declaration"))
+			contextClose("declaration");
 		contextOpen("use");
 		contextOpen("only");
 		if (verbosity >= 100)
@@ -2024,6 +2045,13 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void interface_body(boolean hasPrefix) {
 		// TODO Auto-generated method stub
 		super.interface_body(hasPrefix);
+	}
+
+	public void generic_spec(Token keyword, Token name, int type) {
+		contextOpen("name");
+		setAttribute("id", name);
+		super.generic_spec(keyword, name, type);
+		contextClose();
 	}
 
 	public void import_stmt(Token label, Token importKeyword, Token eos, boolean hasGenericNameList) {
