@@ -7,30 +7,45 @@ import java.util.ArrayList;
 import org.antlr.runtime.Lexer;
 import org.antlr.runtime.Token;
 
+/*
+class FortranAltStream extends FortranStream {
+
+  public FortranAltStream(String filename, String path, int sourceForm) throws IOException {
+    super(filename, path, sourceForm);
+  }
+
+  public char[] getData() {
+    return data;
+  }
+}
+*/
+
 public class CommentTokensList extends ArrayList<Token> {
 
-  protected File file;
-
-  protected FortranStream stream;
-
-  protected FortranCommentLexer lexer;
-
-  protected FortranTokenStream tokenStream;
-
   public CommentTokensList(File file, boolean fixed_form) throws IOException {
-    this.file = file;
-    stream = new FortranStream(
+    addAll(file, fixed_form);
+  }
+
+  public CommentTokensList(File file, boolean fixed_form, int onlyOfType) throws IOException {
+    addAll(file, fixed_form, onlyOfType);
+  }
+
+  public void addAll(File file, boolean fixed_form) throws IOException {
+    addAll(file, fixed_form, null);
+  }
+
+  public void addAll(File file, boolean fixed_form, Integer onlyOfType) throws IOException {
+    FortranStream stream = new FortranStream(
       file.getName(), file.getAbsolutePath(),
       fixed_form ? FortranStream.FIXED_FORM : FortranStream.FREE_FORM);
-    lexer = new FortranCommentLexer(stream);
-    tokenStream = new FortranTokenStream(lexer);
+    // System.err.println(stream.getData());
+    FortranAlternateLexer lexer = new FortranAlternateLexer(stream);
 
-    int i = 0;
-    Token token = tokenStream.LT(i);
-    while (token != null) {
-      add(token);
-      ++i;
-      token = tokenStream.LT(i);
+    Token token = lexer.nextToken();
+    while(token.getType() != FortranAlternateLexer.EOF) {
+      if (onlyOfType == null || token.getType() == ((int) onlyOfType))
+        add(token);
+      token = lexer.nextToken();
     }
   }
 

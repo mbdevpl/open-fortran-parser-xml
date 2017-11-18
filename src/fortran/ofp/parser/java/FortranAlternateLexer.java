@@ -543,25 +543,6 @@ public class FortranAlternateLexer extends Lexer {
              return tk;
           }
 
-            if (tk.getType() != LINE_COMMENT && tk.getType() != WS &&
-                tk.getType() != PREPROCESS_LINE) {
-               prevToken = tk;
-            }
-
-            if (tk.getType() == T_EOS && continueFlag == true) {
-                tk.setChannel(99);
-            } else if (continueFlag == true) {
-                if (tk.getType() != LINE_COMMENT && tk.getType() != WS &&
-                    tk.getType() != PREPROCESS_LINE && tk.getType() != CONTINUE_CHAR) {
-                    // if the token we have is not T_EOS or any kind of WS or
-                    // comment, and we have a continue, then this should be the
-                    // first token on the line folliwng the '&'.  this means that
-                    // we only have one '&' (no '&' on the second line) and we
-                    // need to clear the flag so we know to process the T_EOS.
-                    continueFlag = false;
-                }
-            }
-
             return tk;
         } // end nextToken()
 
@@ -600,39 +581,7 @@ public class FortranAlternateLexer extends Lexer {
 
 
         private File findFile(String fileName) {
-            File tmpFile;
-            String tmpPath;
-            StringBuffer newFileName;
-
-            tmpFile = new File(fileName);
-            if(tmpFile.exists() == false) {
-                /* the file doesn't exist by the given name from the include line,
-                 * so we need to append it to each include dir and search.  */
-                for(int i = 0; i < this.includeDirs.size(); i++) {
-                    tmpPath = this.includeDirs.get(i);
-
-                    newFileName = new StringBuffer();
-
-                    /* Build the new file name with the path.  Add separator to
-                     * end of path if necessary (unix specific).  */
-                    newFileName = newFileName.append(tmpPath);
-                    if(tmpPath.charAt(tmpPath.length()-1) != '/') {
-                        newFileName = newFileName.append('/');
-                    }
-                    newFileName = newFileName.append(fileName);
-
-                    /* Try opening the new file.  */
-                    tmpFile = new File(newFileName.toString());
-                    if(tmpFile.exists() == true) {
-                        return tmpFile;
-                    }
-                }
-
-                /* File did not exist.  */
-                return null;
-            } else {
-                return tmpFile;
-            }
+            return null;
         } // end findFile()
 
 

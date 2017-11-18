@@ -1,5 +1,5 @@
 
-C minimalistic Fortran program
+      ! minimalistic Fortran program
 
       program empty
 

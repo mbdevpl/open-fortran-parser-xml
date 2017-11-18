@@ -1,6 +1,7 @@
 package fortran.ofp;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +24,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import fortran.ofp.parser.java.CommentTokensList;
+import fortran.ofp.parser.java.FortranLexer;
 import fortran.ofp.parser.java.FortranParserActionPrint;
 import fortran.ofp.parser.java.IFortranParser;
 
@@ -512,10 +514,17 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	public void cleanUp() {
 		while (context != root)
 			contextClose(context);
+		try {
+			// System.err.println("all tokens: " + new CommentTokensList(new File(filename), false));
+			CommentTokensList comments = new CommentTokensList(new File(filename), false, FortranLexer.LINE_COMMENT);
+			System.err.println("comments: " + comments);
+			// TODO: insertComments();
+		} catch (IOException error) {
+			error.printStackTrace();
+			System.exit(1);
+		}
 		calculateBounds(context);
 		try {
-			CommentTokensList comments = new CommentTokensList(new File(filename), false);
-			System.err.println(comments);
 			persist();
 		} catch (Exception error) {
 			error.printStackTrace();
