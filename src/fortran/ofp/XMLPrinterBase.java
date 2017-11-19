@@ -403,13 +403,16 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			++index;
 			if (line_begin == null || col_begin == null || line_end == null || col_end == null)
 				continue;
-			if (line_begin >= line)
+			if (line < line_begin)
 				return index;
 			if (line > line_end)
 				continue;
-			throw new RuntimeException();
+			if (line == line_begin)
+				if (col > col_end)
+					continue;
+			throw new RuntimeException("(" + line + "," + col + ")");
 		}
-		throw new RuntimeException();
+		return contextNodesCount(context);
 	}
 
 	protected Integer[] getBounds(Element context) {
@@ -556,7 +559,12 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 				updateBounds(comment);
 				contextClose();
 				element.getParentNode().removeChild(element);
-				this.context.insertBefore(element, contextNode(targetIndex));
+				if (targetIndex < contextNodesCount(this.context))
+					this.context.insertBefore(element, contextNode(targetIndex));
+				else if (targetIndex == contextNodesCount(this.context))
+					this.context.appendChild(element);
+				else
+					throw new IllegalArgumentException();
 				this.context = originalContext;
 			}
 	}
