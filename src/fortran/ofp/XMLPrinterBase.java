@@ -23,7 +23,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
-import fortran.ofp.parser.java.CommentTokensList;
+import fortran.ofp.parser.java.TokensList;
 import fortran.ofp.parser.java.FortranLexer;
 import fortran.ofp.parser.java.FortranParserActionPrint;
 import fortran.ofp.parser.java.IFortranParser;
@@ -515,8 +515,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		while (context != root)
 			contextClose(context);
 		try {
-			// System.err.println("all tokens: " + new CommentTokensList(new File(filename), false));
-			CommentTokensList comments = new CommentTokensList(new File(filename), false, FortranLexer.LINE_COMMENT);
+			// System.err.println("all tokens: " + new TokensList(new File(filename), false));
+			TokensList comments = new TokensList(new File(filename), false, FortranLexer.LINE_COMMENT);
 			System.err.println("comments: " + comments);
 			// TODO: insertComments();
 		} catch (IOException error) {

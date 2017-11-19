@@ -20,13 +20,13 @@ class FortranAltStream extends FortranStream {
 }
 */
 
-public class CommentTokensList extends ArrayList<Token> {
+public class TokensList extends ArrayList<Token> {
 
-  public CommentTokensList(File file, boolean fixed_form) throws IOException {
+  public TokensList(File file, boolean fixed_form) throws IOException {
     addAll(file, fixed_form);
   }
 
-  public CommentTokensList(File file, boolean fixed_form, int onlyOfType) throws IOException {
+  public TokensList(File file, boolean fixed_form, int onlyOfType) throws IOException {
     addAll(file, fixed_form, onlyOfType);
   }
 

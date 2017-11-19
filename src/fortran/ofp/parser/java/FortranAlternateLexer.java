@@ -622,6 +622,8 @@ public class FortranAlternateLexer extends Lexer {
                 System.err.println("ERROR: Unable to determine file name from " +
                                    "include line");
             }
+            if (includedFile == null)
+              return filename + ":?";
 
             return filename + ":" + includedFile.getAbsolutePath();
 
