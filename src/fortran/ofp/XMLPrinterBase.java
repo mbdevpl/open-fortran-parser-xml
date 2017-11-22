@@ -528,7 +528,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	protected void insertComments(Element context) throws IOException {
 			// System.err.println("all tokens: " + new TokensList(new File(filename), false));
 			TokensList comments = new TokensList(new File(filename), false, FortranLexer.LINE_COMMENT);
-			System.err.println("comments: " + comments);
+			// System.err.println("comments: " + comments);
 
 			for(Token comment: comments) {
 				int line = comment.getLine();
@@ -539,19 +539,21 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 				Element originalContext = this.context;
 				if (target == null && targetAlt == null) {
 					this.context = contextNode(root, 0);
-					System.err.println("either in the beginning or at the end...");
+					// System.err.println("either in the beginning or at the end...");
 				} else {
-					contextPrint(target);
-					contextPrint(targetAlt);
-					if (target != targetAlt)
+					if (target != targetAlt) {
+						contextPrint(target);
+						contextPrint(targetAlt);
 						throw new IllegalArgumentException();
+					}
 					this.context = target;
 				}
 				int targetIndex = findPosition(this.context, line, col_begin);
 				int targetIndexAlt = findPosition(this.context, line, col_end);
-				System.err.println("should be at index " + targetIndex + " or " + targetIndexAlt);
-				if (targetIndex != targetIndexAlt)
+				if (targetIndex != targetIndexAlt) {
+					System.err.println("should be at index " + targetIndex + " or " + targetIndexAlt);
 					throw new IllegalArgumentException();
+				}
 
 				contextOpen("comment");
 				Element element = this.context;
