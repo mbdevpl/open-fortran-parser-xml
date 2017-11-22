@@ -606,14 +606,16 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	public void cleanUp() {
 		while (context != root)
 			contextClose(context);
-		propagateBounds(context);
-		try {
-			insertComments(context);
-		} catch (IOException error) {
-			error.printStackTrace();
-			System.exit(1);
+		if (verbosity >= 100) {
+			propagateBounds(context);
+			try {
+				insertComments(context);
+			} catch (IOException error) {
+				error.printStackTrace();
+				System.exit(1);
+			}
+			propagateBounds(context);
 		}
-		propagateBounds(context);
 		try {
 			persist();
 		} catch (Exception error) {
