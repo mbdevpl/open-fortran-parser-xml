@@ -20,21 +20,12 @@ matrix:
       env: TRAVIS_JDK_VERSION=openjdk8
     - os: linux
       language: python
-      python: "3.6-dev"
-      env: TRAVIS_JDK_VERSION=oraclejdk9
-    - os: linux
-      language: python
       python: "3.7-dev"
       env: TRAVIS_JDK_VERSION=oraclejdk9
     - os: osx
       language: generic
       env:
-        - TRAVIS_PYTHON_VERSION="3.6.2"
-        - TRAVIS_JDK_VERSION=oraclejdk8
-    - os: osx
-      language: generic
-      env:
-        - TRAVIS_PYTHON_VERSION="3.6-dev"
+        - TRAVIS_PYTHON_VERSION="3.6.3"
         - TRAVIS_JDK_VERSION=oraclejdk8
     - os: osx
       language: generic
@@ -42,11 +33,7 @@ matrix:
         - TRAVIS_PYTHON_VERSION="3.7-dev"
         - TRAVIS_JDK_VERSION=oraclejdk8
   allow_failures:
-    - python: "3.6-dev"
     - python: "3.7-dev"
-    - env:
-        - TRAVIS_PYTHON_VERSION="3.6-dev"
-        - TRAVIS_JDK_VERSION=oraclejdk8
     - env:
         - TRAVIS_PYTHON_VERSION="3.7-dev"
         - TRAVIS_JDK_VERSION=oraclejdk8
