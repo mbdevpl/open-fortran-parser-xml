@@ -539,21 +539,27 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 				int col_begin = comment.getCharPositionInLine();
 				int col_end = col_begin + comment.getText().length();
 				Element target = findContext(context, line, col_begin);
+				/* debug-only
 				Element targetAlt = findContext(context, line, col_end);
-				if (target == null && targetAlt == null) {
+				*/
+				if (target == null /*&& targetAlt == null*/) {
 					target = contextNode(root, 0);
 					// System.err.println("either in the beginning or at the end...");
+				/* debug-only
 				} else if (target != targetAlt) {
 					contextPrint(target);
 					contextPrint(targetAlt);
 					throw new IllegalArgumentException();
+				*/
 				}
 				int targetIndex = findPosition(target, line, col_begin);
+				/* debug-only
 				int targetIndexAlt = findPosition(target, line, col_end);
 				if (targetIndex != targetIndexAlt) {
 					System.err.println("should be at index " + targetIndex + " or " + targetIndexAlt);
 					throw new IllegalArgumentException("two possible targets");
 				}
+				*/
 
 				Element commentNode = contextOpen("comment");
 				setAttribute("text", comment.getText());
