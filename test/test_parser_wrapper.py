@@ -2,6 +2,7 @@
 
 import itertools
 import logging
+import os
 import pathlib
 import tempfile
 import unittest
@@ -16,6 +17,7 @@ _LOG = logging.getLogger(__name__)
 _HERE = pathlib.Path(__file__).resolve().parent
 
 INPUT_PATHS = list(pathlib.Path(_HERE, 'examples').glob('**/*.*'))
+INPUT_PATHS_LARGE = list(pathlib.Path(_HERE, 'examples_large').glob('**/*.*'))
 VERBOSITIES = (0, 20, 80, 100)
 
 
@@ -76,7 +78,7 @@ class Tests(unittest.TestCase):
                     process = execute_parser(input_path, None, verbosity)
                     self.assertEqual(process.returncode, 0)
                     fortran_ast = ET.fromstring(process.stdout)
-                    self.assertIsInstance(fortran_ast, ET.Element)
+                    self._validate_tree(fortran_ast)
 
     def test_generate_xml(self):
         results_path = pathlib.Path(_HERE, 'results', 'examples')
@@ -89,14 +91,38 @@ class Tests(unittest.TestCase):
                     self.assertEqual(process.returncode, 0)
                     self.assertTrue(output_path.exists())
 
+    @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
+    def test_generate_xml_large(self):
+        results_path = pathlib.Path(_HERE, 'results', 'examples')
+        results_path.mkdir(exist_ok=True)
+        for input_path in INPUT_PATHS_LARGE:
+            for verbosity in VERBOSITIES:
+                with self.subTest(input_path=input_path, verbosity=verbosity):
+                    output_path = pathlib.Path(results_path, input_path.name + '.xml')
+                    process = execute_parser(input_path, output_path, verbosity)
+                    self.assertEqual(process.returncode, 0)
+                    self.assertTrue(output_path.exists())
+
+    def _validate_tree(self, tree):
+        self.assertIsNotNone(tree)
+        self.assertIsInstance(tree, ET.Element)
+        self.assertEqual(tree.tag, 'ofp')
+        self.assertEqual(len(tree), 1)
+        file_node = tree[0]
+        self.assertEqual(file_node.tag, 'file')
+        self.assertGreater(len(file_node), 0)
+
     def test_parse(self):
         for input_path in INPUT_PATHS:
             for verbosity in VERBOSITIES:
                 with self.subTest(input_path=input_path, verbosity=verbosity):
                     root_node = parse(input_path, verbosity)
-                    self.assertIsNotNone(root_node)
-                    self.assertEqual(root_node.tag, 'ofp')
-                    self.assertEqual(len(root_node), 1)
-                    file_node = root_node[0]
-                    self.assertEqual(file_node.tag, 'file')
-                    self.assertGreater(len(file_node), 0)
+                    self._validate_tree(root_node)
+
+    @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
+    def test_parse_large(self):
+        for input_path in INPUT_PATHS_LARGE:
+            for verbosity in VERBOSITIES:
+                with self.subTest(input_path=input_path, verbosity=verbosity):
+                    root_node = parse(input_path, verbosity)
+                    self._validate_tree(root_node)

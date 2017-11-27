@@ -306,6 +306,7 @@ class Tests(unittest.TestCase):
             'rule-tests/R1207.f90']]
         self.check_cases(input_paths)
 
+    @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
     def test_ofp_all_cases(self):
         tests_absolute_path = _OFP_TESTS_DIR.resolve()
         failure_reports_path = _HERE.joinpath('results', 'compatibility', 'failure')
