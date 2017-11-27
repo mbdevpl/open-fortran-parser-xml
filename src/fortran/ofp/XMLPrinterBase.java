@@ -555,13 +555,12 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 					throw new IllegalArgumentException("two possible targets");
 				}
 
-				contextOpen("comment");
-				Element element = this.context;
+				Element commentNode = contextOpen("comment");
 				setAttribute("text", comment.getText());
 				updateBounds(comment);
 				contextClose();
 
-				element.getParentNode().removeChild(element);
+				commentNode.getParentNode().removeChild(commentNode);
 				if (targetIndex < contextNodesCount(target))
 					target.insertBefore(element, contextNode(target, targetIndex));
 				else if (targetIndex == contextNodesCount(target))
