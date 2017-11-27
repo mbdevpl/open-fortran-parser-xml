@@ -316,6 +316,10 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	}
 
 	protected void contextPrint(Element context) {
+		if (context == null) {
+			System.err.println("context is null");
+			return;
+		}
 		System.err.println("context: " + context.getTagName());
 		System.err.println("  attributes: " + contextAttributes(context));
 		ArrayList<String> names = new ArrayList<String>();
