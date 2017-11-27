@@ -540,23 +540,19 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 				int col_end = col_begin + comment.getText().length();
 				Element target = findContext(context, line, col_begin);
 				Element targetAlt = findContext(context, line, col_end);
-				Element originalContext = this.context;
 				if (target == null && targetAlt == null) {
-					this.context = contextNode(root, 0);
+					target = contextNode(root, 0);
 					// System.err.println("either in the beginning or at the end...");
-				} else {
-					if (target != targetAlt) {
-						contextPrint(target);
-						contextPrint(targetAlt);
-						throw new IllegalArgumentException();
-					}
-					this.context = target;
+				} else if (target != targetAlt) {
+					contextPrint(target);
+					contextPrint(targetAlt);
+					throw new IllegalArgumentException();
 				}
-				int targetIndex = findPosition(this.context, line, col_begin);
-				int targetIndexAlt = findPosition(this.context, line, col_end);
+				int targetIndex = findPosition(target, line, col_begin);
+				int targetIndexAlt = findPosition(target, line, col_end);
 				if (targetIndex != targetIndexAlt) {
 					System.err.println("should be at index " + targetIndex + " or " + targetIndexAlt);
-					throw new IllegalArgumentException();
+					throw new IllegalArgumentException("two possible targets");
 				}
 
 				contextOpen("comment");
@@ -564,14 +560,14 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 				setAttribute("text", comment.getText());
 				updateBounds(comment);
 				contextClose();
+
 				element.getParentNode().removeChild(element);
-				if (targetIndex < contextNodesCount(this.context))
-					this.context.insertBefore(element, contextNode(targetIndex));
-				else if (targetIndex == contextNodesCount(this.context))
-					this.context.appendChild(element);
+				if (targetIndex < contextNodesCount(target))
+					target.insertBefore(element, contextNode(target, targetIndex));
+				else if (targetIndex == contextNodesCount(target))
+					target.appendChild(element);
 				else
-					throw new IllegalArgumentException();
-				this.context = originalContext;
+					throw new IllegalArgumentException("location within target is invalid");
 			}
 	}
 
