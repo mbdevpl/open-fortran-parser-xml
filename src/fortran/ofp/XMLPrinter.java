@@ -801,18 +801,15 @@ public class XMLPrinter extends XMLPrinterBase {
 			Element step = null;
 			contextOpen("range");
 			if (hasLowerBound) {
-				contextOpen("lower-bound");
-				lowerBound = context;
+				lowerBound = contextOpen("lower-bound");
 				contextClose();
 			}
 			if (hasUpperBound) {
-				contextOpen("upper-bound");
-				upperBound = context;
+				upperBound = contextOpen("upper-bound");
 				contextClose();
 			}
 			if (hasStride) {
-				contextOpen("step");
-				step = context;
+				step = contextOpen("step");
 				contextClose();
 			}
 			contextClose();
@@ -895,7 +892,7 @@ public class XMLPrinter extends XMLPrinterBase {
 					+ " hasAllocateCoarraySpec=" + hasAllocateCoarraySpec);
 		Element element = contextNode(-1);
 		if (element.getTagName().equals("expression"))
-			context = contextNode(-1);
+			context = element;
 		else {
 			contextOpen("expression");
 			moveHere(element);
@@ -1116,8 +1113,7 @@ public class XMLPrinter extends XMLPrinterBase {
 				int nodesCount = 2 * numAndOps + 2;
 				ArrayList<Element> nodes = contextNodes(-nodesCount, 2);
 				Element reference = contextNode(-nodesCount + 2);
-				contextOpen("operation");
-				Element operation = context;
+				Element operation = contextOpen("operation");
 				setAttribute("type", "unary");
 				for (Element node : nodes) {
 					boolean needsTransform = !node.getTagName().equals("operand")
