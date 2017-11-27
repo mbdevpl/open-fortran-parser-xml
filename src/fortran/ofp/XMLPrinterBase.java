@@ -568,9 +568,9 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 
 				commentNode.getParentNode().removeChild(commentNode);
 				if (targetIndex < contextNodesCount(target))
-					target.insertBefore(element, contextNode(target, targetIndex));
+					target.insertBefore(commentNode, contextNode(target, targetIndex));
 				else if (targetIndex == contextNodesCount(target))
-					target.appendChild(element);
+					target.appendChild(commentNode);
 				else
 					throw new IllegalArgumentException("location within target is invalid");
 			}
