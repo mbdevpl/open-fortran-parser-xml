@@ -315,7 +315,19 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		return contextNode(context, index);
 	}
 
+	protected String contextString(Element context) {
+		if (context == null)
+			return "context is null";
+		ArrayList<String> names = new ArrayList<String>();
+		for (Element node : contextNodes(context))
+			names.add(node.getTagName());
+		return "context: " + context.getTagName() + "\n"
+			+ "  attributes: " + contextAttributes(context) + "\n"
+			+ "  sub-contexts: " + names;
+	}
+
 	protected void contextPrint(Element context) {
+		// System.err.println(contextString(context));
 		if (context == null) {
 			System.err.println("context is null");
 			return;
@@ -412,9 +424,16 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			if (line > line_end)
 				continue;
 			if (line == line_begin)
+			  if (col < col_begin)
+					return index;
 				if (col > col_end)
 					continue;
-			throw new RuntimeException("(" + line + "," + col + ")");
+			throw new RuntimeException(
+				"looking for (" + line + "," + col + ")"
+				+ " within bounds (" + line_begin + "," + col_begin + ")"
+				+ " .. (" + line_end + "," + col_end + ")" + "\n"
+				+ "of " + contextString(node) + "\n"
+				+ "subnode of " + contextString(context));
 		}
 		return contextNodesCount(context);
 	}
