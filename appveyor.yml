@@ -62,7 +62,9 @@ build: off
 
 test_script:
   - set TEST_PACKAGING=1
-  - set TEST_DEPENDENCIES=1 
+  - set TEST_DEPENDENCIES=1
+  - set TEST_LONG=1
+  - set TEST_COVERAGE=1
   - python -m coverage run --branch --source . -m unittest discover --verbose
 
 after_test:
