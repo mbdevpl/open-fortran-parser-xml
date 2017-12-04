@@ -352,6 +352,22 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
+	public void attr_spec(Token attrKeyword, int attr) {
+		String nestIn = "";
+		switch (attr) {
+		case 816:
+			nestIn = "pointer";
+			break;
+		default:
+			break;
+		}
+		if (nestIn.length() > 0)
+			contextOpen(nestIn);
+		super.attr_spec(attrKeyword, attr);
+		if (nestIn.length() > 0)
+			contextClose();
+	}
+
 	public void entity_decl(Token id, boolean hasArraySpec, boolean hasCoarraySpec, boolean hasCharLength,
 			boolean hasInitialization) {
 		contextCloseAllInner("variable");
@@ -462,6 +478,26 @@ public class XMLPrinter extends XMLPrinterBase {
 			throw new IllegalArgumentException(Integer.toString(type));
 		}
 		super.array_spec_element(type);
+		contextClose();
+	}
+
+	public void intent_spec(Token intentKeyword1, Token intentKeyword2, int intent) {
+		contextOpen("intent");
+		switch (intent) {
+		case 600:
+			setAttribute("type", "in");
+			break;
+		case 601:
+			setAttribute("type", "out");
+			break;
+		case 602:
+			setAttribute("type", "inout");
+			break;
+		default:
+			throw new IllegalArgumentException(Integer.toString(intent));
+		}
+		if (verbosity >= 100)
+			super.intent_spec(intentKeyword1, intentKeyword2, intent);
 		contextClose();
 	}
 
