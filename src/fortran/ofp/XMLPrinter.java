@@ -1775,10 +1775,10 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void print_stmt(Token label, Token printKeyword, Token eos, boolean hasOutputItemList) {
-		Element outputs = null;
-		if (hasOutputItemList)
-			outputs = contextNode(-1);
+		Element outputs = hasOutputItemList ? contextNode(-1) : null;
+		Element format = contextNode(hasOutputItemList ? -2: -1);
 		contextOpen("print");
+		moveHere(format);
 		if (hasOutputItemList)
 			moveHere(outputs);
 		super.print_stmt(label, printKeyword, eos, hasOutputItemList);
@@ -1808,6 +1808,22 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (verbosity >= 100)
 			super.io_control_spec_list(count);
 		setAttribute("count", count);
+		contextClose();
+	}
+
+	public void format() {
+		Element label = null;
+		if (contextNodesCount() > 0) {
+			Element node = contextNode(-1);
+			if (node.getNodeName().equals("literal"))
+				label = node;
+		}
+		contextOpen("print-format");
+		setAttribute("type", label == null ? "*" : "label");
+		if (label != null)
+			moveHere(label);
+		if (verbosity >= 100)
+			super.format();
 		contextClose();
 	}
 
@@ -1889,10 +1905,28 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
+	public void format_specification(boolean hasFormatItemList) {
+		Element items = hasFormatItemList ? contextNode(-1) : null;
+		contextOpen("format");
+		if (hasFormatItemList)
+			moveHere(items);
+		if (verbosity >= 60)
+			super.format_specification(hasFormatItemList);
+		contextClose();
+	}
+
 	public void format_item_list__begin() {
-		// contextOpen("declaration");
+		contextOpen("format-items");
 		if (verbosity >= 100)
 			super.format_item_list__begin();
+	}
+
+	public void format_item_list(int count) {
+		contextCloseAllInner("format-items");
+		if (verbosity >= 100)
+			super.format_item_list(count);
+		setAttribute("count", count);
+		contextClose("format-items");
 	}
 
 	public void main_program__begin() {
