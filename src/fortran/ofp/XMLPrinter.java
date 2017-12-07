@@ -1407,7 +1407,7 @@ public class XMLPrinter extends XMLPrinterBase {
 		Element statementToBeFixed = contextNode(ifBody, 0);
 		Element ifCondition = contextNode(statementToBeFixed, 0);
 		if (!ifBody.getTagName().equals("body"))
-			throw new IllegalArgumentException();
+			cleanUpAfterError("if body node must be named body");
 		moveTo(ifHeader, ifCondition);
 		contextCloseAllInner("if");
 		super.if_stmt(label, ifKeyword);
@@ -1907,6 +1907,9 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void format_specification(boolean hasFormatItemList) {
 		Element items = hasFormatItemList ? contextNode(-1) : null;
+		if (!context.getNodeName().equals("declaration"))
+			cleanUpAfterError("format allowed only in declaration");
+		setAttribute("type", "format");
 		contextOpen("format");
 		if (hasFormatItemList)
 			moveHere(items);
