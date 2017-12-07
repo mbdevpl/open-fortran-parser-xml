@@ -605,8 +605,27 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "parameter");
+		contextOpen("constants");
 		if (verbosity >= 100)
 			super.named_constant_def_list__begin();
+	}
+
+	public void named_constant_def_list(int count) {
+		contextCloseAllInner("constants");
+		if (verbosity >= 100)
+			super.named_constant_def_list(count);
+		setAttribute("count", count);
+		contextClose("constants");
+	}
+
+	public void named_constant_def(Token id) {
+		Element value = contextNode(-1);
+		contextOpen("constant");
+		setAttribute("name", id);
+		moveHere(value);
+		if (verbosity >= 100)
+			super.named_constant_def(id);
+		contextClose();
 	}
 
 	public void pointer_decl_list__begin() {
