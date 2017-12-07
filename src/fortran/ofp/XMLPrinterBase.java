@@ -492,12 +492,37 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		}
 	}
 
-	protected void moveTo(Element targetContext, Element element) {
+	/**
+	 * Move given element from its current context to a given target context.
+	 *
+	 * The element is inserted at target index - so that later contextNode(targetContext, targetIndex) will return the
+	 * element.
+	 *
+	 * The index, as in contextNode() method, can be negative.
+	 *
+	 * Unlike contextNode() method the index can be also null, which appends the element at the end of target context.
+	 *
+	 * @param targetContext
+	 * @param targetIndex
+	 * @param element
+	 */
+	protected void moveTo(Element targetContext, Integer targetIndex, Element element) {
 		if (targetContext == element)
 			cleanUpAfterError("Cannot move " + element + " to itself.");
 		try {
 			element.getParentNode().removeChild(element);
-			targetContext.appendChild(element);
+			boolean insert = false;
+			if (targetIndex != null)
+				if (targetIndex < 0) {
+					targetIndex += 1;
+					if (targetIndex < 0)
+						insert = true;
+				} else
+					insert = true;
+			if (insert)
+				targetContext.insertBefore(element, contextNode(targetContext, targetIndex));
+			else
+				targetContext.appendChild(element);
 		} catch (org.w3c.dom.DOMException error) {
 			System.err.println("Cannot move " + element + " to " + targetContext + ".");
 			contextPrint(element);
@@ -508,17 +533,33 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		}
 	}
 
-	protected void moveTo(Element targetContext, ArrayList<Element> elements) {
-		for (Element element : elements)
-			moveTo(targetContext, element);
+	protected void moveTo(Element targetContext, Element element) {
+		moveTo(targetContext, null, element);
+	}
+
+	protected void moveHere(Integer targetIndex, Element element) {
+		moveTo(context, targetIndex, element);
 	}
 
 	protected void moveHere(Element element) {
-		moveTo(context, element);
+		moveTo(context, null, element);
+	}
+
+	protected void moveTo(Element targetContext, Integer targetIndex, ArrayList<Element> elements) {
+		for (Element element : elements)
+			moveTo(targetContext, targetIndex, element);
+	}
+
+	protected void moveTo(Element targetContext, ArrayList<Element> elements) {
+		moveTo(targetContext, null, elements);
+	}
+
+	protected void moveTo(Integer targetIndex, ArrayList<Element> elements) {
+		moveTo(context, targetIndex, elements);
 	}
 
 	protected void moveHere(ArrayList<Element> elements) {
-		moveTo(context, elements);
+		moveTo(context, null, elements);
 	}
 
 	protected void printRuleHeader(int rule, String name, String addendum) {
