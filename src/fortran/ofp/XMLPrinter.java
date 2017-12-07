@@ -1776,7 +1776,7 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void print_stmt(Token label, Token printKeyword, Token eos, boolean hasOutputItemList) {
 		Element outputs = hasOutputItemList ? contextNode(-1) : null;
-		Element format = contextNode(hasOutputItemList ? -2: -1);
+		Element format = contextNode(hasOutputItemList ? -2 : -1);
 		contextOpen("print");
 		moveHere(format);
 		if (hasOutputItemList)

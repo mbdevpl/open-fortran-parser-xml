@@ -321,9 +321,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		ArrayList<String> names = new ArrayList<String>();
 		for (Element node : contextNodes(context))
 			names.add(node.getTagName());
-		return "context: " + context.getTagName() + "\n"
-			+ "  attributes: " + contextAttributes(context) + "\n"
-			+ "  sub-contexts: " + names;
+		return "context: " + context.getTagName() + "\n" + "  attributes: " + contextAttributes(context) + "\n"
+				+ "  sub-contexts: " + names;
 	}
 
 	protected void contextPrint(Element context) {
@@ -364,8 +363,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			valueString = token.getText();
 			if (verbosity >= 100)
 				updateBounds(context, token);
-		}
-		else
+		} else
 			valueString = value.toString();
 		context.setAttribute(name, valueString);
 	}
@@ -384,8 +382,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	protected static String X_MAX = "col_end";
 
 	/**
-	 * Return null if (line, col) not in this context,
-	 * and when it cannot be determined if it is in it or not.
+	 * Return null if (line, col) not in this context, and when it cannot be determined if it is in it or not.
 	 *
 	 * Otherwise, return an innermost context which contains a given location.
 	 */
@@ -424,16 +421,13 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			if (line > line_end)
 				continue;
 			if (line == line_begin)
-			  if (col < col_begin)
+				if (col < col_begin)
 					return index;
-				if (col > col_end)
-					continue;
-			throw new RuntimeException(
-				"looking for (" + line + "," + col + ")"
-				+ " within bounds (" + line_begin + "," + col_begin + ")"
-				+ " .. (" + line_end + "," + col_end + ")" + "\n"
-				+ "of " + contextString(node) + "\n"
-				+ "subnode of " + contextString(context));
+			if (col > col_end)
+				continue;
+			throw new RuntimeException("looking for (" + line + "," + col + ")" + " within bounds (" + line_begin + ","
+					+ col_begin + ")" + " .. (" + line_end + "," + col_end + ")" + "\n" + "of " + contextString(node)
+					+ "\n" + "subnode of " + contextString(context));
 		}
 		return contextNodesCount(context);
 	}
@@ -451,19 +445,17 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		Integer col_end = null;
 		if (context.hasAttribute(X_MAX))
 			col_end = Integer.valueOf(context.getAttribute(X_MAX));
-		return new Integer[]{line_begin, col_begin, line_end, col_end};
+		return new Integer[] { line_begin, col_begin, line_end, col_end };
 	}
 
 	protected void updateBounds(Element context, Integer[] bounds) {
 		updateBounds(context, bounds[0], bounds[1], bounds[2], bounds[3]);
 	}
 
-	protected void updateBounds(
-			Element context, Integer new_line_begin, Integer new_col_begin, Integer new_line_end,
+	protected void updateBounds(Element context, Integer new_line_begin, Integer new_col_begin, Integer new_line_end,
 			Integer new_col_end) {
 		Integer[] bounds = getBounds(context);
-		Integer line_begin = bounds[0], col_begin = bounds[1],
-			line_end = bounds[2], col_end = bounds[3];
+		Integer line_begin = bounds[0], col_begin = bounds[1], line_end = bounds[2], col_end = bounds[3];
 		if (new_line_begin != null && (line_begin == null || new_line_begin < line_begin))
 			context.setAttribute(Y_MIN, new_line_begin.toString());
 		if (new_col_begin != null && (col_begin == null || new_line_begin < line_begin
@@ -471,8 +463,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			context.setAttribute(X_MIN, new_col_begin.toString());
 		if (new_line_end != null && (line_end == null || new_line_end > line_end))
 			context.setAttribute(Y_MAX, new_line_end.toString());
-		if (new_col_end != null && (col_end == null || new_line_end > line_end
-				|| new_line_end == line_end && new_col_end > col_end))
+		if (new_col_end != null
+				&& (col_end == null || new_line_end > line_end || new_line_end == line_end && new_col_end > col_end))
 			context.setAttribute(X_MAX, new_col_end.toString());
 	}
 
@@ -493,7 +485,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 
 	protected void propagateBounds(Element context) {
 		ArrayList<Element> nodes = contextNodes(context);
-		for(Element node : nodes) {
+		for (Element node : nodes) {
 			propagateBounds(node);
 			if (context != root)
 				updateBounds(context, getBounds(node));
@@ -549,50 +541,50 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	}
 
 	protected void insertComments(Element context) throws IOException {
-			// System.err.println("all tokens: " + new TokensList(new File(filename), false));
-			TokensList comments = new TokensList(new File(filename), false, FortranLexer.LINE_COMMENT);
-			// System.err.println("comments: " + comments);
+		// System.err.println("all tokens: " + new TokensList(new File(filename), false));
+		TokensList comments = new TokensList(new File(filename), false, FortranLexer.LINE_COMMENT);
+		// System.err.println("comments: " + comments);
 
-			for(Token comment: comments) {
-				int line = comment.getLine();
-				int col_begin = comment.getCharPositionInLine();
-				int col_end = col_begin + comment.getText().length();
-				Element target = findContext(context, line, col_begin);
-				/* debug-only
-				Element targetAlt = findContext(context, line, col_end);
-				*/
-				if (target == null /*&& targetAlt == null*/) {
-					target = contextNode(root, 0);
-					// System.err.println("either in the beginning or at the end...");
+		for (Token comment : comments) {
+			int line = comment.getLine();
+			int col_begin = comment.getCharPositionInLine();
+			int col_end = col_begin + comment.getText().length();
+			Element target = findContext(context, line, col_begin);
+			/* debug-only
+			Element targetAlt = findContext(context, line, col_end);
+			*/
+			if (target == null /*&& targetAlt == null*/) {
+				target = contextNode(root, 0);
+				// System.err.println("either in the beginning or at the end...");
 				/* debug-only
 				} else if (target != targetAlt) {
 					contextPrint(target);
 					contextPrint(targetAlt);
 					throw new IllegalArgumentException();
 				*/
-				}
-				int targetIndex = findPosition(target, line, col_begin);
-				/* debug-only
-				int targetIndexAlt = findPosition(target, line, col_end);
-				if (targetIndex != targetIndexAlt) {
-					System.err.println("should be at index " + targetIndex + " or " + targetIndexAlt);
-					throw new IllegalArgumentException("two possible targets");
-				}
-				*/
-
-				Element commentNode = contextOpen("comment");
-				setAttribute("text", comment.getText());
-				updateBounds(comment);
-				contextClose();
-
-				commentNode.getParentNode().removeChild(commentNode);
-				if (targetIndex < contextNodesCount(target))
-					target.insertBefore(commentNode, contextNode(target, targetIndex));
-				else if (targetIndex == contextNodesCount(target))
-					target.appendChild(commentNode);
-				else
-					throw new IllegalArgumentException("location within target is invalid");
 			}
+			int targetIndex = findPosition(target, line, col_begin);
+			/* debug-only
+			int targetIndexAlt = findPosition(target, line, col_end);
+			if (targetIndex != targetIndexAlt) {
+				System.err.println("should be at index " + targetIndex + " or " + targetIndexAlt);
+				throw new IllegalArgumentException("two possible targets");
+			}
+			*/
+
+			Element commentNode = contextOpen("comment");
+			setAttribute("text", comment.getText());
+			updateBounds(comment);
+			contextClose();
+
+			commentNode.getParentNode().removeChild(commentNode);
+			if (targetIndex < contextNodesCount(target))
+				target.insertBefore(commentNode, contextNode(target, targetIndex));
+			else if (targetIndex == contextNodesCount(target))
+				target.appendChild(commentNode);
+			else
+				throw new IllegalArgumentException("location within target is invalid");
+		}
 	}
 
 	public void persist() throws TransformerException {
