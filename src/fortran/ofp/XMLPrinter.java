@@ -1905,11 +1905,18 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
+	public void format_stmt(Token label, Token formatKeyword, Token eos) {
+		Element labelNode = (label != null) ? contextNode(-2) : null;
+		context = contextNode(-1);
+		if (label != null)
+			moveHere(0, labelNode);
+		if (verbosity >= 60)
+			super.format_stmt(label, formatKeyword, eos);
+		contextClose();
+	}
+
 	public void format_specification(boolean hasFormatItemList) {
 		Element items = hasFormatItemList ? contextNode(-1) : null;
-		if (!context.getNodeName().equals("declaration"))
-			cleanUpAfterError("format allowed only in declaration");
-		setAttribute("type", "format");
 		contextOpen("format");
 		if (hasFormatItemList)
 			moveHere(items);
