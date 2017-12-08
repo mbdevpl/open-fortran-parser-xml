@@ -433,19 +433,18 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	}
 
 	protected Integer[] getBounds(Element context) {
-		Integer line_begin = null;
-		if (context.hasAttribute(Y_MIN))
-			line_begin = Integer.valueOf(context.getAttribute(Y_MIN));
-		Integer col_begin = null;
-		if (context.hasAttribute(X_MIN))
-			col_begin = Integer.valueOf(context.getAttribute(X_MIN));
-		Integer line_end = null;
-		if (context.hasAttribute(Y_MAX))
-			line_end = Integer.valueOf(context.getAttribute(Y_MAX));
-		Integer col_end = null;
-		if (context.hasAttribute(X_MAX))
-			col_end = Integer.valueOf(context.getAttribute(X_MAX));
-		return new Integer[] { line_begin, col_begin, line_end, col_end };
+		Integer lineBegin = context.hasAttribute(Y_MIN) ? Integer.valueOf(context.getAttribute(Y_MIN)) : null;
+		Integer colBegin = context.hasAttribute(X_MIN) ? Integer.valueOf(context.getAttribute(X_MIN)) : null;
+		Integer lineEnd = context.hasAttribute(Y_MAX) ? Integer.valueOf(context.getAttribute(Y_MAX)) : null;
+		Integer colEnd = context.hasAttribute(X_MAX) ? Integer.valueOf(context.getAttribute(X_MAX)) : null;
+		return new Integer[] { lineBegin, colBegin, lineEnd, colEnd };
+	}
+
+	protected Integer[] getBounds(Token token) {
+		Integer line = token.getLine();
+		Integer colBegin = token.getCharPositionInLine();
+		Integer colEnd = colBegin + token.getText().length();
+		return new Integer[] { line, colBegin, line, colEnd };
 	}
 
 	protected void updateBounds(Element context, Integer[] bounds) {
@@ -472,10 +471,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		for (Token newToken : newTokens) {
 			if (newToken == null)
 				continue;
-			Integer new_line = newToken.getLine();
-			Integer new_col_begin = newToken.getCharPositionInLine();
-			Integer new_col_end = new_col_begin + newToken.getText().length();
-			updateBounds(context, new_line, new_col_begin, new_line, new_col_end);
+			updateBounds(context, getBounds(newToken));
 		}
 	}
 
