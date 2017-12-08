@@ -581,17 +581,21 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		setAttribute(name, param);
 	}
 
-	protected void insertComments(Element context) throws IOException {
+	/**
+	 * Insert raw tokens from current file into given context.
+	 */
+	protected void insertTokens(Element context, int tokenType, String tokenContextName, String tokenTextAttributeName)
+			throws IOException {
 		// System.err.println("all tokens: " + new TokensList(new File(filename), false));
-		TokensList comments = new TokensList(new File(filename), false, FortranLexer.LINE_COMMENT);
-		// System.err.println("comments: " + comments);
+		TokensList tokens = new TokensList(new File(filename), false, tokenType);
+		// System.err.println("found tokens: " + tokens);
 
-		for (Token comment : comments) {
-			int line = comment.getLine();
-			int col_begin = comment.getCharPositionInLine();
-			int col_end = col_begin + comment.getText().length();
+		for (Token token : tokens) {
+			int line = token.getLine();
+			int col_begin = token.getCharPositionInLine();
 			Element target = findContext(context, line, col_begin);
 			/* debug-only
+			int col_end = col_begin + comment.getText().length();
 			Element targetAlt = findContext(context, line, col_end);
 			*/
 			if (target == null /*&& targetAlt == null*/) {
@@ -613,16 +617,16 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			}
 			*/
 
-			Element commentNode = contextOpen("comment");
-			setAttribute("text", comment.getText());
-			updateBounds(comment);
+			Element tokenNode = contextOpen(tokenContextName);
+			setAttribute(tokenTextAttributeName, token.getText());
+			updateBounds(token);
 			contextClose();
 
-			commentNode.getParentNode().removeChild(commentNode);
+			tokenNode.getParentNode().removeChild(tokenNode);
 			if (targetIndex < contextNodesCount(target))
-				target.insertBefore(commentNode, contextNode(target, targetIndex));
+				target.insertBefore(tokenNode, contextNode(target, targetIndex));
 			else if (targetIndex == contextNodesCount(target))
-				target.appendChild(commentNode);
+				target.appendChild(tokenNode);
 			else
 				throw new IllegalArgumentException("location within target is invalid");
 		}
@@ -668,7 +672,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		if (verbosity >= 100) {
 			propagateBounds(context);
 			try {
-				insertComments(context);
+				insertTokens(context, FortranLexer.LINE_COMMENT, "comment", "text");
 			} catch (IOException error) {
 				error.printStackTrace();
 				System.exit(1);
