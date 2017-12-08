@@ -673,6 +673,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			propagateBounds(context);
 			try {
 				insertTokens(context, FortranLexer.LINE_COMMENT, "comment", "text");
+				insertTokens(context, FortranLexer.PREPROCESS_LINE, "directive", "text");
 			} catch (IOException error) {
 				error.printStackTrace();
 				System.exit(1);
