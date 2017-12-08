@@ -455,16 +455,59 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			Integer new_col_end) {
 		Integer[] bounds = getBounds(context);
 		Integer line_begin = bounds[0], col_begin = bounds[1], line_end = bounds[2], col_end = bounds[3];
-		if (new_line_begin != null && (line_begin == null || new_line_begin < line_begin))
+
+		if (new_line_begin == null && new_col_begin == null && new_line_end == null && new_col_end == null)
+			return;
+		if (new_line_begin == null || new_col_begin == null || new_line_end == null || new_col_end == null)
+			throw new IllegalArgumentException("the implementation of this method is all-or-nothing");
+
+		boolean updateLineBegin = false;
+		boolean updateColBegin = false;
+		boolean updateLineEnd = false;
+		boolean updateColEnd = false;
+
+		if (line_begin == null && col_begin == null && line_end == null && col_end == null) {
+			updateLineBegin = true;
+			updateColBegin = true;
+			updateLineEnd = true;
+			updateColEnd = true;
+		} else if (line_begin == null || col_begin == null || line_end == null || col_end == null)
+			throw new IllegalArgumentException("the implementation of this method is all-or-nothing");
+		else {
+			if (new_line_begin < line_begin)
+				updateLineBegin = true;
+
+			if (updateLineBegin)
+				updateColBegin = true;
+			else if (new_line_begin == line_begin && new_col_begin < col_begin)
+				updateColBegin = true;
+
+			if (new_line_end > line_end)
+				updateLineEnd = true;
+
+			if (updateLineEnd)
+				updateColEnd = true;
+			else if (new_line_end == line_end && new_col_end > col_end)
+				updateColEnd = true;
+
+			if (new_line_end == line_end && updateColEnd) {
+				System.err.println("updating col_end in " + contextString(context));
+			}
+
+		}
+
+		if (updateLineBegin)
 			context.setAttribute(Y_MIN, new_line_begin.toString());
-		if (new_col_begin != null && (col_begin == null || new_line_begin < line_begin
-				|| new_line_begin == line_begin && new_col_begin < col_begin))
+		if (updateColBegin)
 			context.setAttribute(X_MIN, new_col_begin.toString());
-		if (new_line_end != null && (line_end == null || new_line_end > line_end))
+		if (updateLineEnd)
 			context.setAttribute(Y_MAX, new_line_end.toString());
-		if (new_col_end != null
-				&& (col_end == null || new_line_end > line_end || new_line_end == line_end && new_col_end > col_end))
+		if (updateColEnd)
 			context.setAttribute(X_MAX, new_col_end.toString());
+
+		if (new_line_end == line_end && updateColEnd) {
+			System.err.println("updated  col_end in " + contextString(context));
+		}
 	}
 
 	protected void updateBounds(Element context, Token... newTokens) {

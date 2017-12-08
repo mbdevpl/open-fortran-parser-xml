@@ -1,5 +1,7 @@
 package fortran.ofp;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -8,6 +10,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
 import fortran.ofp.parser.java.IFortranParser;
+import fortran.ofp.parser.java.TokensList;
 
 /**
  * XML output generator for Open Fortran Parser.
@@ -2343,9 +2346,43 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
+	protected void printTokens(Token... tokens) {
+		for (Token token : tokens) {
+			if (token == null) {
+				System.err.println("token is null");
+				continue;
+			}
+			int line = token.getLine();
+			int colBegin = token.getCharPositionInLine();
+			String text = token.getText();
+			int colEnd = colBegin + text.length();
+			System.err.println(filename + "@" + line + ":" + colBegin + "~" + colEnd + ": \"" + text + "\"");
+		}
+		/*
+		try {
+			TokensList tokens = new TokensList(new File(filename), false);
+			System.err.println("found tokens: " + tokens);
+		} catch (IOException e) {
+		}
+		*/
+	}
+
 	public void end_subroutine_stmt(Token label, Token keyword1, Token keyword2, Token name, Token eos) {
 		contextCloseAllInner("subroutine");
+		//System.err.println(Arrays.toString(getBounds(context)));
+		//updateBounds(name);
+		//updateBounds(eos);
+		//System.err.println(Arrays.toString(getBounds(context)));
+		System.err.println("end subroutine statments");
 		super.end_subroutine_stmt(label, keyword1, keyword2, name, eos);
+		System.err.println(Arrays.toString(getBounds(context)));
+		System.err.println(Arrays.toString(getBounds(context)));
+		updateBounds(label, keyword1, keyword2, name, eos);
+		System.err.println(Arrays.toString(getBounds(context)));
+		printTokens(label, keyword1, keyword2, name, eos);
+		System.err.println(Arrays.toString(getBounds(context)));
+		//updateBounds(eos);
+		//System.err.println(Arrays.toString(getBounds(context)));
 		contextClose();
 	}
 
