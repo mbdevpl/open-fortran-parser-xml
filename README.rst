@@ -57,16 +57,11 @@ dependencies
 
 *   Java 1.7 or later
 
-*   Open Fortran Parser 0.8.4-2
+*   Open Fortran Parser 0.8.4-3
 
     https://github.com/mbdevpl/open-fortran-parser/releases
 
-    This is a patched version of OFP. Specifically, `FortranParserActionPrint` class in OFP
-    could not be properly subclassed due to access levels of members of that class, so for example
-    writing my own printer would introduce a lot of code duplication. Patch resolves this,
-    without affecting any functionality.
-
-    The patch also resolves an issue when compiling with recent GCC versions.
+    This is a patched version of OFP. The list of changes is available at the above link.
 
 *   ANTRL 3.3 (dependency of Open Fortran Parser)
 
@@ -95,7 +90,7 @@ Build:
     ant
     export CLASSPATH="${CLASSPATH}:$(pwd)/dist/*"
 
-This will create a `.jar` file in `dist` directory.
+This will create a `.jar` file in `dist` directory, and add it to the Java classpath.
 
 
 how to run
@@ -153,6 +148,9 @@ Inside the :xml:`<file>`, there might be one or many of the following nodes:
 Each of which has :xml:`<header>` and :xml:`<body>`.
 Additionally, :xml:`<module>` has :xml:`<members>`.
 
+The contents of the header depend on the type of the node. For example, in case of subroutines,
+it contains list of parameters.
+
 In the body, a special node :xml:`<specification>`, followed by a collection of statements can be found.
 
 The :xml:`<specification>` contains a collection of :xml:`<declaraion>` nodes.
@@ -173,13 +171,14 @@ It has :xml:`<lower-bound>`, :xml:`<upper-bound>`  and :xml:`<step>`.
 
 In the header of :xml:`<if>`, an expression is present.
 
-Expressions are built from the :xml:`<operation>` nodes, each of which contains a collection of
-:xml:`<operand>` and :xml:`<operator>` nodes. Each operand can be also an expression,
-or a simple node like:
+Expression might be a single node like:
 
 *   :xml:`<name>`
 *   :xml:`<literal>`
 *   ...
+
+More complex expressions are built from the :xml:`<operation>` nodes, each of which contains
+a collection of :xml:`<operand>` and :xml:`<operator>` nodes. Each operand constains an expression.
 
 All simple statements are using :xml:`<statement>` node, which wraps around nodes like:
 
@@ -188,6 +187,10 @@ All simple statements are using :xml:`<statement>` node, which wraps around node
 *   :xml:`<open>`
 *   :xml:`<close>`
 *   :xml:`<write>`
+*   :xml:`<format>`
+*   :xml:`<print>`
+*   :xml:`<allocate>`
+*   :xml:`<deallocate>`
 *   :xml:`<return>`
 *   :xml:`<stop>`
 *   :xml:`<continue>`

@@ -24,6 +24,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import fortran.ofp.parser.java.TokensList;
+import fortran.ofp.parser.java.CodeBounds;
 import fortran.ofp.parser.java.FortranLexer;
 import fortran.ofp.parser.java.FortranParserActionPrint;
 import fortran.ofp.parser.java.IFortranParser;
@@ -361,8 +362,11 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		else if (value instanceof Token) {
 			Token token = (Token) value;
 			valueString = token.getText();
-			if (verbosity >= 100)
-				updateBounds(context, token);
+			if (verbosity >= 100) {
+				CodeBounds bounds = new CodeBounds(context);
+				bounds.extend(token);
+				bounds.persist(context);
+			}
 		} else
 			valueString = value.toString();
 		context.setAttribute(name, valueString);
@@ -376,11 +380,6 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		setAttribute(name, value, context);
 	}
 
-	protected static String Y_MIN = "line_begin";
-	protected static String X_MIN = "col_begin";
-	protected static String Y_MAX = "line_end";
-	protected static String X_MAX = "col_end";
-
 	/**
 	 * Return null if (line, col) not in this context, and when it cannot be determined if it is in it or not.
 	 *
@@ -393,141 +392,55 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 				continue;
 			return containingNode;
 		}
-		Integer[] bounds = getBounds(context);
-		Integer line_begin = bounds[0], col_begin = bounds[1], line_end = bounds[2], col_end = bounds[3];
-		if (line_begin == null || col_begin == null || line_end == null || col_end == null)
+		CodeBounds bounds = new CodeBounds(context);
+		if (bounds.begin == null || bounds.end == null)
 			return null;
-		if (line < line_begin || line > line_end)
+		if (line < bounds.begin.line || line > bounds.end.line)
 			return null;
-		if (line > line_begin && line < line_end)
+		if (line > bounds.begin.line && line < bounds.end.line)
 			return context;
-		if (line == line_begin)
-			return col >= col_begin ? context : null;
-		if (line == line_end)
-			return col <= col_end ? context : null;
+		if (line == bounds.begin.line)
+			return col >= bounds.begin.col ? context : null;
+		if (line == bounds.end.line)
+			return col <= bounds.end.col ? context : null;
 		throw new RuntimeException();
 	}
 
 	public int findPosition(Element context, int line, int col) {
 		int index = -1;
 		for (Element node : contextNodes(context)) {
-			Integer[] bounds = getBounds(node);
-			Integer line_begin = bounds[0], col_begin = bounds[1], line_end = bounds[2], col_end = bounds[3];
+			CodeBounds bounds = new CodeBounds(node);
 			++index;
-			if (line_begin == null || col_begin == null || line_end == null || col_end == null)
+			if (bounds.begin == null ||  bounds.end == null)
 				continue;
-			if (line < line_begin)
+			if (line < bounds.begin.line)
 				return index;
-			if (line > line_end)
+			if (line > bounds.end.line)
 				continue;
-			if (line == line_begin)
-				if (col < col_begin)
+			if (line == bounds.begin.line)
+				if (col < bounds.begin.col)
 					return index;
-			if (col > col_end)
+			if (col > bounds.end.col)
 				continue;
-			throw new RuntimeException("looking for (" + line + "," + col + ")" + " within bounds (" + line_begin + ","
-					+ col_begin + ")" + " .. (" + line_end + "," + col_end + ")" + "\n" + "of " + contextString(node)
+			throw new RuntimeException("looking for (" + line + "," + col + ")" + " within bounds " + bounds + "\n" + "of " + contextString(node)
 					+ "\n" + "subnode of " + contextString(context));
 		}
 		return contextNodesCount(context);
-	}
-
-	protected Integer[] getBounds(Element context) {
-		Integer lineBegin = context.hasAttribute(Y_MIN) ? Integer.valueOf(context.getAttribute(Y_MIN)) : null;
-		Integer colBegin = context.hasAttribute(X_MIN) ? Integer.valueOf(context.getAttribute(X_MIN)) : null;
-		Integer lineEnd = context.hasAttribute(Y_MAX) ? Integer.valueOf(context.getAttribute(Y_MAX)) : null;
-		Integer colEnd = context.hasAttribute(X_MAX) ? Integer.valueOf(context.getAttribute(X_MAX)) : null;
-		return new Integer[] { lineBegin, colBegin, lineEnd, colEnd };
-	}
-
-	protected Integer[] getBounds(Token token) {
-		Integer line = token.getLine();
-		Integer colBegin = token.getCharPositionInLine();
-		Integer colEnd = colBegin + token.getText().length();
-		return new Integer[] { line, colBegin, line, colEnd };
-	}
-
-	protected void updateBounds(Element context, Integer[] bounds) {
-		updateBounds(context, bounds[0], bounds[1], bounds[2], bounds[3]);
-	}
-
-	protected void updateBounds(Element context, Integer new_line_begin, Integer new_col_begin, Integer new_line_end,
-			Integer new_col_end) {
-		Integer[] bounds = getBounds(context);
-		Integer line_begin = bounds[0], col_begin = bounds[1], line_end = bounds[2], col_end = bounds[3];
-
-		if (new_line_begin == null && new_col_begin == null && new_line_end == null && new_col_end == null)
-			return;
-		if (new_line_begin == null || new_col_begin == null || new_line_end == null || new_col_end == null)
-			throw new IllegalArgumentException("the implementation of this method is all-or-nothing");
-
-		boolean updateLineBegin = false;
-		boolean updateColBegin = false;
-		boolean updateLineEnd = false;
-		boolean updateColEnd = false;
-
-		if (line_begin == null && col_begin == null && line_end == null && col_end == null) {
-			updateLineBegin = true;
-			updateColBegin = true;
-			updateLineEnd = true;
-			updateColEnd = true;
-		} else if (line_begin == null || col_begin == null || line_end == null || col_end == null)
-			throw new IllegalArgumentException("the implementation of this method is all-or-nothing");
-		else {
-			if (new_line_begin < line_begin)
-				updateLineBegin = true;
-
-			if (updateLineBegin)
-				updateColBegin = true;
-			else if (new_line_begin == line_begin && new_col_begin < col_begin)
-				updateColBegin = true;
-
-			if (new_line_end > line_end)
-				updateLineEnd = true;
-
-			if (updateLineEnd)
-				updateColEnd = true;
-			else if (new_line_end == line_end && new_col_end > col_end)
-				updateColEnd = true;
-
-			if (new_line_end == line_end && updateColEnd) {
-				System.err.println("updating col_end in " + contextString(context));
-			}
-
-		}
-
-		if (updateLineBegin)
-			context.setAttribute(Y_MIN, new_line_begin.toString());
-		if (updateColBegin)
-			context.setAttribute(X_MIN, new_col_begin.toString());
-		if (updateLineEnd)
-			context.setAttribute(Y_MAX, new_line_end.toString());
-		if (updateColEnd)
-			context.setAttribute(X_MAX, new_col_end.toString());
-
-		if (new_line_end == line_end && updateColEnd) {
-			System.err.println("updated  col_end in " + contextString(context));
-		}
-	}
-
-	protected void updateBounds(Element context, Token... newTokens) {
-		for (Token newToken : newTokens) {
-			if (newToken == null)
-				continue;
-			updateBounds(context, getBounds(newToken));
-		}
-	}
-
-	protected void updateBounds(Token... newTokens) {
-		updateBounds(context, newTokens);
 	}
 
 	protected void propagateBounds(Element context) {
 		ArrayList<Element> nodes = contextNodes(context);
 		for (Element node : nodes) {
 			propagateBounds(node);
-			if (context != root)
-				updateBounds(context, getBounds(node));
+			if (context == root)
+				continue;
+			CodeBounds bounds = new CodeBounds(node);
+			if (bounds.begin == null)
+				continue;
+			CodeBounds rootBounds = new CodeBounds(context);
+			rootBounds.extend(bounds.begin);
+			rootBounds.extend(bounds.end);
+			rootBounds.persist(context);
 		}
 	}
 
@@ -620,6 +533,27 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		setAttribute(name, param);
 	}
 
+	protected void printTokens(Token... tokens) {
+		for (Token token : tokens) {
+			if (token == null) {
+				System.err.println("token is null");
+				continue;
+			}
+			int line = token.getLine();
+			int colBegin = token.getCharPositionInLine();
+			String text = token.getText();
+			int colEnd = colBegin + text.length();
+			System.err.println(filename + "@" + line + ":" + colBegin + "~" + colEnd + ": \"" + text + "\"");
+		}
+		/*
+		try {
+			TokensList tokens = new TokensList(new File(filename), false);
+			System.err.println("found tokens: " + tokens);
+		} catch (IOException e) {
+		}
+		*/
+	}
+
 	/**
 	 * Insert raw tokens from current file into given context.
 	 */
@@ -658,7 +592,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 
 			Element tokenNode = contextOpen(tokenContextName);
 			setAttribute(tokenTextAttributeName, token.getText());
-			updateBounds(token);
+			CodeBounds bounds = new CodeBounds(token);
+			bounds.persist(tokenNode); // updateBounds(token);
 			contextClose();
 
 			tokenNode.getParentNode().removeChild(tokenNode);
