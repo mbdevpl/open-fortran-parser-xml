@@ -589,6 +589,13 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 				throw new IllegalArgumentException("two possible targets");
 			}
 			*/
+			if (targetIndex > 0) {
+				Element beforeTarget = contextNode(target, targetIndex - 1);
+				if (beforeTarget.getNodeName().equals("body")) {
+					target = beforeTarget;
+					targetIndex = contextNodesCount(beforeTarget);
+				}
+			}
 
 			Element tokenNode = contextOpen(tokenContextName);
 			setAttribute(tokenTextAttributeName, token.getText());
