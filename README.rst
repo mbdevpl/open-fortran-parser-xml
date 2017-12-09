@@ -265,6 +265,13 @@ You can make sure that dependencies are configured correctly by running:
 
     python3 -m open_fortran_parser --deps
 
+If the depenencies changed since you first ran the wrapper from the source tree, you can cleanup
+outdated dependencies by executing:
+
+.. code:: bash
+
+    python3 -m open_fortran_parser --cleanup-deps
+
 
 as script
 ~~~~~~~~~

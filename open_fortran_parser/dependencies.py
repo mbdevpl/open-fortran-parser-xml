@@ -25,8 +25,9 @@ DEV_DEPENDENCIES = {
         pathlib.Path('antlr-3.3-complete.jar')),
     'Open Fortran Parser 0.8.4-2': (
         urllib.parse.urlparse(
-            'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.4-2/'),
-        pathlib.Path('OpenFortranParser-0.8.4-2.jar')),
+            # 'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.4-2/'),
+            'https://dl.bintray.com/mbdevpl/pkgs/open-fortran-parser-v0.8.5.dev4+8f933cfc/linux-openjdk7/'),
+        pathlib.Path('OpenFortranParser-0.8.4-3.jar')),
     'Apache Commons CLI 1.4': (
         urllib.parse.urlparse(
             'https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.1.0/'),
@@ -44,9 +45,6 @@ DEPENDENCIES.update({
         pathlib.Path('OpenFortranParserXML-{}.jar'.format(VERSION)))})
 
 DEPENDENCIES_PATH = pathlib.Path(__file__).resolve().parent
-
-OUTDATED_DEPENDENCIES = {
-    'Open Fortran Parser 0.8.4-1': pathlib.Path('OpenFortranParser-0.8.4-2.jar')}
 
 
 def ensure_dependencies(
@@ -73,5 +71,27 @@ def ensure_dependencies(
         if platform.system() != 'Windows':
             _LOG.warning('export CLASSPATH="${CLASSPATH}:%s"', classpath)
 
-if __name__ == '__main__':
-    ensure_dependencies(DEPENDENCIES, DEPENDENCIES_PATH)
+
+OUTDATED_DEPENDENCIES = {
+    'Open Fortran Parser 0.8.4-1': pathlib.Path('OpenFortranParser-0.8.4-1.jar'),
+    'Open Fortran Parser 0.8.4-2': pathlib.Path('OpenFortranParser-0.8.4-2.jar')}
+
+
+def cleanup_old_dependencies(
+        outdated_dependencies, current_dir: pathlib.Path,
+        backup_dir: t.Optional[pathlib.Path] = None):
+    if backup_dir is not None and not backup_dir.exists():
+        _LOG.warning('Creating directory "%s"...', backup_dir)
+        os.makedirs(str(backup_dir), exist_ok=True)
+    for dependency, filename in outdated_dependencies.items():
+        path = current_dir.joinpath(filename)
+        if not path.is_file():
+            _LOG.debug('%s already does not exist.', dependency)
+            continue
+        if backup_dir is None:
+            _LOG.warning('Deleting %s in path "%s"...', dependency, current_dir)
+            path.unlink()
+        else:
+            _LOG.warning('Moving %s from path "%s" to path "%s"...',
+                         dependency, current_dir, backup_dir)
+            path.move()

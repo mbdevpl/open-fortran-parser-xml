@@ -8,7 +8,8 @@ import sys
 from ._version import VERSION
 from .parser_wrapper import execute_parser
 from .dependencies import \
-    DEV_DEPENDENCIES, DEV_DEPENDENCIES_PATH, DEPENDENCIES, DEPENDENCIES_PATH, ensure_dependencies
+    DEV_DEPENDENCIES, DEV_DEPENDENCIES_PATH, DEPENDENCIES, DEPENDENCIES_PATH, ensure_dependencies, \
+    OUTDATED_DEPENDENCIES, cleanup_old_dependencies
 
 logging.basicConfig()
 
@@ -40,6 +41,9 @@ def main(args=None, namespace=None):
     parser.add_argument(
         '--get-development-dependencies', '--dev-deps', action='store_true',
         help=argparse.SUPPRESS)
+    parser.add_argument(
+        '--cleanup-dependencies', '--cleanup-deps', action='store_true',
+        help=argparse.SUPPRESS)
 
     args = parser.parse_args(args, namespace)
 
@@ -50,6 +54,9 @@ def main(args=None, namespace=None):
     if args.get_dependencies:
         ensure_dependencies(DEPENDENCIES, DEPENDENCIES_PATH)
         return
+
+    if args.cleanup_dependencies:
+        cleanup_old_dependencies(OUTDATED_DEPENDENCIES, DEPENDENCIES_PATH)
 
     if not args.input:
         parser.print_help(sys.stderr)
