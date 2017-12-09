@@ -540,6 +540,11 @@ public class XMLPrinter extends XMLPrinterBase {
 		super.codimension_decl_list__begin();
 	}
 
+	public void data_stmt_object() {
+		if (verbosity >= 100)
+			super.data_stmt_object();
+	}
+
 	public void data_stmt_object_list__begin() {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
@@ -550,10 +555,16 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void data_stmt_object_list(int count) {
+		contextCloseAllInner("variables");
 		if (verbosity >= 100)
 			super.data_stmt_object_list(count);
 		setAttribute("count", count);
 		contextClose("variables");
+	}
+	
+	public void data_stmt_value(Token asterisk) {
+		if (verbosity >= 100)
+			super.data_stmt_value(asterisk);
 	}
 
 	public void data_stmt_value_list__begin() {
@@ -563,6 +574,7 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void data_stmt_value_list(int count) {
+		contextCloseAllInner("values");
 		if (verbosity >= 100)
 			super.data_stmt_value_list(count);
 		setAttribute("count", count);
