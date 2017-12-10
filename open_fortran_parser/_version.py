@@ -1,3 +1,3 @@
 """Version of open_fortran_parser package."""
 
-VERSION = '0.3.1'
+VERSION = '0.4.0'
