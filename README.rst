@@ -197,6 +197,12 @@ All simple statements are using :xml:`<statement>` node, which wraps around node
 *   :xml:`<cycle>`
 *   ...
 
+In addition to the above, nodes :xml:`<comment>` and :xml:`<directive>` exist to carry comments
+and preprocessor directives, respectively. These nodes might be in principle inserted before,
+after or within any of other nodes, however, in practice they are either surrounding
+the top-level nodes (such as program or subroutine) or are placed in-between non-compound
+declarations and/or statements within them.
+
 Remaining details of AST are not decided yet. For the time being, to see implementation details,
 please take a look into `<src/fortran/ofp/XMLPrinter.java>`_.
 
