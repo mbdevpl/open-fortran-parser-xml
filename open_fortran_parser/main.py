@@ -56,7 +56,8 @@ def main(args=None, namespace=None):
         return
 
     if args.cleanup_dependencies:
-        cleanup_old_dependencies(OUTDATED_DEPENDENCIES, DEPENDENCIES_PATH)
+        cleanup_old_dependencies(OUTDATED_DEPENDENCIES, DEV_DEPENDENCIES_PATH)
+        return
 
     if not args.input:
         parser.print_help(sys.stderr)

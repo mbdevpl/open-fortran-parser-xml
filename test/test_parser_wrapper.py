@@ -88,7 +88,7 @@ class Tests(unittest.TestCase):
                 with self.subTest(input_path=input_path, verbosity=verbosity):
                     output_path = pathlib.Path(results_path, input_path.name + '.xml')
                     process = execute_parser(input_path, output_path, verbosity)
-                    self.assertEqual(process.returncode, 0)
+                    self.assertEqual(process.returncode, 0, process)
                     self.assertTrue(output_path.exists())
 
     @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
