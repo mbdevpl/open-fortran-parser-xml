@@ -434,6 +434,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			propagateBounds(node);
 			if (context == root)
 				continue;
+			if (node.getNodeName().equals("file"))
+				continue; // propagating bounds beyond <file> node makes them inconsistent
 			CodeBounds bounds = new CodeBounds(node);
 			if (bounds.begin == null)
 				continue;
