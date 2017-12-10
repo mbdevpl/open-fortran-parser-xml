@@ -39,7 +39,7 @@ public class CodeBounds {
 		else if (lineEnd == null || colEnd == null)
 			throw new IllegalArgumentException("the implementation of this method is all-or-nothing");
 		else
-		end = new CodeLocation(lineEnd, colEnd);
+			end = new CodeLocation(lineEnd, colEnd);
 	}
 
 	public CodeBounds(Token token) {

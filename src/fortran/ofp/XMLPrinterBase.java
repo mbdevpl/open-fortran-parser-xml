@@ -411,7 +411,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		for (Element node : contextNodes(context)) {
 			CodeBounds bounds = new CodeBounds(node);
 			++index;
-			if (bounds.begin == null ||  bounds.end == null)
+			if (bounds.begin == null || bounds.end == null)
 				continue;
 			if (line < bounds.begin.line)
 				return index;
@@ -422,8 +422,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 					return index;
 			if (col > bounds.end.col)
 				continue;
-			throw new RuntimeException("looking for (" + line + "," + col + ")" + " within bounds " + bounds + "\n" + "of " + contextString(node)
-					+ "\n" + "subnode of " + contextString(context));
+			throw new RuntimeException("looking for (" + line + "," + col + ")" + " within bounds " + bounds + "\n"
+					+ "of " + contextString(node) + "\n" + "subnode of " + contextString(context));
 		}
 		return contextNodesCount(context);
 	}

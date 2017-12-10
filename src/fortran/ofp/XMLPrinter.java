@@ -1,7 +1,5 @@
 package fortran.ofp;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -9,9 +7,7 @@ import org.antlr.runtime.Token;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-import fortran.ofp.parser.java.CodeBounds;
 import fortran.ofp.parser.java.IFortranParser;
-import fortran.ofp.parser.java.TokensList;
 
 /**
  * XML output generator for Open Fortran Parser.
@@ -562,7 +558,7 @@ public class XMLPrinter extends XMLPrinterBase {
 		setAttribute("count", count);
 		contextClose("variables");
 	}
-	
+
 	public void data_stmt_value(Token asterisk) {
 		if (verbosity >= 100)
 			super.data_stmt_value(asterisk);
