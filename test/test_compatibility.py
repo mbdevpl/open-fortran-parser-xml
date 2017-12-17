@@ -24,8 +24,7 @@ def all_fortran_paths(root_path: pathlib.Path):
     all_input_paths = []
     for extension in itertools.chain(
             *[(_, _.upper()) for _ in ('.f', '.f90', '.f03', '.f08', '.h')]):
-        input_paths = root_path.glob(
-            f'**/*{extension}')
+        input_paths = root_path.glob('**/*{}'.format(extension))
         for input_path in input_paths:
             input_path = input_path.resolve()
             all_input_paths.append(input_path)
@@ -155,14 +154,14 @@ class Tests(unittest.TestCase):
             else:
                 self.fail('{} {}'.format(type(result), result))
 
-            with open(report_path, 'w') as report_file:
+            with open(str(report_path), 'w') as report_file:
                 print('<path>{}</path>'.format(input_path), file=report_file)
                 if hasattr(result, 'stderr') and result.stderr:
                     print('<stderr>', file=report_file)
                     print(result.stderr.decode().rstrip(), file=report_file)
                     print('</stderr>', file=report_file)
                 print('<code>', file=report_file)
-                with open(input_path) as fortran_file:
+                with open(str(input_path)) as fortran_file:
                     print(fortran_file.read(), file=report_file)
                 print('</code>', file=report_file)
                 if isinstance(result, ET.Element):

@@ -11,13 +11,14 @@ class Package(setup_boilerplate.Package):
     description = 'Python wrapper for XML output generator for Open Fortran Parser'
     download_url = 'https://github.com/mbdevpl/open-fortran-parser-xml'
     classifiers = [
-        'Development Status :: 1 - Planning',
+        'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Operating System :: POSIX',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3 :: Only',
         'Topic :: Education',

@@ -36,9 +36,11 @@ class Tests(unittest.TestCase):
             all_miranda_io_src_paths)
 
     def test_flash(self):
-        flash_relative_repo_path = pathlib.Path('..', 'flash-subset')
-        flash_src_dir = _HERE.parent.joinpath(flash_relative_repo_path,
-                                              'FLASH4.4', 'source').resolve()
+        flash_relative_repo_path = pathlib.Path('..', 'flash-subset', 'FLASH4.4')
+        try:
+            flash_src_dir = _HERE.parent.joinpath(flash_relative_repo_path, 'source').resolve()
+        except FileNotFoundError:
+            self.skipTest('FLASH directory not found')  # in Python 3.5
         if not flash_src_dir.is_dir():
             self.skipTest('FLASH directory not found')
         tested_flash_kernel_paths = [

@@ -13,4 +13,4 @@ if os.environ.get('TEST_COVERAGE'):
         if java_config['options'] is None:
             java_config['options'] = []
         java_config['options'].append(
-            f'-javaagent:{str(JACOCO_PATH)}=excludes={":".join(JACOCO_EXCLUDES)}')
+            '-javaagent:{}=excludes={}'.format(str(JACOCO_PATH), ':'.join(JACOCO_EXCLUDES)))

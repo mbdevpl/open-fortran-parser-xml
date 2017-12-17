@@ -42,7 +42,7 @@ def execute_compiler(
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if output_path is not None:
-        with open(output_path, 'wb') as output_file:
+        with open(str(output_path), 'wb') as output_file:
             output_file.write(result.stdout)
 
     return result

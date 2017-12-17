@@ -4,6 +4,10 @@ matrix:
   include:
     - os: linux
       language: python
+      python: "3.5"
+      env: TRAVIS_JDK_VERSION=oraclejdk9
+    - os: linux
+      language: python
       python: "3.6"
       env: TRAVIS_JDK_VERSION=oraclejdk8
     - os: linux
@@ -22,6 +26,11 @@ matrix:
       language: python
       python: "3.7-dev"
       env: TRAVIS_JDK_VERSION=oraclejdk9
+    - os: osx
+      language: generic
+      env:
+        - TRAVIS_PYTHON_VERSION="3.5.4"
+        - TRAVIS_JDK_VERSION=oraclejdk8
     - os: osx
       language: generic
       env:

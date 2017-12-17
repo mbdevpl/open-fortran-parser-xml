@@ -223,7 +223,7 @@ dependencies
 
 Java XML generator for OFP and all of its dependencies.
 
-Python version >= 3.6.
+Python version >= 3.5.
 
 Python libraries as specified in `<requirements.txt>`_.
 
