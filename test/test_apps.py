@@ -11,65 +11,57 @@ _LOG = logging.getLogger(__name__)
 
 _HERE = pathlib.Path(__file__).resolve().parent
 
-_FFBMINI_RELATIVE_REPO_PATH = pathlib.Path('..', 'ffb-mini')
-_FFBMINI_SRC_DIR = _HERE.parent.joinpath(_FFBMINI_RELATIVE_REPO_PATH, 'src').resolve()
+_APPS_ROOT_PATHS = {
+    'miranda_io': pathlib.Path('..', 'miranda_io'),
+    'FLASH': pathlib.Path('..', 'flash-subset', 'FLASH4.4'),
+    'FFB-MINI': pathlib.Path('..', 'ffb-mini')}
 
-ALL_FFBMINI_SRC_PATHS = all_fortran_paths(_FFBMINI_SRC_DIR)
-VERBOSITIES = (100,)
+_APPS_OPTIONAL = {'FLASH'}
+
+_APPS_ROOT_PATHS = {
+    app: _HERE.parent.joinpath(path).resolve() for app, path in _APPS_ROOT_PATHS.items()
+    if app not in _APPS_OPTIONAL or _HERE.parent.joinpath(path).is_dir()}
+
+_APPS_CODE_FILEPATHS = {
+    'miranda_io': all_fortran_paths(_APPS_ROOT_PATHS['miranda_io']),
+    'FLASH': [pathlib.Path(_APPS_ROOT_PATHS['FLASH'], 'source', pathlib.Path(input_path))
+              for input_path in [
+                  'physics/Hydro/HydroMain/simpleUnsplit/HLL/hy_hllUnsplit.F90'
+                  ]] if 'FLASH' in _APPS_ROOT_PATHS else [],
+    'FFB-MINI': all_fortran_paths(_APPS_ROOT_PATHS['FFB-MINI'].joinpath('src'))}
 
 
 class Tests(unittest.TestCase):
 
     maxDiff = None
 
+    def _run_app_test(
+            self, app_name: str, app_dirname: str = None, minimum_passed_cases: int = None,
+            fall_back_to_ofc: bool = False):
+        if app_dirname is None:
+            app_dirname = app_name
+
+        _suffix = '_ofc' if fall_back_to_ofc else ''
+
+        failure_reports_path = _HERE.joinpath('results', 'apps', app_dirname, 'failure' + _suffix)
+        success_reports_path = _HERE.joinpath('results', 'apps', app_dirname, 'success' + _suffix)
+
+        from .test_compatibility import Tests as CompatibilityTests
+        CompatibilityTests.check_cases_and_report(
+            self, app_name, failure_reports_path, success_reports_path,
+            _APPS_ROOT_PATHS[app_name], _APPS_CODE_FILEPATHS[app_name],
+            minimum_passed_cases, fall_back_to_ofc)
+
     def test_miranda_io(self):
-        miranda_io_relative_repo_path = pathlib.Path('..', 'miranda_io')
-        miranda_io_src_dir = _HERE.parent.joinpath(miranda_io_relative_repo_path).resolve()
-        all_miranda_io_src_paths = all_fortran_paths(miranda_io_src_dir)
+        self._run_app_test('miranda_io')
 
-        failure_reports_path = _HERE.joinpath('results', 'apps', 'mirnada_io', 'failure')
-        success_reports_path = _HERE.joinpath('results', 'apps', 'mirnada_io', 'success')
-
-        from .test_compatibility import Tests as CompTests
-        CompTests.check_cases_and_report(
-            self, 'miranda_io', failure_reports_path, success_reports_path, miranda_io_src_dir,
-            all_miranda_io_src_paths)
-
+    @unittest.skipIf('FLASH' not in _APPS_ROOT_PATHS, 'FLASH directory not found')
     def test_flash(self):
-        flash_relative_repo_path = pathlib.Path('..', 'flash-subset', 'FLASH4.4')
-        try:
-            flash_src_dir = _HERE.parent.joinpath(flash_relative_repo_path, 'source').resolve()
-        except FileNotFoundError:
-            self.skipTest('FLASH directory not found')  # in Python 3.5
-        if not flash_src_dir.is_dir():
-            self.skipTest('FLASH directory not found')
-        tested_flash_kernel_paths = [
-            pathlib.Path(flash_src_dir, pathlib.Path(input_path)) for input_path in [
-                'physics/Hydro/HydroMain/simpleUnsplit/HLL/hy_hllUnsplit.F90']]
-
-        failure_reports_path = _HERE.joinpath('results', 'apps', 'flash', 'failure')
-        success_reports_path = _HERE.joinpath('results', 'apps', 'flash', 'success')
-
-        from .test_compatibility import Tests as CompTests
-        CompTests.check_cases_and_report(
-            self, 'FLASH', failure_reports_path, success_reports_path, flash_src_dir,
-            tested_flash_kernel_paths)
+        self._run_app_test('FLASH', 'flash')
 
     def test_ffb_mini(self):
-        failure_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'failure')
-        success_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'success')
-
-        from .test_compatibility import Tests as CompTests
-        CompTests.check_cases_and_report(
-            self, 'FFB-MINI', failure_reports_path, success_reports_path, _FFBMINI_SRC_DIR,
-            ALL_FFBMINI_SRC_PATHS, 25)
+        self._run_app_test('FFB-MINI', 'ffb-mini', 25)
 
     @unittest.skipIf(platform.system() == 'Windows', 'OFC not available on Windows')
     def test_ffb_mini_with_ofc(self):
-        failure_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'failure_ofc')
-        success_reports_path = _HERE.joinpath('results', 'apps', 'ffb-mini', 'success_ofc')
-
-        from .test_compatibility import Tests as CompTests
-        CompTests.check_cases_and_report(
-            self, 'FFB-MINI+OFC', failure_reports_path, success_reports_path, _FFBMINI_SRC_DIR,
-            ALL_FFBMINI_SRC_PATHS, 35, True)
+        self._run_app_test('FFB-MINI', 'ffb-mini', 35, True)
