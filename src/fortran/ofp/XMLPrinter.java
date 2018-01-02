@@ -1677,6 +1677,13 @@ public class XMLPrinter extends XMLPrinterBase {
 			super.end_do_stmt(label, endKeyword, doKeyword, id, eos);
 	}
 
+	public void do_term_action_stmt(Token label, Token endKeyword, Token doKeyword, Token id, Token eos,
+			boolean inserted) {
+		contextCloseAllInner("loop");
+		if (verbosity >= 80)
+			super.do_term_action_stmt(label, endKeyword, doKeyword, id, eos, inserted);
+	}
+
 	public void cycle_stmt(Token label, Token cycleKeyword, Token id, Token eos) {
 		contextOpen("cycle");
 		if (verbosity >= 80)
@@ -1692,8 +1699,14 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void continue_stmt(Token label, Token continueKeyword, Token eos) {
+		Element labelNode = contextNodesCount() > 0 ? contextNode(-1) : null;
+		labelNode = labelNode != null && labelNode.getTagName() == "label" ? labelNode : null;
 		contextOpen("statement");
+		contextOpen("continue");
+		if (labelNode != null)
+			moveHere(labelNode);
 		super.continue_stmt(label, continueKeyword, eos);
+		contextClose();
 	}
 
 	public void stop_stmt(Token label, Token stopKeyword, Token eos, boolean hasStopCode) {
