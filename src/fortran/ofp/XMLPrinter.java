@@ -1698,6 +1698,11 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
+	public void goto_stmt(Token label, Token goKeyword, Token toKeyword, Token target_label, Token eos) {
+		// TODO Auto-generated method stub
+		super.goto_stmt(label, goKeyword, toKeyword, target_label, eos);
+	}
+
 	public void continue_stmt(Token label, Token continueKeyword, Token eos) {
 		Element labelNode = contextNodesCount() > 0 ? contextNode(-1) : null;
 		labelNode = labelNode != null && labelNode.getTagName() == "label" ? labelNode : null;
