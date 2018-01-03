@@ -694,6 +694,28 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextOpen("declaration");
 	}
 
+	public void letter_spec(Token id1, Token id2) {
+		contextOpen("letter-range");
+		setAttribute("begin", id1);
+		setAttribute("end", id2);
+		if (verbosity >= 100)
+			super.letter_spec(id1, id2);
+		contextClose();
+	}
+
+	public void letter_spec_list__begin() {
+		contextOpen("letter-ranges");
+		if (verbosity >= 100)
+			super.letter_spec_list__begin();
+	}
+
+	public void letter_spec_list(int count) {
+		contextCloseAllInner("letter-ranges");
+		if (verbosity >= 100)
+			super.letter_spec_list(count);
+		contextClose();
+	}
+
 	public void namelist_stmt(Token label, Token keyword, Token eos, int count) {
 		contextCloseAllInner("namelists");
 		super.namelist_stmt(label, keyword, eos, count);
