@@ -6,10 +6,10 @@ import pathlib
 import sys
 
 from ._version import VERSION
+from .config import \
+    DEV_DEPENDENCIES_PATH, DEV_DEPENDENCIES, DEPENDENCIES_PATH, DEPENDENCIES, OUTDATED_DEPENDENCIES
 from .parser_wrapper import execute_parser
-from .dependencies import \
-    DEV_DEPENDENCIES, DEV_DEPENDENCIES_PATH, DEPENDENCIES, DEPENDENCIES_PATH, ensure_dependencies, \
-    OUTDATED_DEPENDENCIES, cleanup_old_dependencies
+from .dependencies import ensure_dependencies, cleanup_old_dependencies
 
 logging.basicConfig()
 

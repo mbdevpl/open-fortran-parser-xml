@@ -7,6 +7,7 @@ import pathlib
 import tempfile
 import unittest
 
+from open_fortran_parser.config import DEV_DEPENDENCIES_PATH, DEPENDENCIES_PATH
 from .test_setup import run_module
 
 INPUT_PATH = pathlib.Path('test', 'examples', 'empty.f')
@@ -21,7 +22,10 @@ class Tests(unittest.TestCase):
     maxDiff = None
 
     def test_run_not_main(self):
-        run_module('open_fortran_parser', 'some', 'bad', 'args', run_name='not_main')
+        sio = io.StringIO()
+        with contextlib.redirect_stderr(sio):
+            run_module('open_fortran_parser', 'some', 'bad', 'args', run_name='not_main')
+        self.assertEqual(len(sio.getvalue()), 0)
 
     def test_help(self):
         sio = io.StringIO()
@@ -37,8 +41,10 @@ class Tests(unittest.TestCase):
         with contextlib.redirect_stderr(sio):
             run_module('open_fortran_parser', '--deps')
         self.assertGreater(len(sio.getvalue()), 0)
+        self.assertGreater(len(os.listdir(str(DEPENDENCIES_PATH))), 0)
 
         run_module('open_fortran_parser', '--dev-deps')
+        self.assertGreater(len(os.listdir(str(DEV_DEPENDENCIES_PATH))), 0)
 
     def test_verbosity_flag(self):
         verbosities = (0, 20, 40, 60, 80, 100)
