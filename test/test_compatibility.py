@@ -190,6 +190,20 @@ class Tests(unittest.TestCase):
 
         return passed_test_cases, new_passed_cases, failed_test_cases, new_failed_cases
 
+    @unittest.skip('not ready yet')
+    def test_comments(self):
+        for suffix in ('.f', '.f90'):
+            input_path = pathlib.Path(_HERE, 'examples', 'comments{}'.format(suffix))
+            with self.subTest(input_path=input_path):
+                result = parse(input_path, raise_on_error=True)
+                all_comments = result.findall('.//comment')
+                self.assertEqual(len(all_comments), 6, msg='found {} comments: {} in:\n{}'.format(
+                    len(all_comments), all_comments, ET.tostring(result).decode()))
+                comment1, comment6 = result.findall('./file/comment')
+                comment2, comment5 = result.findall('./file/program/body/comment')
+                comment3, comment4 = result.findall('./file/program/body/if/body/comment')
+                print(ET.tostring(result).decode())
+
     def test_ofp_simple_expressions(self):
         input_paths = [pathlib.Path(_) for _ in [
             'annex_c/c_5_3_2.f03',
