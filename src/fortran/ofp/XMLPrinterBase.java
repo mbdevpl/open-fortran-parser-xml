@@ -428,6 +428,14 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		return contextNodesCount(context);
 	}
 
+	/**
+	 * Propagate code bounds within a given context.
+	 *
+	 * Propagating code bounds means that code bounds of each node within given context are extended using bounds of all
+	 * its subnodes. This is done recursively, depth-first.
+	 *
+	 * An exception to this rule are <file> nodes, the bounds of which are not propagated outside of them.
+	 */
 	protected void propagateBounds(Element context) {
 		ArrayList<Element> nodes = contextNodes(context);
 		for (Element node : nodes) {
@@ -561,8 +569,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	 */
 	protected void insertTokens(Element context, int tokenType, String tokenContextName, String tokenTextAttributeName)
 			throws IOException {
-		// System.err.println("all tokens: " + new TokensList(new File(filename), false));
-		TokensList tokens = new TokensList(new File(filename), false, tokenType);
+		// System.err.println("all tokens: " + new TokensList(new File(filename)));
+		TokensList tokens = new TokensList(new File(filename), tokenType);
 		// System.err.println("found tokens: " + tokens);
 
 		for (Token token : tokens) {
@@ -590,13 +598,56 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 				System.err.println("should be at index " + targetIndex + " or " + targetIndexAlt);
 				throw new IllegalArgumentException("two possible targets");
 			}
+			System.err.println("adjusting " + target.getNodeName() + "@" + targetIndex + "/" + contextNodesCount(target));
 			*/
+			if (contextNodesCount(target) == 0) {
+				/*
+				System.err.println("target is empty");
+				*/
+				ArrayList<Element> hierarchy = contextHierarchy(target);
+				hierarchy.remove(0);
+				for (Element parent : hierarchy) {
+					ArrayList<Element> parentNodes = contextNodes(parent);
+					int indexInParent = parentNodes.indexOf(target);
+					target = parent;
+					targetIndex = indexInParent + 1;
+					if (target.getNodeName().equals("body"))
+						break;
+				}
+				if (!target.getNodeName().equals("body"))
+					throw new IllegalArgumentException("didn't find good candidate to adjust token " + token
+							+ " location in hierarchy " + hierarchy);
+			}
+			boolean updated = false;
 			if (targetIndex > 0) {
 				Element beforeTarget = contextNode(target, targetIndex - 1);
 				if (beforeTarget.getNodeName().equals("body")) {
 					target = beforeTarget;
 					targetIndex = contextNodesCount(beforeTarget);
+					updated = true;
+					/*
+					System.err.println("beforeTarget: " + target.getNodeName() + "@" + targetIndex + "/" + contextNodesCount(target));
+					*/
 				}
+				/*
+				else
+					System.err.println("before is " + beforeTarget.getNodeName());
+				*/
+			}
+			if (!updated && targetIndex < contextNodesCount(target) - 1) {
+				Element afterTarget = contextNode(target, targetIndex);
+				if (afterTarget.getNodeName().equals("body")) {
+					target = afterTarget;
+					targetIndex = 0;
+					updated = true;
+					/*
+					System.err.println("afterTarget: " + target.getNodeName() + "@" + targetIndex + "/" + contextNodesCount(target));
+					*/
+				}
+				/*
+				else
+					System.err.println("after is " + afterTarget.getNodeName());
+				*/
 			}
 
 			Element tokenNode = contextOpen(tokenContextName);
@@ -612,6 +663,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 				target.appendChild(tokenNode);
 			else
 				throw new IllegalArgumentException("location within target is invalid");
+
+			propagateBounds(target);
 		}
 	}
 

@@ -84,7 +84,7 @@ class Tests(unittest.TestCase):
         for i, input_path in enumerate(input_paths):
             if i % 50 == 49:
                 _LOG.warning('%s: testing case %i of %i', scenario_name, i + 1, len(input_paths))
-            #with self.subTest(input_path=input_path):
+            # with self.subTest(input_path=input_path):
 
             relative_input_path = input_path.relative_to(input_paths_root)
             flat_relative_input_path = str(relative_input_path).replace(os.sep, '_')
@@ -190,19 +190,27 @@ class Tests(unittest.TestCase):
 
         return passed_test_cases, new_passed_cases, failed_test_cases, new_failed_cases
 
-    @unittest.skip('not ready yet')
+    # @unittest.skip('not ready yet')
     def test_comments(self):
         for suffix in ('.f', '.f90'):
             input_path = pathlib.Path(_HERE, 'examples', 'comments{}'.format(suffix))
             with self.subTest(input_path=input_path):
                 result = parse(input_path, raise_on_error=True)
                 all_comments = result.findall('.//comment')
-                self.assertEqual(len(all_comments), 6, msg='found {} comments: {} in:\n{}'.format(
-                    len(all_comments), all_comments, ET.tostring(result).decode()))
-                comment1, comment6 = result.findall('./file/comment')
-                comment2, comment5 = result.findall('./file/program/body/comment')
-                comment3, comment4 = result.findall('./file/program/body/if/body/comment')
-                print(ET.tostring(result).decode())
+                self.assertEqual(len(all_comments), 12, msg='found {} comments: {} in:\n{}'.format(
+                    len(all_comments), [cmnt.attrib['text'] for cmnt in all_comments],
+                    ET.tostring(result).decode()))
+                _LOG.warning('%s', ET.tostring(result).decode())
+                for xpath, numbers in [
+                        ('./file/comment', (1, 2, 11, 12)),
+                        ('./file/program/body/comment', (3, 4, 9, 10)),
+                        ('./file/program/body/if/body/comment', (5, 6, 7, 8))]:
+                    comments = result.findall(xpath)
+                    self.assertEqual(len(comments), len(numbers), msg=(
+                        xpath, numbers, [cmnt.attrib['text'] for cmnt in comments]))
+                    for comment, number in zip(comments, numbers):
+                        self.assertTrue(comment.attrib['text'].endswith(str(number)), msg=(
+                            xpath, number, comment.attrib['text']))
 
     def test_ofp_simple_expressions(self):
         input_paths = [pathlib.Path(_) for _ in [
