@@ -57,7 +57,7 @@ dependencies
 
 *   Java 1.7 or later
 
-*   Open Fortran Parser 0.8.4-3
+*   Open Fortran Parser 0.8.4-4
 
     https://github.com/mbdevpl/open-fortran-parser/releases
 
