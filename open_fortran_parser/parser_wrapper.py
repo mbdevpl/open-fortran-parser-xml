@@ -13,8 +13,11 @@ _LOG = logging.getLogger(__name__)
 
 def execute_parser(
         input_path: pathlib.Path, output_path: t.Optional[pathlib.Path],
-        verbosity: int = 100) -> subprocess.CompletedProcess:
-    """Execute Open Fortran Parser according to current configuration and function parameters."""
+        verbosity: int = 100, tokenize_instead: bool = False) -> subprocess.CompletedProcess:
+    """Execute Open Fortran Parser according to current configuration and function parameters.
+
+    If tokenize_instead is True, given file will not be parsed, but just tokenized instead.
+    """
 
     command = [str(java_config['executable'])]
     if java_config['classpath'] is not None:
@@ -22,6 +25,8 @@ def execute_parser(
     if java_config['options'] is not None:
         command += java_config['options']
     command.append(java_config['ofp_class'])
+    if tokenize_instead:
+        command.append('--tokens')
     command += ['--class', java_config['ofp_xml_class'], '--verbosity', str(verbosity)]
     if output_path is not None:
         command += ['--output', str(output_path)]
