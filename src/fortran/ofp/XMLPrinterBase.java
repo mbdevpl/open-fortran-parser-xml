@@ -61,6 +61,9 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	 */
 	protected Element context = null;
 
+	static public ArrayList<String> tokenLocationsWhitelist = new ArrayList<String>(
+			Arrays.asList(new String[] { "file", "members", "body" }));
+
 	public XMLPrinterBase(String[] args, IFortranParser parser, String filename) {
 		super(args, parser, filename);
 
@@ -611,10 +614,10 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 					int indexInParent = parentNodes.indexOf(target);
 					target = parent;
 					targetIndex = indexInParent + 1;
-					if (target.getNodeName().equals("body"))
+					if (XMLPrinterBase.tokenLocationsWhitelist.contains(target.getNodeName()))
 						break;
 				}
-				if (!target.getNodeName().equals("body"))
+				if (!XMLPrinterBase.tokenLocationsWhitelist.contains(target.getNodeName()))
 					throw new IllegalArgumentException("didn't find good candidate to adjust token " + token
 							+ " location in hierarchy " + hierarchy);
 			}

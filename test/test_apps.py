@@ -28,7 +28,9 @@ _APPS_CODE_FILEPATHS = {
               for input_path in [
                   'physics/Hydro/HydroMain/simpleUnsplit/HLL/hy_hllUnsplit.F90'
                   ]] if 'FLASH' in _APPS_ROOT_PATHS else [],
-    'FFB-MINI': all_fortran_paths(_APPS_ROOT_PATHS['FFB-MINI'].joinpath('src'))}
+    'FFB-MINI': [path for path in all_fortran_paths(_APPS_ROOT_PATHS['FFB-MINI'].joinpath('src'))
+                 if path.name not in ('gfc.h', 'gfrd_c.h', 'gfutil_c.h', 'gfutil_f.h', 'gfwrt_c.h',
+                                      'maprof.h', 'maprof_proc.h', 'maprof_yaml.h')]}
 
 
 class Tests(unittest.TestCase):
@@ -60,7 +62,7 @@ class Tests(unittest.TestCase):
         self._run_app_test('FLASH', 'flash')
 
     def test_ffb_mini(self):
-        self._run_app_test('FFB-MINI', 'ffb-mini', 25)
+        self._run_app_test('FFB-MINI', 'ffb-mini', 24)
 
     @unittest.skipIf(platform.system() == 'Windows', 'OFC not available on Windows')
     def test_ffb_mini_with_ofc(self):

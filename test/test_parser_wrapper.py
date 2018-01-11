@@ -52,7 +52,8 @@ class Tests(unittest.TestCase):
                     command += invalid_options
                     command.append(str(input_path))
 
-                    if invalid_options or verbosity == 'invalid':
+                    if invalid_options or verbosity == 'invalid' \
+                            or classpath is None and 'CLASSPATH' not in os.environ:
                         with self.assertRaises(AssertionError):
                             run_program(*command)
                         continue

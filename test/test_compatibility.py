@@ -30,6 +30,7 @@ def all_fortran_paths(root_path: pathlib.Path):
             all_input_paths.append(input_path)
     return all_input_paths
 
+
 _OFP_RELATIVE_REPO_PATH = pathlib.Path('..', 'open-fortran-parser')
 _OFP_TESTS_DIR = _HERE.parent.joinpath(_OFP_RELATIVE_REPO_PATH, 'tests')
 
@@ -190,7 +191,6 @@ class Tests(unittest.TestCase):
 
         return passed_test_cases, new_passed_cases, failed_test_cases, new_failed_cases
 
-    # @unittest.skip('not ready yet')
     def test_comments(self):
         for suffix in ('.f', '.f90'):
             input_path = pathlib.Path(_HERE, 'examples', 'comments{}'.format(suffix))
@@ -200,7 +200,7 @@ class Tests(unittest.TestCase):
                 self.assertEqual(len(all_comments), 12, msg='found {} comments: {} in:\n{}'.format(
                     len(all_comments), [cmnt.attrib['text'] for cmnt in all_comments],
                     ET.tostring(result).decode()))
-                _LOG.warning('%s', ET.tostring(result).decode())
+                _LOG.debug('%s', ET.tostring(result).decode())
                 for xpath, numbers in [
                         ('./file/comment', (1, 2, 11, 12)),
                         ('./file/program/body/comment', (3, 4, 9, 10)),
