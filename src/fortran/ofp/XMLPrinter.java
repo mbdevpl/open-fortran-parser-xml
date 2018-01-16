@@ -875,14 +875,16 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void section_subscript(boolean hasLowerBound, boolean hasUpperBound, boolean hasStride,
 			boolean isAmbiguous) {
-		contextCloseAllInner("subscript");
+		// contextCloseAllInner("subscript");
+		Element outerContext = context;
+		contextOpen("subscript");
 		if (!hasLowerBound && !hasUpperBound && !hasStride)
 			setAttribute("type", "empty");
-		else if (hasLowerBound && !hasUpperBound && !hasStride)
+		else if (hasLowerBound && !hasUpperBound && !hasStride) {
 			setAttribute("type", "simple");
-		else {
+			moveHere(contextNode(outerContext, -2));
+		} else {
 			setAttribute("type", "range");
-			Element outerContext = context;
 			Element lowerBound = null;
 			Element upperBound = null;
 			Element step = null;
@@ -900,34 +902,28 @@ public class XMLPrinter extends XMLPrinterBase {
 				contextClose();
 			}
 			contextClose();
-			if (hasStride) {
-				Element value = contextNode(outerContext, -2);
-				moveTo(step, value);
-			}
-			if (hasUpperBound) {
-				Element value = contextNode(outerContext, -2);
-				moveTo(upperBound, value);
-			}
-			if (hasLowerBound) {
-				Element value = contextNode(outerContext, -2);
-				moveTo(lowerBound, value);
-			}
+			if (hasStride)
+				moveTo(step, contextNode(outerContext, -2));
+			if (hasUpperBound)
+				moveTo(upperBound, contextNode(outerContext, -2));
+			if (hasLowerBound)
+				moveTo(lowerBound, contextNode(outerContext, -2));
 		}
-		contextClose();
 		if (verbosity >= 80)
 			super.section_subscript(hasLowerBound, hasUpperBound, hasStride, isAmbiguous);
-		contextOpen("subscript");
+		contextClose();
 	}
 
 	public void section_subscript_list__begin() {
 		contextOpen("subscripts");
 		if (verbosity >= 100)
 			super.section_subscript_list__begin();
-		contextOpen("subscript");
+		// contextOpen("subscript");
 	}
 
 	public void section_subscript_list(int count) {
-		contextClose("subscript");
+		// contextClose("subscript");
+		contextCloseAllInner("subscripts");
 		if (verbosity >= 100)
 			super.section_subscript_list(count);
 		setAttribute("count", count);
