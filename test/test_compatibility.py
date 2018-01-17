@@ -253,6 +253,11 @@ class Tests(unittest.TestCase):
             'rule-tests/R802.f03']]
         self.check_cases(input_paths)
 
+    def test_ofp_declaration_attributes(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'rule-tests/R503.f03']]
+        self.check_cases(input_paths)
+
     def test_ofp_dimensions(self):
         input_paths = [pathlib.Path(_) for _ in [
             'rule-tests/R510.f03']]

@@ -367,14 +367,62 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void attr_spec(Token attrKeyword, int attr) {
 		String nestIn = "";
 		switch (attr) {
+		case 801:
+			// private
+			break;
+		case 802:
+			// bind
+			break;
+		case 805:
+			nestIn = "allocatable";
+			break;
+		case 806:
+			nestIn = "asynchronous";
+			break;
+		case 807:
+			nestIn = "codimension";
+			break;
+		case 809:
+			// dimension
+			break;
+		case 810:
+			nestIn = "external";
+			break;
+		case 811:
+			// intent
+			break;
+		case 812:
+			nestIn = "intrinsic";
+			break;
+		case 814:
+			nestIn = "optional";
+			break;
+		case 815:
+			nestIn = "parameter";
+			break;
 		case 816:
 			nestIn = "pointer";
 			break;
-		default:
+		case 817:
+			nestIn = "protected";
 			break;
+		case 818:
+			nestIn = "save";
+			break;
+		case 819:
+			nestIn = "target";
+			break;
+		case 820:
+			nestIn = "value";
+			break;
+		case 821:
+			nestIn = "volatile";
+			break;
+		default:
+			throw new IllegalArgumentException(Integer.toString(attr) + " - " + attrKeyword);
 		}
 		if (nestIn.length() > 0)
-			contextOpen(nestIn);
+			contextOpen("attribute-" + nestIn);
 		super.attr_spec(attrKeyword, attr);
 		if (nestIn.length() > 0)
 			contextClose();
