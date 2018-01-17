@@ -62,7 +62,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	protected Element context = null;
 
 	static public ArrayList<String> tokenLocationsWhitelist = new ArrayList<String>(
-			Arrays.asList(new String[] { "file", "members", "body" }));
+			Arrays.asList(new String[] { "file", "members", "body", "specification" }));
 
 	public XMLPrinterBase(String[] args, IFortranParser parser, String filename) {
 		super(args, parser, filename);
