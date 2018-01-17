@@ -332,10 +332,22 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextOpen("type");
 		setAttribute("hasLength", false);
 		setAttribute("hasKind", false);
+		Attr n;
 		for (Element declaration : typeDeclarations) {
 			switch (declaration.getTagName()) {
 			case "intrinsic-type-spec":
+				n = getAttribute("name");
+				if (n != null)
+					new IllegalArgumentException(declaration.getTagName());
 				setAttribute("name", declaration.getAttribute("keyword1"));
+				setAttribute("type", "intrinsic");
+				break;
+			case "derived-type-spec":
+				n = getAttribute("name");
+				if (n != null)
+					new IllegalArgumentException(declaration.getTagName());
+				setAttribute("name", declaration.getAttribute("typeName"));
+				setAttribute("type", "derived");
 				break;
 			case "length":
 				setAttribute("hasLength", true);
@@ -1737,7 +1749,7 @@ public class XMLPrinter extends XMLPrinterBase {
 			Element value = contextNode(-1);
 			contextOpen("stop");
 			moveHere(value);
-			Attr stopCode = contextAttribute(value, "digitString");
+			Attr stopCode = getAttribute("digitString", value);
 			setAttribute("code", stopCode.getValue());
 		} else {
 			contextOpen("stop");
