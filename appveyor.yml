@@ -74,8 +74,8 @@ build: off
 
 test_script:
   - set TEST_PACKAGING=1
-  - set TEST_DEPENDENCIES=1
-  - set TEST_LONG=1
+  - if [%JAVA_VERSION%]==[jdk8] set TEST_DEPENDENCIES=1
+  - if [%JAVA_VERSION%]==[jdk8] set TEST_LONG=1
   - set TEST_COVERAGE=1
   - python -m coverage run --branch --source . -m unittest discover --verbose
 
