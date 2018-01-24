@@ -567,100 +567,128 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		// System.err.println("all tokens: " + new TokensList(new File(filename)));
 		TokensList tokens = new TokensList(new File(filename), tokenType);
 		// System.err.println("found tokens: " + tokens);
+		insertTokens(context, tokens, tokenContextName, tokenTextAttributeName);
+	}
 
-		for (Token token : tokens) {
-			int line = token.getLine();
-			int col_begin = token.getCharPositionInLine();
-			Element target = findContext(context, line, col_begin);
-			/* debug-only
-			int col_end = col_begin + comment.getText().length();
-			Element targetAlt = findContext(context, line, col_end);
-			*/
-			if (target == null /*&& targetAlt == null*/) {
-				target = contextNode(root, 0);
-				// System.err.println("either in the beginning or at the end...");
-				/* debug-only
-				} else if (target != targetAlt) {
-					contextPrint(target);
-					contextPrint(targetAlt);
-					throw new IllegalArgumentException();
-				*/
-			}
-			int targetIndex = findPosition(target, line, col_begin);
-			/* debug-only
-			int targetIndexAlt = findPosition(target, line, col_end);
-			if (targetIndex != targetIndexAlt) {
-				System.err.println("should be at index " + targetIndex + " or " + targetIndexAlt);
-				throw new IllegalArgumentException("two possible targets");
-			}
-			System.err.println("adjusting " + target.getNodeName() + "@" + targetIndex + "/" + contextNodesCount(target));
-			*/
-			if (contextNodesCount(target) == 0) {
-				/*
-				System.err.println("target is empty");
-				*/
-				ArrayList<Element> hierarchy = contextHierarchy(target);
-				hierarchy.remove(0);
-				for (Element parent : hierarchy) {
-					ArrayList<Element> parentNodes = contextNodes(parent);
-					int indexInParent = parentNodes.indexOf(target);
-					target = parent;
-					targetIndex = indexInParent + 1;
-					if (XMLPrinterBase.tokenLocationsWhitelist.contains(target.getNodeName()))
-						break;
-				}
-				if (!XMLPrinterBase.tokenLocationsWhitelist.contains(target.getNodeName()))
-					throw new IllegalArgumentException("didn't find good candidate to adjust token " + token
-							+ " location in hierarchy " + hierarchy);
-			}
-			boolean updated = false;
-			if (targetIndex > 0) {
-				Element beforeTarget = contextNode(target, targetIndex - 1);
-				if (beforeTarget.getNodeName().equals("body")) {
-					target = beforeTarget;
-					targetIndex = contextNodesCount(beforeTarget);
-					updated = true;
-					/*
-					System.err.println("beforeTarget: " + target.getNodeName() + "@" + targetIndex + "/" + contextNodesCount(target));
-					*/
-				}
-				/*
-				else
-					System.err.println("before is " + beforeTarget.getNodeName());
-				*/
-			}
-			if (!updated && targetIndex < contextNodesCount(target) - 1) {
-				Element afterTarget = contextNode(target, targetIndex);
-				if (afterTarget.getNodeName().equals("body")) {
-					target = afterTarget;
-					targetIndex = 0;
-					updated = true;
-					/*
-					System.err.println("afterTarget: " + target.getNodeName() + "@" + targetIndex + "/" + contextNodesCount(target));
-					*/
-				}
-				/*
-				else
-					System.err.println("after is " + afterTarget.getNodeName());
-				*/
-			}
+	protected void insertTokens(Element context, ArrayList<Token> tokens, String tokenContextName,
+			String tokenTextAttributeName) {
+		for (Token token : tokens)
+			insertToken(context, token, tokenContextName, tokenTextAttributeName);
+	}
 
-			Element tokenNode = contextOpen(tokenContextName);
-			setAttribute(tokenTextAttributeName, token.getText());
-			CodeBounds bounds = new CodeBounds(token);
-			bounds.persist(tokenNode); // updateBounds(token);
-			contextClose();
+	protected void insertToken(Element context, Token token, String tokenContextName, String tokenTextAttributeName) {
+		TokenTarget target = findTarget(context, token);
 
-			tokenNode.getParentNode().removeChild(tokenNode);
-			if (targetIndex < contextNodesCount(target))
-				target.insertBefore(tokenNode, contextNode(target, targetIndex));
-			else if (targetIndex == contextNodesCount(target))
-				target.appendChild(tokenNode);
-			else
-				throw new IllegalArgumentException("location within target is invalid");
+		Element tokenNode = contextOpen(tokenContextName);
+		setAttribute(tokenTextAttributeName, token.getText());
+		CodeBounds bounds = new CodeBounds(token);
+		bounds.persist(tokenNode); // updateBounds(token);
+		contextClose();
 
-			propagateBounds(target);
+		tokenNode.getParentNode().removeChild(tokenNode);
+		if (target.index < contextNodesCount(target.element))
+			target.element.insertBefore(tokenNode, contextNode(target.element, target.index));
+		else if (target.index == contextNodesCount(target.element))
+			target.element.appendChild(tokenNode);
+		else
+			throw new IllegalArgumentException("location within target is invalid");
+
+		propagateBounds(target.element);
+	}
+
+	private class TokenTarget {
+
+		public Element element;
+		public int index;
+
+		public TokenTarget(Element target, int targetIndex) {
+			element = target;
+			index = targetIndex;
 		}
+
+	}
+
+	private TokenTarget findTarget(Element context, Token token) {
+		int line = token.getLine();
+		int col_begin = token.getCharPositionInLine();
+		Element target = findContext(context, line, col_begin);
+		/* debug-only
+		int col_end = col_begin + comment.getText().length();
+		Element targetAlt = findContext(context, line, col_end);
+		*/
+		if (target == null /*&& targetAlt == null*/) {
+			target = contextNode(root, 0);
+			// System.err.println("either in the beginning or at the end...");
+			/* debug-only
+			} else if (target != targetAlt) {
+				contextPrint(target);
+				contextPrint(targetAlt);
+				throw new IllegalArgumentException();
+			*/
+		}
+		int targetIndex = findPosition(target, line, col_begin);
+		/* debug-only
+		int targetIndexAlt = findPosition(target, line, col_end);
+		if (targetIndex != targetIndexAlt) {
+			System.err.println("should be at index " + targetIndex + " or " + targetIndexAlt);
+			throw new IllegalArgumentException("two possible targets");
+		}
+		System.err.println("adjusting " + target.getNodeName() + "@" + targetIndex + "/" + contextNodesCount(target));
+		*/
+		return refineTarget(token, target, targetIndex);
+	}
+
+	private TokenTarget refineTarget(Token token, Element target, int targetIndex) {
+		if (contextNodesCount(target) == 0) {
+			/*
+			System.err.println("target is empty");
+			*/
+			ArrayList<Element> hierarchy = contextHierarchy(target);
+			hierarchy.remove(0);
+			for (Element parent : hierarchy) {
+				ArrayList<Element> parentNodes = contextNodes(parent);
+				int indexInParent = parentNodes.indexOf(target);
+				target = parent;
+				targetIndex = indexInParent + 1;
+				if (XMLPrinterBase.tokenLocationsWhitelist.contains(target.getNodeName()))
+					break;
+			}
+			if (!XMLPrinterBase.tokenLocationsWhitelist.contains(target.getNodeName()))
+				throw new IllegalArgumentException(
+						"didn't find good candidate to adjust token " + token + " location in hierarchy " + hierarchy);
+		}
+		boolean updated = false;
+		if (targetIndex > 0) {
+			Element beforeTarget = contextNode(target, targetIndex - 1);
+			if (beforeTarget.getNodeName().equals("body")) {
+				target = beforeTarget;
+				targetIndex = contextNodesCount(beforeTarget);
+				updated = true;
+				/*
+				System.err.println("beforeTarget: " + target.getNodeName() + "@" + targetIndex + "/" + contextNodesCount(target));
+				*/
+			}
+			/*
+			else
+				System.err.println("before is " + beforeTarget.getNodeName());
+			*/
+		}
+		if (!updated && targetIndex < contextNodesCount(target) - 1) {
+			Element afterTarget = contextNode(target, targetIndex);
+			if (afterTarget.getNodeName().equals("body")) {
+				target = afterTarget;
+				targetIndex = 0;
+				updated = true;
+				/*
+				System.err.println("afterTarget: " + target.getNodeName() + "@" + targetIndex + "/" + contextNodesCount(target));
+				*/
+			}
+			/*
+			else
+				System.err.println("after is " + afterTarget.getNodeName());
+			*/
+		}
+		return new TokenTarget(target, targetIndex);
 	}
 
 	public void persist() throws TransformerException {
