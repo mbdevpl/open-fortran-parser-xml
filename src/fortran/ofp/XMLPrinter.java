@@ -1352,6 +1352,22 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
+	public void pointer_assignment_stmt(Token label, Token eos, boolean hasBoundsSpecList,
+			boolean hasBoundsRemappingList) {
+		Element value = contextNode(-1);
+		contextClose();
+		Element target = contextNode(-1);
+		contextOpen("pointer-assignment");
+		contextOpen("target");
+		moveHere(target);
+		contextClose();
+		contextOpen("value");
+		moveHere(value);
+		contextClose();
+		super.pointer_assignment_stmt(label, eos, hasBoundsSpecList, hasBoundsRemappingList);
+		contextClose();
+	}
+
 	public void forall_construct() {
 		if (verbosity >= 100)
 			super.forall_construct();
