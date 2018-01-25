@@ -11,6 +11,7 @@
     :language: xml
 
 
+============================================
 XML output generator for Open Fortran Parser
 ============================================
 
@@ -39,6 +40,9 @@ Implementation has 2 parts: the XML generator written in Java, and Python wrappe
 The implementation is tested on Linux, OS X and Windows.
 
 In this file, first the Java implementation is described and then the Python wrapper.
+
+.. contents::
+    :backlinks: none
 
 
 Java XML generator for OFP
@@ -183,6 +187,7 @@ a collection of :xml:`<operand>` and :xml:`<operator>` nodes. Each operand const
 All simple statements are using :xml:`<statement>` node, which wraps around nodes like:
 
 *   :xml:`<assignment>`
+*   :xml:`<pointer-assignment>`
 *   :xml:`<call>`
 *   :xml:`<open>`
 *   :xml:`<close>`
