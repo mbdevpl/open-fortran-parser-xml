@@ -2489,17 +2489,20 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void contains_stmt(Token label, Token keyword, Token eos) {
 		ArrayList<String> hierarchy = contextNameHierarchy();
-		String[] expected = { "statement", "body", "module" };
-		boolean inModuleBody = hierarchy.size() >= 3 && Arrays.equals(hierarchy.subList(0, 3).toArray(), expected);
-		if (inModuleBody)
-			contextClose("body");
-		/*
-		else
-			System.err.println("Context hierarchy for 'contains' statement: " + hierarchy);
-		*/
+		boolean acceptedContext = false;
+		if (hierarchy.size() >= 3) {
+			Object[] hierarchyArray = hierarchy.subList(0, 3).toArray();
+			for (String enclosingGroup : new String[] { "subroutine", "program", "module" }) {
+				acceptedContext = Arrays.equals(hierarchyArray, new String[] { "statement", "body", enclosingGroup });
+				if (acceptedContext)
+					break;
+			}
+		}
+		if (!acceptedContext)
+			cleanUpAfterError("Context hierarchy for 'contains' statement is invalid: " + hierarchy);
+		contextClose("body");
 		super.contains_stmt(label, keyword, eos);
-		if (inModuleBody)
-			contextOpen("members");
+		contextOpen("members");
 	}
 
 	public void separate_module_subprogram(boolean hasExecutionPart, boolean hasInternalSubprogramPart) {
