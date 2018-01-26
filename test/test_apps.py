@@ -57,6 +57,8 @@ class Tests(unittest.TestCase):
     def _run_app_test(
             self, app_name: str, app_dirname: str = None, minimum_passed_cases: int = None,
             fall_back_to_ofc: bool = False):
+        if app_name not in _APPS_ROOT_PATHS and app_name in _APPS_OPTIONAL:
+            self.skip('{} directory not found'.format(app_name))
         if app_dirname is None:
             app_dirname = app_name
 
@@ -74,11 +76,9 @@ class Tests(unittest.TestCase):
     def test_miranda_io(self):
         self._run_app_test('miranda_io')
 
-    @unittest.skipIf('FLASH-4.5' not in _APPS_ROOT_PATHS, 'FLASH-4.5 directory not found')
     def test_flash_45(self):
         self._run_app_test('FLASH-4.5', 'flash-4.5')
 
-    @unittest.skipIf('FLASH-SUBSET' not in _APPS_ROOT_PATHS, 'FLASH-SUBSET directory not found')
     def test_flash_subset(self):
         self._run_app_test('FLASH-SUBSET', 'flash-subset')
 

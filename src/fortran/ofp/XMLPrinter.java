@@ -2498,11 +2498,15 @@ public class XMLPrinter extends XMLPrinterBase {
 					break;
 			}
 		}
+		/*
 		if (!acceptedContext)
 			cleanUpAfterError("Context hierarchy for 'contains' statement is invalid: " + hierarchy);
-		contextClose("body");
+		*/
+		if (acceptedContext)
+			contextClose("body");
 		super.contains_stmt(label, keyword, eos);
-		contextOpen("members");
+		if (acceptedContext)
+			contextOpen("members");
 	}
 
 	public void separate_module_subprogram(boolean hasExecutionPart, boolean hasInternalSubprogramPart) {
