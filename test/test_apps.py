@@ -60,7 +60,7 @@ class Tests(unittest.TestCase):
         if app_name not in _APPS_ROOT_PATHS and app_name in _APPS_OPTIONAL:
             self.skipTest('{} directory not found'.format(app_name))
         if app_dirname is None:
-            app_dirname = app_name
+            app_dirname = app_name.lower()
 
         _suffix = '_ofc' if fall_back_to_ofc else ''
 
@@ -77,14 +77,14 @@ class Tests(unittest.TestCase):
         self._run_app_test('miranda_io')
 
     def test_flash_45(self):
-        self._run_app_test('FLASH-4.5', 'flash-4.5')
+        self._run_app_test('FLASH-4.5')
 
     def test_flash_subset(self):
-        self._run_app_test('FLASH-SUBSET', 'flash-subset')
+        self._run_app_test('FLASH-SUBSET')
 
     def test_ffb_mini(self):
-        self._run_app_test('FFB-MINI', 'ffb-mini', 24)
+        self._run_app_test('FFB-MINI', None, 24)
 
     @unittest.skipIf(platform.system() == 'Windows', 'OFC not available on Windows')
     def test_ffb_mini_with_ofc(self):
-        self._run_app_test('FFB-MINI', 'ffb-mini', 35, True)
+        self._run_app_test('FFB-MINI', None, 35, True)
