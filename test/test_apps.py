@@ -58,7 +58,7 @@ class Tests(unittest.TestCase):
             self, app_name: str, app_dirname: str = None, minimum_passed_cases: int = None,
             fall_back_to_ofc: bool = False):
         if app_name not in _APPS_ROOT_PATHS and app_name in _APPS_OPTIONAL:
-            self.skip('{} directory not found'.format(app_name))
+            self.skipTest('{} directory not found'.format(app_name))
         if app_dirname is None:
             app_dirname = app_name
 
