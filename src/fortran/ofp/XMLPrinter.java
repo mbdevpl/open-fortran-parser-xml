@@ -902,8 +902,7 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void data_ref(int numPartRef) {
-		if (numPartRef > 1) {
-			assert numPartRef == 2;
+		for (int i = 1; i < numPartRef; ++i) {
 			assert context.getTagName().equals("name");
 			Element innerName = context;
 			ArrayList<Element> elements = contextNodes();
