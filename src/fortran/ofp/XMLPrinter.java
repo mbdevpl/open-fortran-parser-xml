@@ -911,7 +911,7 @@ public class XMLPrinter extends XMLPrinterBase {
 			contextClose();
 			assert context.getTagName().equals("name");
 			moveHere(elements);
-			setAttribute("id", getAttribute("id") + "%" + innerNameId.getValue());
+			setAttribute("id", getAttribute("id").getValue() + "%" + innerNameId.getValue());
 			context.removeChild(innerName);
 		}
 		super.data_ref(numPartRef);
