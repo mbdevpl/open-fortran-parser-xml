@@ -1304,6 +1304,23 @@ public class XMLPrinter extends XMLPrinterBase {
 		genericOperationClose(numOrOps);
 	}
 
+	public void equiv_operand(int numEquivOps) {
+		genericOperationOpen(numEquivOps);
+		if (verbosity >= 100)
+			super.equiv_operand(numEquivOps);
+		genericOperationClose(numEquivOps);
+	}
+
+	public void equiv_operand__equiv_op(Token equivOp) {
+		// same as mult_operand__mult_op()
+		Element element = contextNode(-1);
+		contextOpen("operand");
+		moveHere(element);
+		if (verbosity >= 100)
+			super.equiv_operand__equiv_op(equivOp);
+		contextClose();
+	}
+
 	public void not_op(Token notOp) {
 		contextOpen("operator");
 		setAttribute("operator", notOp);
@@ -1329,8 +1346,11 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void equiv_op(Token equivOp) {
-		// TODO Auto-generated method stub
-		super.equiv_op(equivOp);
+		contextOpen("operator");
+		setAttribute("operator", equivOp);
+		if (verbosity >= 100)
+			super.equiv_op(equivOp);
+		contextClose();
 	}
 
 	public void assignment_stmt(Token label, Token eos) {
