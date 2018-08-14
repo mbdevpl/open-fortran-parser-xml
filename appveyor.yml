@@ -59,8 +59,8 @@ init:
   - set PATH=C:\\apache-ant-%ANT%\\bin;%PATH%
 
 install:
-  - pip install -U pip || pip --version
-  - pip install -U -r dev_requirements.txt
+  - python -m pip install -U pip
+  - python -m pip install -U -r dev_requirements.txt
   # Java
   - python -m open_fortran_parser --dev-deps
   - set CLASSPATH=%cd%\\lib\\*;%CLASSPATH%
@@ -77,18 +77,17 @@ test_script:
   - if [%JAVA_VERSION%]==[jdk8] set TEST_DEPENDENCIES=1
   - if [%JAVA_VERSION%]==[jdk8] set TEST_LONG=1
   - set TEST_COVERAGE=1
-  - python -m coverage run --branch --source . -m unittest discover --verbose
+  - python -m coverage run --branch --source . -m unittest -v
 
 after_test:
   - python -m coverage report --show-missing
   - java -jar "lib\\org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" report "jacoco.exec" --classfiles "bin\\" --sourcefiles "src\\" --xml jacoco.xml
   - codecov
-  # Bintray artifact preparation
-  - pip install version_query
-  - for /f %%i in ('python -m version_query -p .') do set VERSION=%%i
-  - set PLATFORM=windows%ARCHITECTURE%-%JAVA_VERSION%-python%PYTHON_VERSION%
-  - ps: Invoke-WebRequest "https://gist.githubusercontent.com/mbdevpl/cdbc3dab3ae1941870dcaa5bb1b358bc/raw/appveyor_bintray_packager.py" -OutFile "appveyor_bintray_packager.py"
-  - python appveyor_bintray_packager.py %VERSION% %PLATFORM% dist\*.jar dist\*.tar.gz dist\*.whl dist\*.zip
+  # Bintray archive preparation
+  - python -m pip install version_query
+  - ps: Invoke-WebRequest "https://gist.githubusercontent.com/mbdevpl/46d458350f0c9cc7d793b67573e01f7b/raw/prepare_bintray_deployment.py" -OutFile "prepare_bintray_deployment.py"
+  - python prepare_bintray_deployment.py "windows%ARCHITECTURE%-%JAVA_VERSION%-python%PYTHON_VERSION%" "dist\*.jar" "dist\*.tar.gz" "dist\*.whl" "dist\*.zip"
+  - set /p BINTRAY_VERSION=<.bintray_version.txt
 
 artifacts:
   - path: dist\*.jar
@@ -105,7 +104,7 @@ deploy:
     subject: $(APPVEYOR_ACCOUNT_NAME)
     repo: pkgs
     package: $(APPVEYOR_PROJECT_NAME)
-    version: $(VERSION)
+    version: $(BINTRAY_VERSION)
     publish: true
     override: true
     explode: true

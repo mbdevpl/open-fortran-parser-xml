@@ -102,19 +102,17 @@ script:
       export TEST_DEPENDENCIES=1
       export TEST_LONG=1
     fi
-  - TEST_PACKAGING=1 TEST_COVERAGE=1 python -m coverage run --branch --source . -m unittest discover --verbose
+  - TEST_PACKAGING=1 TEST_COVERAGE=1 python -m coverage run --branch --source . -m unittest -v
 
 after_success:
   - python -m coverage report --show-missing
   - java -jar "lib/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --xml jacoco.xml
   - codecov
-  - python -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y --output-format colorized  --reports y $(find . -name "*.py")
 
 before_deploy:
   - pip3 install -U --user version_query || pip3 install -U version_query
-  - wget https://gist.githubusercontent.com/mbdevpl/cdbc3dab3ae1941870dcaa5bb1b358bc/raw/travis_bintray_descriptor_gen.py
-  - python3 travis_bintray_descriptor_gen.py "$(python3 -m version_query -p .)" "$TRAVIS_OS_NAME-$TRAVIS_JDK_VERSION-python$TRAVIS_PYTHON_VERSION" "dist/*.jar" "dist/*.tar.gz" "dist/*.whl" "dist/*.zip"
-  - cat ".bintray.json"
+  - wget https://gist.githubusercontent.com/mbdevpl/46d458350f0c9cc7d793b67573e01f7b/raw/prepare_bintray_deployment.py
+  - python3 prepare_bintray_deployment.py "$TRAVIS_OS_NAME-$TRAVIS_JDK_VERSION-python$TRAVIS_PYTHON_VERSION" "dist/*.jar" "dist/*.tar.gz" "dist/*.whl" "dist/*.zip"
 
 deploy:
   - provider: bintray
