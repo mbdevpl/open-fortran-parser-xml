@@ -24,26 +24,31 @@ _APPS_ROOT_PATHS = {
     if app not in _APPS_OPTIONAL or _HERE.parent.joinpath(path).is_dir()}
 
 _FLASH_COMMON_PATHS = [
-    'physics/Hydro/HydroMain/unsplit/hy_uhd_getFaceFlux.F90',
     'physics/Hydro/HydroMain/split/MHD_8Wave/hy_8wv_interpolate.F90',
     'physics/Hydro/HydroMain/split/MHD_8Wave/hy_8wv_fluxes.F90',
     'physics/Eos/EosMain/Gamma/eos_idealGamma.F90',
-    'physics/Hydro/HydroMain/split/MHD_8Wave/hy_8wv_sweep.F90',
-    'physics/Hydro/HydroMain/unsplit/hy_uhd_DataReconstructNormalDir_MH.F90',
-    'physics/Hydro/HydroMain/unsplit/hy_uhd_upwindTransverseFlux.F90',
-    'physics/Hydro/HydroMain/unsplit/hy_uhd_TVDslope.F90',
-    'physics/Hydro/HydroMain/unsplit/hy_uhd_Roe.F90']
+    'physics/Hydro/HydroMain/split/MHD_8Wave/hy_8wv_sweep.F90']
 
 _APPS_CODE_FILEPATHS = {
     'miranda_io': all_fortran_paths(_APPS_ROOT_PATHS['miranda_io']),
     'FLASH-4.5': [
         pathlib.Path(_APPS_ROOT_PATHS['FLASH-4.5'], 'source', pathlib.Path(input_path))
         for input_path in [
+            'physics/Hydro/HydroMain/unsplit/hy_uhd_getFaceFlux.F90',
+            'physics/Hydro/HydroMain/unsplit/hy_uhd_DataReconstructNormalDir_MH.F90',
+            'physics/Hydro/HydroMain/unsplit/hy_uhd_upwindTransverseFlux.F90',
+            'physics/Hydro/HydroMain/unsplit/hy_uhd_TVDslope.F90',
+            'physics/Hydro/HydroMain/unsplit/hy_uhd_Roe.F90'
             ] + _FLASH_COMMON_PATHS] if 'FLASH-4.5' in _APPS_ROOT_PATHS else [],
     'FLASH-SUBSET': [
         pathlib.Path(_APPS_ROOT_PATHS['FLASH-SUBSET'], 'source', pathlib.Path(input_path))
         for input_path in [
-            'physics/Hydro/HydroMain/simpleUnsplit/HLL/hy_hllUnsplit.F90'
+            'physics/Hydro/HydroMain/simpleUnsplit/HLL/hy_hllUnsplit.F90',
+            'physics/Hydro/HydroMain/unsplit/hy_getFaceFlux.F90',
+            'physics/Hydro/HydroMain/unsplit/hy_DataReconstructNormalDir_MH.F90',
+            'physics/Hydro/HydroMain/unsplit/hy_upwindTransverseFlux.F90',
+            'physics/Hydro/HydroMain/unsplit/hy_TVDslope.F90',
+            'physics/Hydro/HydroMain/unsplit/hy_Roe.F90'
             ] + _FLASH_COMMON_PATHS] if 'FLASH-SUBSET' in _APPS_ROOT_PATHS else [],
     'FFB-MINI': [path for path in all_fortran_paths(_APPS_ROOT_PATHS['FFB-MINI'].joinpath('src'))
                  if path.name not in ('gfc.h', 'gfrd_c.h', 'gfutil_c.h', 'gfutil_f.h', 'gfwrt_c.h',

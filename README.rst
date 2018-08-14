@@ -228,7 +228,7 @@ dependencies
 
 Java XML generator for OFP and all of its dependencies.
 
-Python version >= 3.5.
+Python version 3.5 or later.
 
 Python libraries as specified in `<requirements.txt>`_.
 
@@ -328,11 +328,43 @@ as library
 testing
 -------
 
+Run basic tests:
+
 .. code:: bash
 
-    python3 -m pylint --load-plugins=pylint.extensions.mccabe --docstring-min-length 5 \
-      --no-docstring-rgx "^(test)?_|.*Tests$" --unsafe-load-any-extension y \
-      --output-format colorized  --reports y $(find . -name "*.py")
-    python3 -m coverage run --branch --source . -m unittest discover --verbose
+    python3 -m unittest -v
+    TEST_LONG=1 python3 -m unittest -v  # this might take a long time...
+
+
+code coverage
+~~~~~~~~~~~~~
+
+Getting code coverage results for Java requires JaCoCo agent, and JaCoCo CLI.
+
+Set up code coverage for Java:
+
+.. code:: bash
+
+    wget "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.7.9-runtime.jar" -O "lib/org.jacoco.agent-0.7.9-runtime.jar"
+    wget "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" -O "lib/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar"
+
+Then, run all test and gather code coverage:
+
+.. code:: bash
+
+    TEST_LONG=1 python3 -m coverage run --branch --source . -m unittest -v
+
+This will take a long while.
+
+Then, generate results for Python code:
+
+.. code:: bash
+
     python3 -m coverage report --show-missing
     python3 -m coverage html
+
+Finally, generate results for Java code:
+
+.. code:: bash
+
+    java -jar "lib/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --xml jacoco.xml
