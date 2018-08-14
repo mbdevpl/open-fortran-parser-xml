@@ -29,12 +29,12 @@ matrix:
     - os: osx
       language: generic
       env:
-        - TRAVIS_PYTHON_VERSION="3.5.4"
+        - TRAVIS_PYTHON_VERSION="3.5.5"
         - TRAVIS_JDK_VERSION=oraclejdk8
     - os: osx
       language: generic
       env:
-        - TRAVIS_PYTHON_VERSION="3.6.3"
+        - TRAVIS_PYTHON_VERSION="3.6.6"
         - TRAVIS_JDK_VERSION=oraclejdk8
     - os: osx
       language: generic
@@ -43,6 +43,12 @@ matrix:
         - TRAVIS_JDK_VERSION=oraclejdk8
   allow_failures:
     - python: "3.7-dev"
+    - env:
+        - TRAVIS_PYTHON_VERSION="3.5.5"
+        - TRAVIS_JDK_VERSION=oraclejdk8
+    - env:
+        - TRAVIS_PYTHON_VERSION="3.6.6"
+        - TRAVIS_JDK_VERSION=oraclejdk8
     - env:
         - TRAVIS_PYTHON_VERSION="3.7-dev"
         - TRAVIS_JDK_VERSION=oraclejdk8
