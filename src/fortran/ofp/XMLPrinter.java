@@ -206,14 +206,14 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void int_literal_constant(Token digitString, Token kindParam) {
-	    if (kindParam != null) {
-		Element kind = contextNode(-1);
-		assert kind.getTagName().equals("kind-param");
-		contextOpen("literal");
-		moveHere(kind);
-	    } else {
-		contextOpen("literal");
-	    }
+		if (kindParam != null) {
+			Element kind = contextNode(-1);
+			assert kind.getTagName().equals("kind-param");
+			contextOpen("literal");
+			moveHere(kind);
+		} else {
+			contextOpen("literal");
+		}
 		setAttribute("type", "int");
 		setAttribute("value", digitString);
 		super.int_literal_constant(digitString, kindParam);
@@ -227,14 +227,14 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void real_literal_constant(Token realConstant, Token kindParam) {
-	    if (kindParam != null) {
-		Element kind = contextNode(-1);
-		assert kind.getTagName().equals("kind-param");
-		contextOpen("literal");
-		moveHere(kind);
-	    } else {
-		contextOpen("literal");
-	    }
+		if (kindParam != null) {
+			Element kind = contextNode(-1);
+			assert kind.getTagName().equals("kind-param");
+			contextOpen("literal");
+			moveHere(kind);
+		} else {
+			contextOpen("literal");
+		}
 		setAttribute("type", "real");
 		setAttribute("value", realConstant);
 		super.real_literal_constant(realConstant, kindParam);
@@ -262,14 +262,14 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void logical_literal_constant(Token logicalValue, boolean isTrue, Token kindParam) {
-	    if (kindParam != null) {
-		Element kind = contextNode(-1);
-		assert kind.getTagName().equals("kind-param");
-		contextOpen("literal");
-		moveHere(kind);
-	    } else {
-		contextOpen("literal");
-	    }
+		if (kindParam != null) {
+			Element kind = contextNode(-1);
+			assert kind.getTagName().equals("kind-param");
+			contextOpen("literal");
+			moveHere(kind);
+		} else {
+			contextOpen("literal");
+		}
 		setAttribute("type", "bool");
 		setAttribute("value", isTrue);
 		super.logical_literal_constant(logicalValue, isTrue, kindParam);
