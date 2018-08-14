@@ -245,7 +245,8 @@ class Tests(unittest.TestCase):
             'bug-reports/bug-3040730.f90',
             'bug-reports/bug-3313167.f90',
             'LOPe/multigrid.f90',
-            'rule-tests/R714.f03']]
+            'rule-tests/R714.f03',
+            'rule-tests/R716.f03']]
         self.check_cases(input_paths)
 
     def test_ofp_if(self):
