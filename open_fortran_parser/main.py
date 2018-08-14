@@ -21,7 +21,8 @@ def main(args=None, namespace=None):
     parser = argparse.ArgumentParser(
         prog='open_fortran_parser',
         description='''Python wrapper around XML generator for Open Fortran Parser''',
-        epilog='''Copyright 2017 Mateusz Bysiek https://mbdevpl.github.io/, Apache License 2.0''',
+        epilog='''Copyright 2017-2018 by the contributors, Apache License 2.0,
+            https://github.com/mbdevpl/open-fortran-parser-xml''',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.version = VERSION

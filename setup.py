@@ -1,4 +1,4 @@
-"""Build script for open_fortran_parser package."""
+"""Setup script for open_fortran_parser package."""
 
 import setup_boilerplate
 
