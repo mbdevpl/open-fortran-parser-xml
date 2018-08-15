@@ -38,6 +38,18 @@ environment:
       JAVA_VERSION: "jdk8"
       JAVA: "C:\\Program Files\\Java\\jdk1.8.0"
       ANT: "1.10.5"
+    - ARCHITECTURE: "x86"
+      PYTHON_VERSION: "3.7"
+      PYTHON: "C:\\Python37"
+      JAVA_VERSION: "jdk8"
+      JAVA: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
+      ANT: "1.10.5"
+    - ARCHITECTURE: "x64"
+      PYTHON_VERSION: "3.7"
+      PYTHON: "C:\\Python37-x64"
+      JAVA_VERSION: "jdk8"
+      JAVA: "C:\\Program Files\\Java\\jdk1.8.0"
+      ANT: "1.10.5"
 
 init:
   - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%

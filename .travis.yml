@@ -23,8 +23,10 @@ matrix:
       python: "3.6"
       env: TRAVIS_JDK_VERSION=openjdk8
     - os: linux
+      dist: xenial
+      sudo: true
       language: python
-      python: "3.7-dev"
+      python: "3.7"
       env: TRAVIS_JDK_VERSION=oraclejdk9
     - os: osx
       osx_image: xcode9.2
@@ -42,13 +44,10 @@ matrix:
       osx_image: xcode9.2
       language: generic
       env:
-        - TRAVIS_PYTHON_VERSION="3.7-dev"
+        - TRAVIS_PYTHON_VERSION="3.7.0"
         - TRAVIS_JDK_VERSION=oraclejdk8
   allow_failures:
-    - python: "3.7-dev"
-    - env:
-        - TRAVIS_PYTHON_VERSION="3.7-dev"
-        - TRAVIS_JDK_VERSION=oraclejdk8
+    - python: "3.7"
 
 before_install:
   - |
