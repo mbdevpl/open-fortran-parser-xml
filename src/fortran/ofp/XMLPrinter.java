@@ -7,6 +7,7 @@ import org.antlr.runtime.Token;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
+import fortran.ofp.parser.java.IActionEnums;
 import fortran.ofp.parser.java.IFortranParser;
 
 /**
@@ -183,6 +184,15 @@ public class XMLPrinter extends XMLPrinterBase {
 			contextOpen("statement");
 	}
 
+	public void type_param_value(boolean hasExpr, boolean hasAsterisk, boolean hasColon) {
+		Element value = hasExpr ? contextNode(-1): null;
+		contextOpen("type-attribute");
+		if (hasExpr)
+			moveHere(value);
+		super.type_param_value(hasExpr, hasAsterisk, hasColon);
+		contextClose();
+	}
+
 	public void intrinsic_type_spec(Token keyword1, Token keyword2, int type, boolean hasKindSelector) {
 		if (!context.getTagName().equals("declaration")) {
 			// TODO: ensure being in body
@@ -240,10 +250,52 @@ public class XMLPrinter extends XMLPrinterBase {
 		super.real_literal_constant(realConstant, kindParam);
 	}
 
+	public void char_selector(Token tk1, Token tk2, int kindOrLen1, int kindOrLen2, boolean hasAsterisk) {
+		int[] attribute_types = new int[]{kindOrLen2, kindOrLen1};
+		contextOpen("type-attributes");
+		Element localContext = context;
+		contextClose();
+		Element value = null;
+		for(int attribute_type: attribute_types) {
+			switch (attribute_type) {
+			case IActionEnums.KindLenParam_none:
+				break;
+			case IActionEnums.KindLenParam_len:
+				value = contextNode(-2);
+				moveTo(localContext, value);
+				contextRename(value, "type-attribute", "length");
+				break;
+			case IActionEnums.KindLenParam_kind:
+				value = contextNode(-2);
+				Element prevContext = context;
+				context = localContext;
+				contextOpen("kind");
+				moveHere(value);
+				contextClose();
+				context = prevContext;
+				break;
+			default:
+				throw new IllegalArgumentException(Integer.toString(attribute_type));
+			}
+		}
+		context = localContext;
+		if (value == null) {
+			contextClose();
+			context.removeChild(localContext);
+		}
+		super.char_selector(tk1, tk2, kindOrLen1, kindOrLen2, hasAsterisk);
+		if (value != null)
+			contextClose();
+	}
+
 	public void char_length(boolean hasTypeParamValue) {
 		Element value = contextNode(-1);
 		contextOpen("length");
 		moveHere(value);
+		if (hasTypeParamValue) {
+			moveHere(contextNodes(value));
+			context.removeChild(value);
+		}
 		super.char_length(hasTypeParamValue);
 		contextClose();
 	}
@@ -353,6 +405,7 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextOpen("type");
 		setAttribute("hasLength", false);
 		setAttribute("hasKind", false);
+		setAttribute("hasAttributes", false);
 		Attr n;
 		for (Element declaration : typeDeclarations) {
 			switch (declaration.getTagName()) {
@@ -375,6 +428,9 @@ public class XMLPrinter extends XMLPrinterBase {
 				break;
 			case "kind":
 				setAttribute("hasKind", true);
+				break;
+			case "type-attributes":
+				setAttribute("hasAttributes", true);
 				break;
 			default:
 				break;

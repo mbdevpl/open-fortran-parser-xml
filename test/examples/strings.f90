@@ -12,5 +12,7 @@ program strings
   character :: mystring04b(16)
   character(kind=c_char) :: mystring05a(*)
   character(kind=c_char) :: mystring05b(16)
+  character(kind=c_char, len=*) :: mystring06a
+  character(kind=c_char, len=16) :: mystring06b
 
 end program strings
