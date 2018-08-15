@@ -444,55 +444,55 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void attr_spec(Token attrKeyword, int attr) {
 		String nestIn = "";
 		switch (attr) {
-		case 801:
+		case IActionEnums.AttrSpec_access:
 			// private
 			break;
-		case 802:
+		case IActionEnums.AttrSpec_language_binding:
 			// bind
 			break;
-		case 805:
+		case IActionEnums.AttrSpec_ALLOCATABLE:
 			nestIn = "allocatable";
 			break;
-		case 806:
+		case IActionEnums.AttrSpec_ASYNCHRONOUS:
 			nestIn = "asynchronous";
 			break;
-		case 807:
+		case IActionEnums.AttrSpec_CODIMENSION:
 			nestIn = "codimension";
 			break;
-		case 809:
+		case IActionEnums.AttrSpec_DIMENSION:
 			// dimension
 			break;
-		case 810:
+		case IActionEnums.AttrSpec_EXTERNAL:
 			nestIn = "external";
 			break;
-		case 811:
+		case IActionEnums.AttrSpec_INTENT:
 			// intent
 			break;
-		case 812:
+		case IActionEnums.AttrSpec_INTRINSIC:
 			nestIn = "intrinsic";
 			break;
-		case 814:
+		case IActionEnums.AttrSpec_OPTIONAL:
 			nestIn = "optional";
 			break;
-		case 815:
+		case IActionEnums.AttrSpec_PARAMETER:
 			nestIn = "parameter";
 			break;
-		case 816:
+		case IActionEnums.AttrSpec_POINTER:
 			nestIn = "pointer";
 			break;
-		case 817:
+		case IActionEnums.AttrSpec_PROTECTED:
 			nestIn = "protected";
 			break;
-		case 818:
+		case IActionEnums.AttrSpec_SAVE:
 			nestIn = "save";
 			break;
-		case 819:
+		case IActionEnums.AttrSpec_TARGET:
 			nestIn = "target";
 			break;
-		case 820:
+		case IActionEnums.AttrSpec_VALUE:
 			nestIn = "value";
 			break;
-		case 821:
+		case IActionEnums.AttrSpec_VOLATILE:
 			nestIn = "volatile";
 			break;
 		default:
@@ -563,15 +563,15 @@ public class XMLPrinter extends XMLPrinterBase {
 		Element value = null;
 		Element value2 = null;
 		switch (type) {
-		case 702:
+		case IActionEnums.ArraySpecElement_expr_colon_expr:
 			value2 = contextNode(-2);
-		case 700:
-		case 701:
-		case 703:
+		case IActionEnums.ArraySpecElement_expr:
+		case IActionEnums.ArraySpecElement_expr_colon:
+		case IActionEnums.ArraySpecElement_expr_colon_asterisk:
 			value = contextNode(-1);
 			break;
-		case 704:
-		case 705:
+		case IActionEnums.ArraySpecElement_asterisk:
+		case IActionEnums.ArraySpecElement_colon:
 			break;
 		default:
 			throw new IllegalArgumentException(Integer.toString(type));
@@ -582,15 +582,15 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextOpen("dimension");
 
 		switch (type) {
-		case 700:
+		case IActionEnums.ArraySpecElement_expr:
 			setAttribute("type", "simple"); // (a)
 			moveHere(value);
 			break;
-		case 701:
+		case IActionEnums.ArraySpecElement_expr_colon:
 			setAttribute("type", "upper-bound-assumed-shape"); // (a:)
 			moveHere(value);
 			break;
-		case 702:
+		case IActionEnums.ArraySpecElement_expr_colon_expr:
 			setAttribute("type", "range"); // (a:b)
 			contextOpen("range");
 			contextOpen("lower-bound");
@@ -601,14 +601,14 @@ public class XMLPrinter extends XMLPrinterBase {
 			contextClose();
 			contextClose();
 			break;
-		case 703:
+		case IActionEnums.ArraySpecElement_expr_colon_asterisk:
 			setAttribute("type", "upper-bound-assumed-size"); // (a:*)
 			moveHere(value);
 			break;
-		case 704:
+		case IActionEnums.ArraySpecElement_asterisk:
 			setAttribute("type", "assumed-size"); // (*)
 			break;
-		case 705:
+		case IActionEnums.ArraySpecElement_colon:
 			setAttribute("type", "assumed-shape"); // (:)
 			break;
 		default:
@@ -621,13 +621,13 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void intent_spec(Token intentKeyword1, Token intentKeyword2, int intent) {
 		contextOpen("intent");
 		switch (intent) {
-		case 600:
+		case IActionEnums.IntentSpec_IN:
 			setAttribute("type", "in");
 			break;
-		case 601:
+		case IActionEnums.IntentSpec_OUT:
 			setAttribute("type", "out");
 			break;
-		case 602:
+		case IActionEnums.IntentSpec_INOUT:
 			setAttribute("type", "inout");
 			break;
 		default:
@@ -1829,13 +1829,13 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextRename("statement", "loop");
 		String loopType = "";
 		switch (doConstructType) {
-		case 1700:
+		case IActionEnums.DoConstruct_concurrent:
 			loopType = "do-concurrent";
 			break;
-		case 1701:
+		case IActionEnums.DoConstruct_variable:
 			loopType = "do";
 			break;
-		case 1702:
+		case IActionEnums.DoConstruct_while:
 			loopType = "do-while";
 			break;
 		default:
