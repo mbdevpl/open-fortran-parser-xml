@@ -79,8 +79,8 @@ install:
   - ant
   - set CLASSPATH=%cd%\\dist\\*;%CLASSPATH%
   # Java tests
-  - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.7.9-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.7.9-runtime.jar"
-  - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" -OutFile "lib\\org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar"
+  - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.8.1-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.8.1-runtime.jar"
+  - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.cli-0.8.1-nodeps.jar" -OutFile "lib\\org.jacoco.cli-0.8.1-nodeps.jar"
 
 build: off
 
@@ -93,7 +93,7 @@ test_script:
 
 after_test:
   - python -m coverage report --show-missing
-  - java -jar "lib\\org.jacoco.cli-0.7.10-20170927.171630-24-nodeps.jar" report "jacoco.exec" --classfiles "bin\\" --sourcefiles "src\\" --xml jacoco.xml
+  - java -jar "lib\\org.jacoco.cli-0.8.1-nodeps.jar" report "jacoco.exec" --classfiles "bin\\" --sourcefiles "src\\" --xml jacoco.xml
   - codecov
   # Bintray archive preparation
   - python -m pip install version_query
