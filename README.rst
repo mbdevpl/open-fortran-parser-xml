@@ -306,13 +306,14 @@ as script
 
     optional arguments:
       -h, --help            show this help message and exit
-      --version             show program's version number and exit
+      --version             show program\'s version number and exit
       -v VERBOSITY, --verbosity VERBOSITY
                             level of verbosity, from 0 to 100 (default: 100)
       --get-dependencies, --deps
                             download dependencies and exit (default: False)
 
-    Copyright 2017 Mateusz Bysiek https://mbdevpl.github.io/, Apache License 2.0
+    Copyright 2017-2018 by the contributors, Apache License 2.0,
+    https://github.com/mbdevpl/open-fortran-parser-xml
 
 
 as library
@@ -323,6 +324,8 @@ as library
     from open_fortran_parser import parse
 
     xml = parse('my_legacy_code.f', verbosity=0)
+
+More examples available in `<examples.ipynb>`_.
 
 
 testing

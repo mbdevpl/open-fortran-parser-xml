@@ -12,6 +12,10 @@
 /jacoco.exec
 /jacoco.xml
 
+# Jupyter Notebook
+.ipynb_checkpoints
+*-checkpoint.ipynb
+
 # OS: macOS
 .DS_Store
 
