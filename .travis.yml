@@ -29,19 +29,16 @@ matrix:
       python: "3.7"
       env: TRAVIS_JDK_VERSION=oraclejdk9
     - os: osx
-      osx_image: xcode9.2
       language: generic
       env:
         - TRAVIS_PYTHON_VERSION="3.5.5"
         - TRAVIS_JDK_VERSION=oraclejdk8
     - os: osx
-      osx_image: xcode9.2
       language: generic
       env:
         - TRAVIS_PYTHON_VERSION="3.6.6"
         - TRAVIS_JDK_VERSION=oraclejdk8
     - os: osx
-      osx_image: xcode9.2
       language: generic
       env:
         - TRAVIS_PYTHON_VERSION="3.7.0"
