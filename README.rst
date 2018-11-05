@@ -432,17 +432,17 @@ dependencies
 
 *   Java 1.7 or later
 
-*   Open Fortran Parser 0.8.4-4
+*   Open Fortran Parser 0.8.5-1
 
     https://github.com/mbdevpl/open-fortran-parser/releases
 
     This is a patched version of OFP. The list of changes is available at the above link.
 
-*   ANTRL 3.3 (dependency of Open Fortran Parser)
+*   ANTRL 3.5.2 (dependency of Open Fortran Parser)
 
     http://www.antlr3.org/download/
 
-*   Apache Commons CLI 1.4 (or later)
+*   Apache Commons CLI 1.4 or later
 
     https://commons.apache.org/proper/commons-cli/download_cli.cgi
 

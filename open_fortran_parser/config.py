@@ -9,14 +9,14 @@ from ._version import VERSION
 DEV_DEPENDENCIES_PATH = pathlib.Path(os.getcwd(), 'lib')
 
 DEV_DEPENDENCIES = {
-    'ANTLR 3.3': (
+    'ANTLR 3.5.2': (
         urllib.parse.urlparse(
-            'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.4-1/'),
-        pathlib.Path('antlr-3.3-complete.jar')),
-    'Open Fortran Parser 0.8.4-4': (
+            'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.5-1/'),
+        pathlib.Path('antlr-3.5.2-complete.jar')),
+    'Open Fortran Parser 0.8.5-1': (
         urllib.parse.urlparse(
-            'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.4-4/'),
-        pathlib.Path('OpenFortranParser-0.8.4-4.jar')),
+            'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.5-1/'),
+        pathlib.Path('OpenFortranParser-0.8.5-1.jar')),
     'Apache Commons CLI 1.4': (
         urllib.parse.urlparse(
             'https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.1.0/'),
@@ -36,7 +36,9 @@ DEPENDENCIES.update({
 OUTDATED_DEPENDENCIES = {
     'Open Fortran Parser 0.8.4-1': pathlib.Path('OpenFortranParser-0.8.4-1.jar'),
     'Open Fortran Parser 0.8.4-2': pathlib.Path('OpenFortranParser-0.8.4-2.jar'),
-    'Open Fortran Parser 0.8.4-3': pathlib.Path('OpenFortranParser-0.8.4-3.jar')}
+    'Open Fortran Parser 0.8.4-3': pathlib.Path('OpenFortranParser-0.8.4-3.jar'),
+    'ANTLR 3.3': pathlib.Path('antlr-3.3-complete.jar'),
+    'Open Fortran Parser 0.8.4-4': pathlib.Path('OpenFortranParser-0.8.4-4.jar')}
 
 JAVA = {
     'executable': pathlib.Path('java'),
