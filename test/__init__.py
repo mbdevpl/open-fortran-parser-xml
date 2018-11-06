@@ -14,7 +14,7 @@ os.makedirs(str(pathlib.Path('test', 'results', 'logs')), exist_ok=True)
 
 if os.environ.get('TEST_COVERAGE'):
     JACOCO_PATH = pathlib.Path('lib', 'org.jacoco.agent-0.8.3-runtime.jar').resolve()
-    JACOCO_EXCLUDES = ('fortran.ofp.parser.java.FortranParserExtras_FortranParser08',)
+    JACOCO_EXCLUDES = ('fortran.ofp.parser.java.FortranParser2008_FortranParserBase',)
     if JACOCO_PATH.is_file():
         java_config['options'].append(
             '-javaagent:{}=excludes={}'.format(str(JACOCO_PATH), ':'.join(JACOCO_EXCLUDES)))
