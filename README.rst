@@ -157,7 +157,11 @@ it contains list of parameters.
 
 In the body, a special node :xml:`<specification>`, followed by a collection of statements can be found.
 
-The :xml:`<specification>` contains a collection of :xml:`<declaraion>` nodes.
+The :xml:`<specification>` contains a collection of following nodes:
+
+*   :xml:`<declaraion>`
+*   :xml:`<use>`
+*   ...
 
 And, each of the statements listed after the specification, can be either compound or simple.
 
@@ -174,6 +178,10 @@ In the header of the :xml:`<loop>`, at least one :xml:`<index-variable>` is pres
 It has :xml:`<lower-bound>`, :xml:`<upper-bound>`  and :xml:`<step>`.
 
 In the header of :xml:`<if>`, an expression is present.
+
+In the body of :xml:`<select>` there multiple :xml:`<case>` nodes.
+These are also compound (i.e. each of them has :xml:`<header>` and :xml:`<body>`),
+however they exist only within the body of select statement.
 
 Expression might be a single node like:
 
@@ -210,6 +218,26 @@ declarations and/or statements within them.
 
 Remaining details of AST are not decided yet. For the time being, to see implementation details,
 please take a look into `<src/fortran/ofp/XMLPrinter.java>`_.
+
+
+Unhandled corner cases
+~~~~~~~~~~~~~~~~~~~~~~
+
+in certain corner cases, the parse tree might deviate from the above description.
+
+This might be due to two main reasons:
+
+1)   Some feature is not yet implemented in this XML output generator
+2)   The events provided by OFP are not sufficient to generate a correct tree.
+
+In case 1, all contributions to this project are very welcome. The implementation of any one
+of the missing features might not be very troublesome. The main reason why many of those features
+are not implemented yet is because the Fortran codes the current contributors work with
+do not use them.
+
+In case 2, there is a need to dynamically reorder/modify/delete nodes, or otherwise manipulate
+existing parse tree while adding new nodes. In such case contributions are also very welcome,
+but implementation might be much more challenging in such cases.
 
 
 Python wrapper for the generator
