@@ -2281,12 +2281,27 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextOpen("declaration");
 	}
 
+	public void module_nature(Token nature) {
+		if (context.getTagName().equals("declaration")) {
+			LOG.log(Level.FINE, "closing unclosed declaration at module_nature nature={0}", nature.getText());
+			contextClose("declaration");
+		}
+		if (!context.getTagName().equals("use"))
+			contextOpen("use");
+		contextOpen("nature");
+		setAttribute("name", nature);
+		if (verbosity >= 80)
+			super.module_nature(nature);
+		contextClose("nature");
+	}
+
 	public void rename_list__begin() {
 		if (context.getTagName().equals("declaration")) {
 			LOG.log(Level.FINE, "closing unclosed declaration at rename_list__begin");
 			contextClose("declaration");
 		}
-		contextOpen("use");
+		if (!context.getTagName().equals("use"))
+			contextOpen("use");
 		contextOpen("rename");
 		if (verbosity >= 100)
 			super.rename_list__begin();
@@ -2302,7 +2317,8 @@ public class XMLPrinter extends XMLPrinterBase {
 			LOG.log(Level.FINE, "closing unclosed declaration at only_list__begin");
 			contextClose("declaration");
 		}
-		contextOpen("use");
+		if (!context.getTagName().equals("use"))
+			contextOpen("use");
 		contextOpen("only");
 		if (verbosity >= 100)
 			super.only_list__begin();

@@ -333,6 +333,16 @@ class Tests(unittest.TestCase):
             'rule-tests/R1207.f90']]
         self.check_cases(input_paths)
 
+    def test_module_nature(self):
+        input_paths = [pathlib.Path(_) for _ in [
+            'annex_c/c_10_2_1.f03',
+            'annex_c/c_10_2_2.f03',
+            'annex_c/c_10_2_3.f03',
+            'annex_c/c_10_2_4.f03',
+            'rule-f08-tests/R1109.f90',
+            'rule-f08-tests/R1228.f90']]
+        self.check_cases(input_paths)
+
     @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
     def test_ofp_all_cases(self):
         tests_absolute_path = _OFP_TESTS_DIR.resolve()
