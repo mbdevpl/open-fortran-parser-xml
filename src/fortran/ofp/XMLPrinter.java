@@ -2,6 +2,8 @@ package fortran.ofp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.antlr.runtime.Token;
 import org.w3c.dom.Attr;
@@ -16,6 +18,8 @@ import fortran.ofp.parser.java.IFortranParser;
  * @author Mateusz Bysiek https://mbdevpl.github.io/
  */
 public class XMLPrinter extends XMLPrinterBase {
+
+	private static final Logger LOG = Logger.getLogger(XMLPrinter.class.getName());
 
 	public XMLPrinter(String[] args, IFortranParser parser, String filename) {
 		super(args, parser, filename);
@@ -93,8 +97,10 @@ public class XMLPrinter extends XMLPrinterBase {
 			contextClose("header");
 			contextOpen("body");
 		}
-		if (context.getTagName().equals("declaration"))
+		if (context.getTagName().equals("declaration")) {
+			LOG.log(Level.FINER, "closing unclosed declaration at specification_part");
 			contextClose("declaration");
+		}
 		if (!context.getTagName().equals("specification"))
 			contextOpen("specification");
 		contextCloseAllInner("specification");
@@ -2630,8 +2636,10 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void start_of_file(String filename, String path) {
 		if (contextTryFind("file") != null) {
-			if (context.getTagName().equals("declaration"))
+			if (context.getTagName().equals("declaration")) {
+				LOG.log(Level.FINER, "closing unclosed declaration at start_of_file");
 				contextClose("declaration");
+			}
 			contextOpen("declaration");
 			setAttribute("type", "include");
 		}
