@@ -2269,8 +2269,10 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void use_stmt(Token label, Token useKeyword, Token id, Token onlyKeyword, Token eos, boolean hasModuleNature,
 			boolean hasRenameList, boolean hasOnly) {
-		if (context.getTagName().equals("declaration"))
+		if (context.getTagName().equals("declaration")) {
+			LOG.log(Level.FINE, "closing unclosed declaration at use_stmt id={0}", id.getText());
 			contextClose("declaration");
+		}
 		if (!context.getTagName().equals("use"))
 			contextOpen("use");
 		setAttribute("name", id);
@@ -2280,8 +2282,10 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void rename_list__begin() {
-		if (context.getTagName().equals("declaration"))
+		if (context.getTagName().equals("declaration")) {
+			LOG.log(Level.FINE, "closing unclosed declaration at rename_list__begin");
 			contextClose("declaration");
+		}
 		contextOpen("use");
 		contextOpen("rename");
 		if (verbosity >= 100)
@@ -2294,8 +2298,10 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void only_list__begin() {
-		if (context.getTagName().equals("declaration"))
+		if (context.getTagName().equals("declaration")) {
+			LOG.log(Level.FINE, "closing unclosed declaration at only_list__begin");
 			contextClose("declaration");
+		}
 		contextOpen("use");
 		contextOpen("only");
 		if (verbosity >= 100)
