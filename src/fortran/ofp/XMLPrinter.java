@@ -2,6 +2,8 @@ package fortran.ofp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.antlr.runtime.Token;
 import org.w3c.dom.Attr;
@@ -16,6 +18,8 @@ import fortran.ofp.parser.java.IFortranParser;
  * @author Mateusz Bysiek https://mbdevpl.github.io/
  */
 public class XMLPrinter extends XMLPrinterBase {
+
+	private static final Logger LOG = Logger.getLogger(XMLPrinter.class.getName());
 
 	public XMLPrinter(String[] args, IFortranParser parser, String filename) {
 		super(args, parser, filename);
@@ -93,8 +97,10 @@ public class XMLPrinter extends XMLPrinterBase {
 			contextClose("header");
 			contextOpen("body");
 		}
-		if (context.getTagName().equals("declaration"))
+		if (context.getTagName().equals("declaration")) {
+			LOG.log(Level.FINER, "closing unclosed declaration at specification_part");
 			contextClose("declaration");
+		}
 		if (!context.getTagName().equals("specification"))
 			contextOpen("specification");
 		contextCloseAllInner("specification");
@@ -2263,8 +2269,10 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void use_stmt(Token label, Token useKeyword, Token id, Token onlyKeyword, Token eos, boolean hasModuleNature,
 			boolean hasRenameList, boolean hasOnly) {
-		if (context.getTagName().equals("declaration"))
+		if (context.getTagName().equals("declaration")) {
+			LOG.log(Level.FINE, "closing unclosed declaration at use_stmt id={0}", id.getText());
 			contextClose("declaration");
+		}
 		if (!context.getTagName().equals("use"))
 			contextOpen("use");
 		setAttribute("name", id);
@@ -2274,8 +2282,10 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void rename_list__begin() {
-		if (context.getTagName().equals("declaration"))
+		if (context.getTagName().equals("declaration")) {
+			LOG.log(Level.FINE, "closing unclosed declaration at rename_list__begin");
 			contextClose("declaration");
+		}
 		contextOpen("use");
 		contextOpen("rename");
 		if (verbosity >= 100)
@@ -2288,8 +2298,10 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void only_list__begin() {
-		if (context.getTagName().equals("declaration"))
+		if (context.getTagName().equals("declaration")) {
+			LOG.log(Level.FINE, "closing unclosed declaration at only_list__begin");
 			contextClose("declaration");
+		}
 		contextOpen("use");
 		contextOpen("only");
 		if (verbosity >= 100)
@@ -2630,8 +2642,10 @@ public class XMLPrinter extends XMLPrinterBase {
 
 	public void start_of_file(String filename, String path) {
 		if (contextTryFind("file") != null) {
-			if (context.getTagName().equals("declaration"))
+			if (context.getTagName().equals("declaration")) {
+				LOG.log(Level.FINER, "closing unclosed declaration at start_of_file");
 				contextClose("declaration");
+			}
 			contextOpen("declaration");
 			setAttribute("type", "include");
 		}
