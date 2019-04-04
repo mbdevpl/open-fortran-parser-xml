@@ -1,6 +1,9 @@
 sudo: required
 language: generic
 addons:
+  apt:
+    packages:
+      - ant
   homebrew:
     packages:
       - ant
