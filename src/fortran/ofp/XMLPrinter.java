@@ -1049,6 +1049,24 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
+	public void nullify_stmt(Token label, Token nullifyKeyword, Token eos) {
+		ArrayList<Element> elements = contextNodes();
+		contextOpen("nullify");
+		moveHere(elements);
+		super.nullify_stmt(label, nullifyKeyword, eos);
+		contextClose();
+	}
+
+	public void pointer_object() {
+		contextCloseAllInner("pointers");
+		Element pointer = contextNode(-1);
+		contextOpen("pointer");
+		moveHere(pointer);
+		if (verbosity >= 100)
+			super.pointer_object();
+		contextClose();
+	}
+
 	public void deallocate_stmt(Token label, Token deallocateKeyword, Token eos, boolean hasDeallocOptList) {
 		Element element2 = hasDeallocOptList ? contextNode(-2) : null;
 		Element element = contextNode(-1);

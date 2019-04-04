@@ -135,8 +135,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		addListContext("allocate-object", "expressions", null);
 		/*
 		addListContext("allocate-shape-spec", "", "");
-		addListContext("pointer-object", "", "");
 		*/
+		addListContext("pointer-object", "pointers", "pointer");
 		addListContext("dealloc-opt", "keyword-arguments", null);
 		/*
 		addListContext("allocate-coshape-spec", "", "");
