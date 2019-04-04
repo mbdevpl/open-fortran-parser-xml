@@ -1,6 +1,7 @@
 """Testing ast_transformer module on FFB-MINI application."""
 
 import logging
+import os
 import pathlib
 import platform
 import unittest
@@ -81,15 +82,19 @@ class Tests(unittest.TestCase):
     def test_miranda_io(self):
         self._run_app_test('miranda_io')
 
+    @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
     def test_flash_45(self):
         self._run_app_test('FLASH-4.5')
 
+    @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
     def test_flash_subset(self):
         self._run_app_test('FLASH-SUBSET')
 
+    @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
     def test_ffb_mini(self):
         self._run_app_test('FFB-MINI', None, 24)
 
+    @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
     @unittest.skipIf(platform.system() == 'Windows', 'OFC not available on Windows')
     def test_ffb_mini_with_ofc(self):
         self._run_app_test('FFB-MINI', None, 35, True)

@@ -16,9 +16,15 @@ _LOG = logging.getLogger(__name__)
 
 _HERE = pathlib.Path(__file__).resolve().parent
 
+INPUT_PATH = _HERE.joinpath('examples', 'empty.f')
+
 INPUT_PATHS = list(pathlib.Path(_HERE, 'examples').glob('**/*.*'))
 INPUT_PATHS_LARGE = list(pathlib.Path(_HERE, 'examples_large').glob('**/*.*'))
 VERBOSITIES = (0, 20, 80, 100)
+
+SOME_INPUT_PATHS = [_HERE.joinpath('examples', _) for _ in ('comments.f', 'strings.f90')]
+SOME_INPUT_PATHS_LARGE = [_HERE.joinpath('examples_large', 'ORCHIDEE_grid.f90')]
+SOME_VERBOSITIES = (0, 100)
 
 
 class Tests(unittest.TestCase):
@@ -30,7 +36,6 @@ class Tests(unittest.TestCase):
         options = java_config['options']
         ofp_class = java_config['ofp_class']
         ofp_xml_class = java_config['ofp_xml_class']
-        input_path = pathlib.Path('test', 'examples', 'empty.f')
         for classpath, verbosity, invalid_options in itertools.product(
                 (None, java_config['classpath']), (0, 100, 'invalid'),
                 ([], ['--invalid', 'option'], ['--help', 'true'])):
@@ -50,7 +55,7 @@ class Tests(unittest.TestCase):
                     if output_path is not None:
                         command += ['--output', str(output_path)]
                     command += invalid_options
-                    command.append(str(input_path))
+                    command.append(str(INPUT_PATH))
 
                     if invalid_options or verbosity == 'invalid' \
                             or classpath is None and 'CLASSPATH' not in os.environ:
@@ -64,17 +69,16 @@ class Tests(unittest.TestCase):
         classpath = java_config['classpath']
         options = java_config['options']
 
-        input_path = pathlib.Path('test', 'examples', 'empty.f')
         java_config['classpath'] = None
         with tempfile.NamedTemporaryFile() as output_file:
-            execute_parser(input_path, pathlib.Path(output_file.name))
+            execute_parser(INPUT_PATH, pathlib.Path(output_file.name))
 
         java_config['classpath'] = classpath
         java_config['options'] = options
 
     def test_execute_parser_stdout(self):
-        for input_path in INPUT_PATHS:
-            for verbosity in VERBOSITIES:
+        for input_path in SOME_INPUT_PATHS:
+            for verbosity in SOME_VERBOSITIES:
                 with self.subTest(input_path=input_path, verbosity=verbosity):
                     process = execute_parser(input_path, None, verbosity)
                     self.assertEqual(process.returncode, 0)
@@ -87,7 +91,8 @@ class Tests(unittest.TestCase):
         for input_path in INPUT_PATHS:
             for verbosity in VERBOSITIES:
                 with self.subTest(input_path=input_path, verbosity=verbosity):
-                    output_path = pathlib.Path(results_path, input_path.name + '.xml')
+                    output_path = results_path.joinpath(
+                        '{}.{}.xml'.format(input_path.name, verbosity))
                     process = execute_parser(input_path, output_path, verbosity)
                     self.assertEqual(process.returncode, 0, process)
                     self.assertTrue(output_path.exists())
@@ -99,7 +104,8 @@ class Tests(unittest.TestCase):
         for input_path in INPUT_PATHS_LARGE:
             for verbosity in VERBOSITIES:
                 with self.subTest(input_path=input_path, verbosity=verbosity):
-                    output_path = pathlib.Path(results_path, input_path.name + '.xml')
+                    output_path = results_path.joinpath(
+                        '{}.{}.xml'.format(input_path.name, verbosity))
                     process = execute_parser(input_path, output_path, verbosity)
                     self.assertEqual(process.returncode, 0)
                     self.assertTrue(output_path.exists())
@@ -114,16 +120,16 @@ class Tests(unittest.TestCase):
         self.assertGreater(len(file_node), 0)
 
     def test_parse(self):
-        for input_path in INPUT_PATHS:
-            for verbosity in VERBOSITIES:
+        for input_path in SOME_INPUT_PATHS:
+            for verbosity in SOME_VERBOSITIES:
                 with self.subTest(input_path=input_path, verbosity=verbosity):
                     root_node = parse(input_path, verbosity)
                     self._validate_tree(root_node)
 
     @unittest.skipUnless(os.environ.get('TEST_LONG'), 'skipping long test')
     def test_parse_large(self):
-        for input_path in INPUT_PATHS_LARGE:
-            for verbosity in VERBOSITIES:
+        for input_path in SOME_INPUT_PATHS_LARGE:
+            for verbosity in SOME_VERBOSITIES:
                 with self.subTest(input_path=input_path, verbosity=verbosity):
                     root_node = parse(input_path, verbosity)
                     self._validate_tree(root_node)

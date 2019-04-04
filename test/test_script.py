@@ -10,7 +10,9 @@ import unittest
 from open_fortran_parser.config import DEV_DEPENDENCIES_PATH, DEPENDENCIES_PATH
 from .test_setup import run_module
 
-INPUT_PATH = pathlib.Path('test', 'examples', 'empty.f')
+_HERE = pathlib.Path(__file__).resolve().parent
+
+INPUT_PATH = _HERE.joinpath('examples', 'empty.f')
 
 
 def normalize_newlines(text: str) -> str:
@@ -36,6 +38,7 @@ class Tests(unittest.TestCase):
         self.assertIn('usage', text)
         self.assertIn('open_fortran_parser', text)
 
+    @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
     def test_deps_flag(self):
         sio = io.StringIO()
         with contextlib.redirect_stderr(sio):
