@@ -513,19 +513,13 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void entity_decl_list__begin() {
-//		contextOpen("variables");
-//		if (verbosity >= 100)
-			super.entity_decl_list__begin();
+		super.entity_decl_list__begin();
 		contextOpen("variable");
 	}
 
 	public void entity_decl_list(int count) {
 		contextClose("variable");
-//		contextCloseAllInner("variables");
-//		if (verbosity >= 100)
-			super.entity_decl_list(count);
-//		setAttribute("count", count);
-//		contextClose();
+		super.entity_decl_list(count);
 	}
 
 	public void initialization(boolean hasExpr, boolean hasNullInit) {
@@ -680,36 +674,12 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "data");
-//		contextOpen("variables");
-//		if (verbosity >= 100)
-			super.data_stmt_object_list__begin();
-	}
-
-	public void data_stmt_object_list(int count) {
-//		contextCloseAllInner("variables");
-//		if (verbosity >= 100)
-			super.data_stmt_object_list(count);
-//		setAttribute("count", count);
-//		contextClose("variables");
+		super.data_stmt_object_list__begin();
 	}
 
 	public void data_stmt_value(Token asterisk) {
 		if (verbosity >= 100)
 			super.data_stmt_value(asterisk);
-	}
-
-	public void data_stmt_value_list__begin() {
-//		contextOpen("values");
-//		if (verbosity >= 100)
-			super.data_stmt_value_list__begin();
-	}
-
-	public void data_stmt_value_list(int count) {
-//		contextCloseAllInner("values");
-//		if (verbosity >= 100)
-			super.data_stmt_value_list(count);
-//		setAttribute("count", count);
-//		contextClose("values");
 	}
 
 	public void hollerith_literal_constant(Token hollerithConstant) {
@@ -751,17 +721,7 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "parameter");
-//		contextOpen("constants");
-//		if (verbosity >= 100)
-			super.named_constant_def_list__begin();
-	}
-
-	public void named_constant_def_list(int count) {
-//		contextCloseAllInner("constants");
-//		if (verbosity >= 100)
-			super.named_constant_def_list(count);
-//		setAttribute("count", count);
-//		contextClose("constants");
+		super.named_constant_def_list__begin();
 	}
 
 	public void named_constant_def(Token id) {
@@ -784,17 +744,7 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void pointer_decl_list__begin() {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
-//		contextOpen("names");
-//		if (verbosity >= 100)
-			super.pointer_decl_list__begin();
-	}
-
-	public void pointer_decl_list(int count) {
-//		contextCloseAllInner("names");
-//		if (verbosity >= 100)
-			super.pointer_decl_list(count);
-//		setAttribute("count", count);
-//		contextClose("names");
+		super.pointer_decl_list__begin();
 	}
 
 	public void pointer_decl(Token id, boolean hasSpecList) {
@@ -861,19 +811,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
-	public void letter_spec_list__begin() {
-//		contextOpen("letter-ranges");
-//		if (verbosity >= 100)
-			super.letter_spec_list__begin();
-	}
-
-	public void letter_spec_list(int count) {
-//		contextCloseAllInner("letter-ranges");
-//		if (verbosity >= 100)
-			super.letter_spec_list(count);
-//		contextClose();
-	}
-
 	public void namelist_stmt(Token label, Token keyword, Token eos, int count) {
 		contextCloseAllInner("namelists");
 		super.namelist_stmt(label, keyword, eos, count);
@@ -903,19 +840,13 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "equivalence");
-//		contextOpen("equivalents");
-//		if (verbosity >= 100)
-			super.equivalence_set_list__begin();
+		super.equivalence_set_list__begin();
 		contextOpen("equivalent");
 	}
 
 	public void equivalence_set_list(int count) {
 		contextClose("equivalent");
-//		contextCloseAllInner("equivalents");
-//		setAttribute("count", count);
-//		if (verbosity >= 100)
-			super.equivalence_set_list(count);
-//		contextClose();
+		super.equivalence_set_list(count);
 	}
 
 	public void equivalence_object() {
@@ -940,20 +871,6 @@ public class XMLPrinter extends XMLPrinterBase {
 			contextOpen("declaration");
 		setAttribute("type", "common");
 		super.common_block_name(id);
-	}
-
-	public void common_block_object_list__begin() {
-//		contextOpen("objects");
-//		if (verbosity >= 100)
-			super.common_block_object_list__begin();
-	}
-
-	public void common_block_object_list(int count) {
-//		contextCloseAllInner("objects");
-//		if (verbosity >= 100)
-			super.common_block_object_list(count);
-//		setAttribute("count", count);
-//		contextClose();
 	}
 
 	public void variable() {
@@ -1072,19 +989,13 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void section_subscript_list__begin() {
-//		contextOpen("subscripts");
-//		if (verbosity >= 100)
-			super.section_subscript_list__begin();
+		super.section_subscript_list__begin();
 		// contextOpen("subscript");
 	}
 
 	public void section_subscript_list(int count) {
 		// contextClose("subscript");
-//		contextCloseAllInner("subscripts");
-//		if (verbosity >= 100)
-			super.section_subscript_list(count);
-//		setAttribute("count", count);
-//		contextClose("subscripts");
+		super.section_subscript_list(count);
 	}
 
 	public void allocate_stmt(Token label, Token allocateKeyword, Token eos, boolean hasTypeSpec,
@@ -1141,20 +1052,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
-	public void allocation_list__begin() {
-//		contextOpen("expressions");
-//		if (verbosity >= 100)
-			super.allocation_list__begin();
-	}
-
-	public void allocation_list(int count) {
-//		contextCloseAllInner("expressions");
-//		setAttribute("count", count);
-//		if (verbosity >= 100)
-			super.allocation_list(count);
-//		contextClose();
-	}
-
 	public void allocate_object() {
 		setAttribute("type", "variable");
 		contextClose("name");
@@ -1164,20 +1061,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (verbosity >= 100)
 			super.allocate_object();
 		contextClose();
-	}
-
-	public void allocate_object_list__begin() {
-//		contextOpen("expressions");
-//		if (verbosity >= 100)
-			super.allocate_object_list__begin();
-	}
-
-	public void allocate_object_list(int count) {
-//		contextCloseAllInner("expressions");
-//		setAttribute("count", count);
-//		if (verbosity >= 100)
-			super.allocate_object_list(count);
-//		contextClose();
 	}
 
 	public void deallocate_stmt(Token label, Token deallocateKeyword, Token eos, boolean hasDeallocOptList) {
@@ -1203,17 +1086,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void dealloc_opt_list__begin() {
-		contextOpen("keyword-arguments");
-		if (verbosity >= 100)
+//		contextOpen("keyword-arguments");
+//		if (verbosity >= 100)
 			super.dealloc_opt_list__begin();
 	}
 
 	public void dealloc_opt_list(int count) {
-		contextCloseAllInner("keyword-arguments");
-		setAttribute("count", count);
-		if (verbosity >= 100)
+//		contextCloseAllInner("keyword-arguments");
+//		setAttribute("count", count);
+//		if (verbosity >= 100)
 			super.dealloc_opt_list(count);
-		contextClose();
+//		contextClose();
 	}
 
 	public void primary() {
@@ -1523,17 +1406,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void forall_triplet_spec_list__begin() {
-		contextOpen("index-variables");
-		if (verbosity >= 100)
+//		contextOpen("index-variables");
+//		if (verbosity >= 100)
 			super.forall_triplet_spec_list__begin();
 	}
 
 	public void forall_triplet_spec_list(int count) {
-		contextCloseAllInner("index-variables");
-		setAttribute("count", count);
-		if (verbosity >= 100)
+//		contextCloseAllInner("index-variables");
+//		setAttribute("count", count);
+//		if (verbosity >= 100)
 			super.forall_triplet_spec_list(count);
-		contextClose();
+//		contextClose();
 	}
 
 	public void forall_assignment_stmt(boolean isPointerAssignment) {
@@ -1716,19 +1599,19 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextOpen("case");
 		setAttribute("type", "specific");
 		contextOpen("header");
-		contextOpen("value-ranges");
-		if (verbosity >= 100)
+//		contextOpen("value-ranges");
+//		if (verbosity >= 100)
 			super.case_value_range_list__begin();
 		contextOpen("value-range");
 		contextOpen("value");
 	}
 
 	public void case_value_range_list(int count) {
-		contextCloseAllInner("value-ranges");
-		if (verbosity >= 100)
+//		contextCloseAllInner("value-ranges");
+//		if (verbosity >= 100)
 			super.case_value_range_list(count);
-		setAttribute("count", count);
-		contextClose();
+//		setAttribute("count", count);
+//		contextClose();
 		contextClose("header");
 	}
 
@@ -1763,17 +1646,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void association_list__begin() {
-		contextOpen("keyword-arguments");
-		if (verbosity >= 100)
+//		contextOpen("keyword-arguments");
+//		if (verbosity >= 100)
 			super.association_list__begin();
 	}
 
 	public void association_list(int count) {
-		contextCloseAllInner("keyword-arguments");
-		setAttribute("count", count);
-		if (verbosity >= 100)
+//		contextCloseAllInner("keyword-arguments");
+//		setAttribute("count", count);
+//		if (verbosity >= 100)
 			super.association_list(count);
-		contextClose();
+//		contextClose();
 	}
 
 	public void association(Token id) {
@@ -1959,19 +1842,19 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void connect_spec_list__begin() {
-		contextOpen("keyword-arguments");
-		if (verbosity >= 100)
+//		contextOpen("keyword-arguments");
+//		if (verbosity >= 100)
 			super.connect_spec_list__begin();
 		contextOpen("keyword-argument");
 	}
 
 	public void connect_spec_list(int count) {
 		contextClose("keyword-argument");
-		contextCloseAllInner("keyword-arguments");
-		if (verbosity >= 100)
+//		contextCloseAllInner("keyword-arguments");
+//		if (verbosity >= 100)
 			super.connect_spec_list(count);
-		setAttribute("count", count);
-		contextClose();
+//		setAttribute("count", count);
+//		contextClose();
 	}
 
 	public void close_stmt(Token label, Token closeKeyword, Token eos) {
@@ -1992,19 +1875,19 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void close_spec_list__begin() {
-		contextOpen("keyword-arguments");
-		if (verbosity >= 100)
+//		contextOpen("keyword-arguments");
+//		if (verbosity >= 100)
 			super.close_spec_list__begin();
 		contextOpen("keyword-argument");
 	}
 
 	public void close_spec_list(int count) {
 		contextClose("keyword-argument");
-		contextCloseAllInner("keyword-arguments");
-		if (verbosity >= 100)
+//		contextCloseAllInner("keyword-arguments");
+//		if (verbosity >= 100)
 			super.close_spec_list(count);
-		setAttribute("count", count);
-		contextClose();
+//		setAttribute("count", count);
+//		contextClose();
 	}
 
 	public void read_stmt(Token label, Token readKeyword, Token eos, boolean hasInputItemList) {
@@ -2056,17 +1939,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void io_control_spec_list__begin() {
-		contextOpen("io-controls");
-		if (verbosity >= 100)
+//		contextOpen("io-controls");
+//		if (verbosity >= 100)
 			super.io_control_spec_list__begin();
 	}
 
 	public void io_control_spec_list(int count) {
-		contextCloseAllInner("io-controls");
-		if (verbosity >= 100)
+//		contextCloseAllInner("io-controls");
+//		if (verbosity >= 100)
 			super.io_control_spec_list(count);
-		setAttribute("count", count);
-		contextClose();
+//		setAttribute("count", count);
+//		contextClose();
 	}
 
 	public void format() {
@@ -2095,17 +1978,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void input_item_list__begin() {
-		contextOpen("inputs");
-		if (verbosity >= 100)
+//		contextOpen("inputs");
+//		if (verbosity >= 100)
 			super.input_item_list__begin();
 	}
 
 	public void input_item_list(int count) {
-		contextCloseAllInner("inputs");
-		if (verbosity >= 100)
+//		contextCloseAllInner("inputs");
+//		if (verbosity >= 100)
 			super.input_item_list(count);
-		setAttribute("count", count);
-		contextClose();
+//		setAttribute("count", count);
+//		contextClose();
 	}
 
 	public void output_item() {
@@ -2118,17 +2001,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void output_item_list__begin() {
-		contextOpen("outputs");
-		if (verbosity >= 100)
+//		contextOpen("outputs");
+//		if (verbosity >= 100)
 			super.output_item_list__begin();
 	}
 
 	public void output_item_list(int count) {
-		contextCloseAllInner("outputs");
-		if (verbosity >= 100)
+//		contextCloseAllInner("outputs");
+//		if (verbosity >= 100)
 			super.output_item_list(count);
-		setAttribute("count", count);
-		contextClose();
+//		setAttribute("count", count);
+//		contextClose();
 	}
 
 	public void io_implied_do() {
@@ -2184,17 +2067,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void format_item_list__begin() {
-		contextOpen("format-items");
-		if (verbosity >= 100)
+//		contextOpen("format-items");
+//		if (verbosity >= 100)
 			super.format_item_list__begin();
 	}
 
 	public void format_item_list(int count) {
-		contextCloseAllInner("format-items");
-		if (verbosity >= 100)
+//		contextCloseAllInner("format-items");
+//		if (verbosity >= 100)
 			super.format_item_list(count);
-		setAttribute("count", count);
-		contextClose("format-items");
+//		setAttribute("count", count);
+//		contextClose("format-items");
 	}
 
 	public void main_program__begin() {
@@ -2317,14 +2200,14 @@ public class XMLPrinter extends XMLPrinterBase {
 		}
 		if (!context.getTagName().equals("use"))
 			contextOpen("use");
-		contextOpen("rename");
-		if (verbosity >= 100)
+//		contextOpen("rename");
+//		if (verbosity >= 100)
 			super.rename_list__begin();
 	}
 
 	public void rename_list(int count) {
 		super.rename_list(count);
-		contextClose("rename");
+//		contextClose("rename");
 	}
 
 	public void only_list__begin() {
@@ -2334,14 +2217,14 @@ public class XMLPrinter extends XMLPrinterBase {
 		}
 		if (!context.getTagName().equals("use"))
 			contextOpen("use");
-		contextOpen("only");
-		if (verbosity >= 100)
+//		contextOpen("only");
+//		if (verbosity >= 100)
 			super.only_list__begin();
 	}
 
 	public void only_list(int count) {
 		super.only_list(count);
-		contextClose("only");
+//		contextClose("only");
 	}
 
 	public void block_data() {
@@ -2446,17 +2329,17 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "procedures");
-		contextOpen("procedures");
-		if (verbosity >= 100)
+//		contextOpen("procedures");
+//		if (verbosity >= 100)
 			super.proc_decl_list__begin();
 	}
 
 	public void proc_decl_list(int count) {
-		contextCloseAllInner("procedures");
-		setAttribute("count", count);
-		if (verbosity >= 100)
+//		contextCloseAllInner("procedures");
+//		setAttribute("count", count);
+//		if (verbosity >= 100)
 			super.proc_decl_list(count);
-		contextClose();
+//		contextClose();
 	}
 
 	public void intrinsic_stmt(Token label, Token intrinsicKeyword, Token eos) {
@@ -2503,18 +2386,18 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void actual_arg_spec_list__begin() {
-		contextOpen("arguments");
-		if (verbosity >= 100)
+//		contextOpen("arguments");
+//		if (verbosity >= 100)
 			super.actual_arg_spec_list__begin();
 		contextOpen("argument");
 	}
 
 	public void actual_arg_spec_list(int count) {
 		contextClose("argument");
-		setAttribute("count", count);
-		if (verbosity >= 100)
+//		setAttribute("count", count);
+//		if (verbosity >= 100)
 			super.actual_arg_spec_list(count);
-		contextClose("arguments");
+//		contextClose("arguments");
 	}
 
 	public void actual_arg(boolean hasExpr, Token label) {
@@ -2593,17 +2476,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void dummy_arg_list__begin() {
-		contextOpen("arguments");
-		if (verbosity >= 100)
+//		contextOpen("arguments");
+//		if (verbosity >= 100)
 			super.dummy_arg_list__begin();
 	}
 
 	public void dummy_arg_list(int count) {
-		contextCloseAllInner("arguments");
-		setAttribute("count", count);
-		if (verbosity >= 100)
+//		contextCloseAllInner("arguments");
+//		setAttribute("count", count);
+//		if (verbosity >= 100)
 			super.dummy_arg_list(count);
-		contextClose();
+//		contextClose();
 	}
 
 	public void end_subroutine_stmt(Token label, Token keyword1, Token keyword2, Token name, Token eos) {

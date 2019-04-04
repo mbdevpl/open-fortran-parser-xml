@@ -95,7 +95,9 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		*/
 		// addListContext("ac-value", /*"array-constructor-values"*/ null, /*"value"*/ null); // not straightforward
 		addListContext("entity-decl", "variables", "variable");
-		// addListContext("explicit-shape-spec", "", "");
+		/*
+		addListContext("explicit-shape-spec", "", "");
+		*/
 		// addListContext("access-id", /*"access-list"*/ null, null); // currently not necessary
 		// addListContext("allocatable-decl", null, null); // currently not necessary
 		/*
@@ -112,7 +114,9 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		/*
 		addListContext("cray-pointer-assoc", "", "");
 		addListContext("saved-entity", "", "");
-		addListContext("target-decl", "", "");
+		*/
+		// addListContext("target-decl", null, null); // currently not necessary
+		/*
 		addListContext("implicit-spec", "", "");
 		*/
 		addListContext("letter-spec", "letter-ranges", null);
@@ -122,7 +126,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		addListContext("equivalence-set", "equivalents", "equivalent");
 		// addListContext("equivalence-object", null, null); // currently not necessary
 		addListContext("common-block-object", "objects", null);
-		addListContext("section-subscript", "subscripts", null);
+		addListContext("section-subscript", "subscripts", /*"subscript"*/ null);
 		addListContext("alloc-opt", "keyword-arguments", null);
 		/*
 		addListContext("cosubscript", "", "");
@@ -132,32 +136,40 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		/*
 		addListContext("allocate-shape-spec", "", "");
 		addListContext("pointer-object", "", "");
-		addListContext("dealloc-opt", "", "");
+		*/
+		addListContext("dealloc-opt", "keyword-arguments", null);
+		/*
 		addListContext("allocate-coshape-spec", "", "");
 		addListContext("bounds-spec", "", "");
 		addListContext("bounds-remapping", "", "");
-		addListContext("forall-triplet-spec", "", "");
-		addListContext("case-value-range", "", "");
-		addListContext("association", "", "");
+		*/
+		addListContext("forall-triplet-spec", "index-variables", null);
+		addListContext("case-value-range", "value-ranges", null);
+		addListContext("association", "keyword-arguments", null);
+		/*
 		addListContext("sync-stat", "", "");
 		addListContext("lock-stat", "", "");
-		addListContext("connect-spec", "", "");
-		addListContext("close-spec", "", "");
-		addListContext("io-control-spec", "", "");
-		addListContext("input-item", "", "");
-		addListContext("output-item", "", "");
+		*/
+		addListContext("connect-spec", "keyword-arguments", "keyword-argument");
+		addListContext("close-spec", "keyword-arguments", "keyword-argument");
+		addListContext("io-control-spec", "io-controls", null);
+		addListContext("input-item", "inputs", null);
+		addListContext("output-item", "outputs", null);
+		/*
 		addListContext("wait-spec", "", "");
 		addListContext("position-spec", "", "");
 		addListContext("flush-spec", "", "");
 		addListContext("inquire-spec", "", "");
-		addListContext("format-item", "", "");
-		addListContext("v", "", "");
-		addListContext("rename", "", "");
-		addListContext("only", "", "");
-		addListContext("proc-decl", "", "");
-		addListContext("actual-arg-spec", "", "");
-		addListContext("dummy-arg", "", "");
 		*/
+		addListContext("format-item", "format-items", null);
+		/*
+		addListContext("v", "", "");
+		*/
+		addListContext("rename", "rename", null);
+		addListContext("only", "only", null);
+		addListContext("proc-decl", "procedures", null);
+		addListContext("actual-arg-spec", "arguments", "argument");
+		addListContext("dummy-arg", "arguments", null);
 	}
 
 	public XMLPrinterBase(String[] args, IFortranParser parser, String filename) {
