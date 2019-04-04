@@ -1,3 +1,5 @@
 """Version of open_fortran_parser package."""
 
-VERSION = '0.5.5.dev0'
+from version_query import predict_version_str
+
+VERSION = predict_version_str()
