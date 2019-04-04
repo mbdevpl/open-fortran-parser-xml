@@ -1023,20 +1023,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
-	public void alloc_opt_list__begin() {
-		contextOpen("keyword-arguments");
-		if (verbosity >= 100)
-			super.alloc_opt_list__begin();
-	}
-
-	public void alloc_opt_list(int count) {
-		contextCloseAllInner("keyword-arguments");
-		setAttribute("count", count);
-		if (verbosity >= 100)
-			super.alloc_opt_list(count);
-		contextClose();
-	}
-
 	public void allocation(boolean hasAllocateShapeSpecList, boolean hasAllocateCoarraySpec) {
 		if (hasAllocateShapeSpecList || hasAllocateCoarraySpec)
 			cleanUpAfterError("didn't expect hasAllocateShapeSpecList=" + hasAllocateShapeSpecList
@@ -1083,20 +1069,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (verbosity >= 100)
 			super.dealloc_opt(id);
 		contextClose();
-	}
-
-	public void dealloc_opt_list__begin() {
-//		contextOpen("keyword-arguments");
-//		if (verbosity >= 100)
-			super.dealloc_opt_list__begin();
-	}
-
-	public void dealloc_opt_list(int count) {
-//		contextCloseAllInner("keyword-arguments");
-//		setAttribute("count", count);
-//		if (verbosity >= 100)
-			super.dealloc_opt_list(count);
-//		contextClose();
 	}
 
 	public void primary() {
@@ -1405,20 +1377,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
-	public void forall_triplet_spec_list__begin() {
-//		contextOpen("index-variables");
-//		if (verbosity >= 100)
-			super.forall_triplet_spec_list__begin();
-	}
-
-	public void forall_triplet_spec_list(int count) {
-//		contextCloseAllInner("index-variables");
-//		setAttribute("count", count);
-//		if (verbosity >= 100)
-			super.forall_triplet_spec_list(count);
-//		contextClose();
-	}
-
 	public void forall_assignment_stmt(boolean isPointerAssignment) {
 		Element assignment = contextNode(-1);
 		if (!context.getTagName().equals("header"))
@@ -1599,19 +1557,13 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextOpen("case");
 		setAttribute("type", "specific");
 		contextOpen("header");
-//		contextOpen("value-ranges");
-//		if (verbosity >= 100)
-			super.case_value_range_list__begin();
+		super.case_value_range_list__begin();
 		contextOpen("value-range");
 		contextOpen("value");
 	}
 
 	public void case_value_range_list(int count) {
-//		contextCloseAllInner("value-ranges");
-//		if (verbosity >= 100)
-			super.case_value_range_list(count);
-//		setAttribute("count", count);
-//		contextClose();
+		super.case_value_range_list(count);
 		contextClose("header");
 	}
 
@@ -1643,20 +1595,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		super.associate_stmt(label, id, associateKeyword, eos);
 		contextOpen("body");
 		contextOpen("statement");
-	}
-
-	public void association_list__begin() {
-//		contextOpen("keyword-arguments");
-//		if (verbosity >= 100)
-			super.association_list__begin();
-	}
-
-	public void association_list(int count) {
-//		contextCloseAllInner("keyword-arguments");
-//		setAttribute("count", count);
-//		if (verbosity >= 100)
-			super.association_list(count);
-//		contextClose();
 	}
 
 	public void association(Token id) {
@@ -1842,19 +1780,13 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void connect_spec_list__begin() {
-//		contextOpen("keyword-arguments");
-//		if (verbosity >= 100)
-			super.connect_spec_list__begin();
+		super.connect_spec_list__begin();
 		contextOpen("keyword-argument");
 	}
 
 	public void connect_spec_list(int count) {
 		contextClose("keyword-argument");
-//		contextCloseAllInner("keyword-arguments");
-//		if (verbosity >= 100)
-			super.connect_spec_list(count);
-//		setAttribute("count", count);
-//		contextClose();
+		super.connect_spec_list(count);
 	}
 
 	public void close_stmt(Token label, Token closeKeyword, Token eos) {
@@ -1875,19 +1807,13 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void close_spec_list__begin() {
-//		contextOpen("keyword-arguments");
-//		if (verbosity >= 100)
-			super.close_spec_list__begin();
+		super.close_spec_list__begin();
 		contextOpen("keyword-argument");
 	}
 
 	public void close_spec_list(int count) {
 		contextClose("keyword-argument");
-//		contextCloseAllInner("keyword-arguments");
-//		if (verbosity >= 100)
-			super.close_spec_list(count);
-//		setAttribute("count", count);
-//		contextClose();
+		super.close_spec_list(count);
 	}
 
 	public void read_stmt(Token label, Token readKeyword, Token eos, boolean hasInputItemList) {
@@ -1938,20 +1864,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose("io-control");
 	}
 
-	public void io_control_spec_list__begin() {
-//		contextOpen("io-controls");
-//		if (verbosity >= 100)
-			super.io_control_spec_list__begin();
-	}
-
-	public void io_control_spec_list(int count) {
-//		contextCloseAllInner("io-controls");
-//		if (verbosity >= 100)
-			super.io_control_spec_list(count);
-//		setAttribute("count", count);
-//		contextClose();
-	}
-
 	public void format() {
 		Element label = null;
 		if (contextNodesCount() > 0) {
@@ -1977,20 +1889,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose("input");
 	}
 
-	public void input_item_list__begin() {
-//		contextOpen("inputs");
-//		if (verbosity >= 100)
-			super.input_item_list__begin();
-	}
-
-	public void input_item_list(int count) {
-//		contextCloseAllInner("inputs");
-//		if (verbosity >= 100)
-			super.input_item_list(count);
-//		setAttribute("count", count);
-//		contextClose();
-	}
-
 	public void output_item() {
 		Element element = contextNode(-1);
 		contextOpen("output");
@@ -1998,20 +1896,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (verbosity >= 100)
 			super.output_item();
 		contextClose();
-	}
-
-	public void output_item_list__begin() {
-//		contextOpen("outputs");
-//		if (verbosity >= 100)
-			super.output_item_list__begin();
-	}
-
-	public void output_item_list(int count) {
-//		contextCloseAllInner("outputs");
-//		if (verbosity >= 100)
-			super.output_item_list(count);
-//		setAttribute("count", count);
-//		contextClose();
 	}
 
 	public void io_implied_do() {
@@ -2064,20 +1948,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (verbosity >= 60)
 			super.format_specification(hasFormatItemList);
 		contextClose();
-	}
-
-	public void format_item_list__begin() {
-//		contextOpen("format-items");
-//		if (verbosity >= 100)
-			super.format_item_list__begin();
-	}
-
-	public void format_item_list(int count) {
-//		contextCloseAllInner("format-items");
-//		if (verbosity >= 100)
-			super.format_item_list(count);
-//		setAttribute("count", count);
-//		contextClose("format-items");
 	}
 
 	public void main_program__begin() {
@@ -2200,14 +2070,7 @@ public class XMLPrinter extends XMLPrinterBase {
 		}
 		if (!context.getTagName().equals("use"))
 			contextOpen("use");
-//		contextOpen("rename");
-//		if (verbosity >= 100)
-			super.rename_list__begin();
-	}
-
-	public void rename_list(int count) {
-		super.rename_list(count);
-//		contextClose("rename");
+		super.rename_list__begin();
 	}
 
 	public void only_list__begin() {
@@ -2217,14 +2080,7 @@ public class XMLPrinter extends XMLPrinterBase {
 		}
 		if (!context.getTagName().equals("use"))
 			contextOpen("use");
-//		contextOpen("only");
-//		if (verbosity >= 100)
-			super.only_list__begin();
-	}
-
-	public void only_list(int count) {
-		super.only_list(count);
-//		contextClose("only");
+		super.only_list__begin();
 	}
 
 	public void block_data() {
@@ -2329,17 +2185,7 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "procedures");
-//		contextOpen("procedures");
-//		if (verbosity >= 100)
-			super.proc_decl_list__begin();
-	}
-
-	public void proc_decl_list(int count) {
-//		contextCloseAllInner("procedures");
-//		setAttribute("count", count);
-//		if (verbosity >= 100)
-			super.proc_decl_list(count);
-//		contextClose();
+		super.proc_decl_list__begin();
 	}
 
 	public void intrinsic_stmt(Token label, Token intrinsicKeyword, Token eos) {
@@ -2386,18 +2232,13 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void actual_arg_spec_list__begin() {
-//		contextOpen("arguments");
-//		if (verbosity >= 100)
-			super.actual_arg_spec_list__begin();
+		super.actual_arg_spec_list__begin();
 		contextOpen("argument");
 	}
 
 	public void actual_arg_spec_list(int count) {
 		contextClose("argument");
-//		setAttribute("count", count);
-//		if (verbosity >= 100)
-			super.actual_arg_spec_list(count);
-//		contextClose("arguments");
+		super.actual_arg_spec_list(count);
 	}
 
 	public void actual_arg(boolean hasExpr, Token label) {
@@ -2473,20 +2314,6 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (verbosity >= 100)
 			super.dummy_arg(dummy);
 		contextClose();
-	}
-
-	public void dummy_arg_list__begin() {
-//		contextOpen("arguments");
-//		if (verbosity >= 100)
-			super.dummy_arg_list__begin();
-	}
-
-	public void dummy_arg_list(int count) {
-//		contextCloseAllInner("arguments");
-//		setAttribute("count", count);
-//		if (verbosity >= 100)
-			super.dummy_arg_list(count);
-//		contextClose();
 	}
 
 	public void end_subroutine_stmt(Token label, Token keyword1, Token keyword2, Token name, Token eos) {
