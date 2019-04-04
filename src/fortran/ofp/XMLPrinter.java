@@ -80,16 +80,7 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void generic_name_list__begin() {
 		if (context.getTagName().equals("specification") || context.getTagName().equals("file"))
 			contextOpen("declaration");
-		contextOpen("names");
-		if (verbosity >= 100)
-			super.generic_name_list__begin();
-	}
-
-	public void generic_name_list(int count) {
-		if (verbosity >= 100)
-			super.generic_name_list(count);
-		setAttribute("count", count);
-		contextClose("names");
+		super.generic_name_list__begin();
 	}
 
 	public void specification_part(int numUseStmts, int numImportStmts, int numImplStmts, int numDeclConstructs) {
@@ -522,19 +513,19 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void entity_decl_list__begin() {
-		contextOpen("variables");
-		if (verbosity >= 100)
+//		contextOpen("variables");
+//		if (verbosity >= 100)
 			super.entity_decl_list__begin();
 		contextOpen("variable");
 	}
 
 	public void entity_decl_list(int count) {
 		contextClose("variable");
-		contextCloseAllInner("variables");
-		if (verbosity >= 100)
+//		contextCloseAllInner("variables");
+//		if (verbosity >= 100)
 			super.entity_decl_list(count);
-		setAttribute("count", count);
-		contextClose();
+//		setAttribute("count", count);
+//		contextClose();
 	}
 
 	public void initialization(boolean hasExpr, boolean hasNullInit) {
@@ -689,17 +680,17 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "data");
-		contextOpen("variables");
-		if (verbosity >= 100)
+//		contextOpen("variables");
+//		if (verbosity >= 100)
 			super.data_stmt_object_list__begin();
 	}
 
 	public void data_stmt_object_list(int count) {
-		contextCloseAllInner("variables");
-		if (verbosity >= 100)
+//		contextCloseAllInner("variables");
+//		if (verbosity >= 100)
 			super.data_stmt_object_list(count);
-		setAttribute("count", count);
-		contextClose("variables");
+//		setAttribute("count", count);
+//		contextClose("variables");
 	}
 
 	public void data_stmt_value(Token asterisk) {
@@ -708,17 +699,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void data_stmt_value_list__begin() {
-		contextOpen("values");
-		if (verbosity >= 100)
+//		contextOpen("values");
+//		if (verbosity >= 100)
 			super.data_stmt_value_list__begin();
 	}
 
 	public void data_stmt_value_list(int count) {
-		contextCloseAllInner("values");
-		if (verbosity >= 100)
+//		contextCloseAllInner("values");
+//		if (verbosity >= 100)
 			super.data_stmt_value_list(count);
-		setAttribute("count", count);
-		contextClose("values");
+//		setAttribute("count", count);
+//		contextClose("values");
 	}
 
 	public void hollerith_literal_constant(Token hollerithConstant) {
@@ -760,17 +751,17 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "parameter");
-		contextOpen("constants");
-		if (verbosity >= 100)
+//		contextOpen("constants");
+//		if (verbosity >= 100)
 			super.named_constant_def_list__begin();
 	}
 
 	public void named_constant_def_list(int count) {
-		contextCloseAllInner("constants");
-		if (verbosity >= 100)
+//		contextCloseAllInner("constants");
+//		if (verbosity >= 100)
 			super.named_constant_def_list(count);
-		setAttribute("count", count);
-		contextClose("constants");
+//		setAttribute("count", count);
+//		contextClose("constants");
 	}
 
 	public void named_constant_def(Token id) {
@@ -793,17 +784,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void pointer_decl_list__begin() {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
-		contextOpen("names");
-		if (verbosity >= 100)
+//		contextOpen("names");
+//		if (verbosity >= 100)
 			super.pointer_decl_list__begin();
 	}
 
 	public void pointer_decl_list(int count) {
-		contextCloseAllInner("names");
-		if (verbosity >= 100)
+//		contextCloseAllInner("names");
+//		if (verbosity >= 100)
 			super.pointer_decl_list(count);
-		setAttribute("count", count);
-		contextClose("names");
+//		setAttribute("count", count);
+//		contextClose("names");
 	}
 
 	public void pointer_decl(Token id, boolean hasSpecList) {
@@ -871,16 +862,16 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void letter_spec_list__begin() {
-		contextOpen("letter-ranges");
-		if (verbosity >= 100)
+//		contextOpen("letter-ranges");
+//		if (verbosity >= 100)
 			super.letter_spec_list__begin();
 	}
 
 	public void letter_spec_list(int count) {
-		contextCloseAllInner("letter-ranges");
-		if (verbosity >= 100)
+//		contextCloseAllInner("letter-ranges");
+//		if (verbosity >= 100)
 			super.letter_spec_list(count);
-		contextClose();
+//		contextClose();
 	}
 
 	public void namelist_stmt(Token label, Token keyword, Token eos, int count) {
@@ -912,19 +903,19 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
 		setAttribute("type", "equivalence");
-		contextOpen("equivalents");
-		if (verbosity >= 100)
+//		contextOpen("equivalents");
+//		if (verbosity >= 100)
 			super.equivalence_set_list__begin();
 		contextOpen("equivalent");
 	}
 
 	public void equivalence_set_list(int count) {
 		contextClose("equivalent");
-		contextCloseAllInner("equivalents");
-		setAttribute("count", count);
-		if (verbosity >= 100)
+//		contextCloseAllInner("equivalents");
+//		setAttribute("count", count);
+//		if (verbosity >= 100)
 			super.equivalence_set_list(count);
-		contextClose();
+//		contextClose();
 	}
 
 	public void equivalence_object() {
@@ -952,17 +943,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void common_block_object_list__begin() {
-		contextOpen("objects");
-		if (verbosity >= 100)
+//		contextOpen("objects");
+//		if (verbosity >= 100)
 			super.common_block_object_list__begin();
 	}
 
 	public void common_block_object_list(int count) {
-		contextCloseAllInner("objects");
-		if (verbosity >= 100)
+//		contextCloseAllInner("objects");
+//		if (verbosity >= 100)
 			super.common_block_object_list(count);
-		setAttribute("count", count);
-		contextClose();
+//		setAttribute("count", count);
+//		contextClose();
 	}
 
 	public void variable() {
@@ -1081,19 +1072,19 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void section_subscript_list__begin() {
-		contextOpen("subscripts");
-		if (verbosity >= 100)
+//		contextOpen("subscripts");
+//		if (verbosity >= 100)
 			super.section_subscript_list__begin();
 		// contextOpen("subscript");
 	}
 
 	public void section_subscript_list(int count) {
 		// contextClose("subscript");
-		contextCloseAllInner("subscripts");
-		if (verbosity >= 100)
+//		contextCloseAllInner("subscripts");
+//		if (verbosity >= 100)
 			super.section_subscript_list(count);
-		setAttribute("count", count);
-		contextClose("subscripts");
+//		setAttribute("count", count);
+//		contextClose("subscripts");
 	}
 
 	public void allocate_stmt(Token label, Token allocateKeyword, Token eos, boolean hasTypeSpec,
@@ -1151,17 +1142,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void allocation_list__begin() {
-		contextOpen("expressions");
-		if (verbosity >= 100)
+//		contextOpen("expressions");
+//		if (verbosity >= 100)
 			super.allocation_list__begin();
 	}
 
 	public void allocation_list(int count) {
-		contextCloseAllInner("expressions");
-		setAttribute("count", count);
-		if (verbosity >= 100)
+//		contextCloseAllInner("expressions");
+//		setAttribute("count", count);
+//		if (verbosity >= 100)
 			super.allocation_list(count);
-		contextClose();
+//		contextClose();
 	}
 
 	public void allocate_object() {
@@ -1176,17 +1167,17 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void allocate_object_list__begin() {
-		contextOpen("expressions");
-		if (verbosity >= 100)
+//		contextOpen("expressions");
+//		if (verbosity >= 100)
 			super.allocate_object_list__begin();
 	}
 
 	public void allocate_object_list(int count) {
-		contextCloseAllInner("expressions");
-		setAttribute("count", count);
-		if (verbosity >= 100)
+//		contextCloseAllInner("expressions");
+//		setAttribute("count", count);
+//		if (verbosity >= 100)
 			super.allocate_object_list(count);
-		contextClose();
+//		contextClose();
 	}
 
 	public void deallocate_stmt(Token label, Token deallocateKeyword, Token eos, boolean hasDeallocOptList) {

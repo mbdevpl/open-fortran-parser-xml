@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -36,6 +40,8 @@ import fortran.ofp.parser.java.IFortranParser;
  */
 public class XMLPrinterBase extends FortranParserActionPrint {
 
+	private static final Logger LOG = Logger.getLogger(XMLPrinterBase.class.getName());
+
 	/**
 	 * Parsed command-line arguments.
 	 */
@@ -63,6 +69,96 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 
 	static public ArrayList<String> tokenLocationsWhitelist = new ArrayList<String>(
 			Arrays.asList(new String[] { "file", "members", "body", "specification" }));
+
+	static public Map<String, String> listContexts = new HashMap<String, String>();
+
+	static public void addListContext(String eventNamePrefix, String listName, String elementName) {
+		listContexts.put(eventNamePrefix + "-list__begin", listName);
+		listContexts.put(eventNamePrefix + "-list-part", elementName);
+		listContexts.put(eventNamePrefix + "-list", listName);
+	}
+
+	static {
+		addListContext("generic-name", "names", "name");
+		addListContext("label", "labels", "label");
+		/*
+		addListContext("type-attr-spec", "", "");
+		addListContext("type-param-decl", "", "");
+		addListContext("component-attr-spec", "", "");
+		addListContext("component-decl", "", "");
+		addListContext("deferred-shape-spec", "", "");
+		addListContext("proc-component-attr-spec", "", "");
+		addListContext("binding-attr", "", "");
+		addListContext("type-param-spec", "", "");
+		addListContext("component-spec", "", "");
+		addListContext("enumerator", "", "");
+		*/
+		// addListContext("ac-value", /*"array-constructor-values"*/ null, /*"value"*/ null); // not straightforward
+		addListContext("entity-decl", "variables", "variable");
+		// addListContext("explicit-shape-spec", "", "");
+		// addListContext("access-id", /*"access-list"*/ null, null); // currently not necessary
+		// addListContext("allocatable-decl", null, null); // currently not necessary
+		/*
+		addListContext("bind-entity", "", "");
+		*/
+		// addListContext("codimension-decl", null, null); // currently not necessary
+		addListContext("data-stmt-object", "variables", null);
+		/*
+		addListContext("data-i-do-object", "", "");
+		*/
+		addListContext("data-stmt-value", "values", null);
+		addListContext("named-constant-def", "constants", null);
+		addListContext("pointer-decl", "names", null);
+		/*
+		addListContext("cray-pointer-assoc", "", "");
+		addListContext("saved-entity", "", "");
+		addListContext("target-decl", "", "");
+		addListContext("implicit-spec", "", "");
+		*/
+		addListContext("letter-spec", "letter-ranges", null);
+		/*
+		addListContext("namelist-group-object", "", "");
+		*/
+		addListContext("equivalence-set", "equivalents", "equivalent");
+		// addListContext("equivalence-object", null, null); // currently not necessary
+		addListContext("common-block-object", "objects", null);
+		addListContext("section-subscript", "subscripts", null);
+		addListContext("alloc-opt", "keyword-arguments", null);
+		/*
+		addListContext("cosubscript", "", "");
+		*/
+		addListContext("allocation", "expressions", null);
+		addListContext("allocate-object", "expressions", null);
+		/*
+		addListContext("allocate-shape-spec", "", "");
+		addListContext("pointer-object", "", "");
+		addListContext("dealloc-opt", "", "");
+		addListContext("allocate-coshape-spec", "", "");
+		addListContext("bounds-spec", "", "");
+		addListContext("bounds-remapping", "", "");
+		addListContext("forall-triplet-spec", "", "");
+		addListContext("case-value-range", "", "");
+		addListContext("association", "", "");
+		addListContext("sync-stat", "", "");
+		addListContext("lock-stat", "", "");
+		addListContext("connect-spec", "", "");
+		addListContext("close-spec", "", "");
+		addListContext("io-control-spec", "", "");
+		addListContext("input-item", "", "");
+		addListContext("output-item", "", "");
+		addListContext("wait-spec", "", "");
+		addListContext("position-spec", "", "");
+		addListContext("flush-spec", "", "");
+		addListContext("inquire-spec", "", "");
+		addListContext("format-item", "", "");
+		addListContext("v", "", "");
+		addListContext("rename", "", "");
+		addListContext("only", "", "");
+		addListContext("proc-decl", "", "");
+		addListContext("actual-arg-spec", "", "");
+		addListContext("dummy-arg", "", "");
+		*/
+	}
 
 	public XMLPrinterBase(String[] args, IFortranParser parser, String filename) {
 		super(args, parser, filename);
@@ -520,6 +616,12 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	}
 
 	protected void printRuleHeader(int rule, String name, String addendum) {
+		if (addendum == "list-begin") {
+			if (!listContexts.containsKey(name))
+				LOG.info("list context not recognized: " + name);
+			else
+				contextOpen(listContexts.get(name));
+		}
 		contextOpen(name);
 		setAttribute("rule", rule);
 		if (addendum.length() > 0)
@@ -527,7 +629,25 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	}
 
 	protected void printRuleTrailer() {
+		Element innerContext = context;
+		Attr addendum = getAttribute("addendum");
 		contextClose();
+		if (addendum != null) {
+			if (addendum.getValue() == "list") {
+				String name = innerContext.getTagName();
+				if (listContexts.containsKey(name)) {
+					contextCloseAllInner(listContexts.get(name));
+					setAttribute("count", getAttribute("count", innerContext).getValue());
+					moveHere(innerContext);
+					contextClose();
+				}
+			}
+			if (addendum.getValue() == "list-begin" || addendum.getValue() == "list") {
+				// LOG.log(Level.FINE, "removing {0} from {1}", new Object[]{innerContext, context});
+				if (verbosity < 100)
+					innerContext.getParentNode().removeChild(innerContext);
+			}
+		}
 	}
 
 	protected void printParameter(Object param, String name) {
