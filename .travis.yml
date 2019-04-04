@@ -1,18 +1,15 @@
 sudo: required
 language: generic
+addons:
+  homebrew:
+    packages:
+      - ant
+      - pyenv
 matrix:
   include:
     - os: linux
       language: python
       python: "3.5"
-      env: TRAVIS_JDK_VERSION=oraclejdk9
-    - os: linux
-      language: python
-      python: "3.6"
-      env: TRAVIS_JDK_VERSION=oraclejdk8
-    - os: linux
-      language: python
-      python: "3.6"
       env: TRAVIS_JDK_VERSION=oraclejdk9
     - os: linux
       language: python
@@ -23,6 +20,10 @@ matrix:
       python: "3.6"
       env: TRAVIS_JDK_VERSION=openjdk8
     - os: linux
+      language: python
+      python: "3.6"
+      env: TRAVIS_JDK_VERSION=oraclejdk9
+    - os: linux
       dist: xenial
       sudo: true
       language: python
@@ -31,17 +32,17 @@ matrix:
     - os: osx
       language: generic
       env:
-        - TRAVIS_PYTHON_VERSION="3.5.5"
+        - TRAVIS_PYTHON_VERSION="3.5"
         - TRAVIS_JDK_VERSION=oraclejdk8
     - os: osx
       language: generic
       env:
-        - TRAVIS_PYTHON_VERSION="3.6.6"
+        - TRAVIS_PYTHON_VERSION="3.6"
         - TRAVIS_JDK_VERSION=oraclejdk8
     - os: osx
       language: generic
       env:
-        - TRAVIS_PYTHON_VERSION="3.7.0"
+        - TRAVIS_PYTHON_VERSION="3.7"
         - TRAVIS_JDK_VERSION=oraclejdk8
   allow_failures:
     - python: "3.7"
@@ -50,11 +51,11 @@ before_install:
   - |
     set -e
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew update
-      brew install pyenv || brew upgrade pyenv
+      if ! [[ ${TRAVIS_PYTHON_VERSION} =~ .*-dev$ ]] ; then
+        TRAVIS_PYTHON_VERSION="$(pyenv install --list | grep -E " ${TRAVIS_PYTHON_VERSION}(\.[0-9brc]+)+$" | tail -n 1 | sed -e 's/^[[:space:]]*//')"
+      fi
       pyenv install "${TRAVIS_PYTHON_VERSION}"
-      export PATH="$HOME/.pyenv/versions/${TRAVIS_PYTHON_VERSION}/bin:${PATH}"
-      brew install ant || brew upgrade ant
+      export PATH="${HOME}/.pyenv/versions/${TRAVIS_PYTHON_VERSION}/bin:${PATH}"
     fi
     set +e
   - |
@@ -91,7 +92,7 @@ install:
 
 script:
   - |
-    if [[ "${TRAVIS_JDK_VERSION}" == "oraclejdk9" ]]; then
+    if [[ "${TRAVIS_JDK_VERSION}" == "openjdk7" ]]; then
       export TEST_DEPENDENCIES=1
       export TEST_LONG=1
     fi
