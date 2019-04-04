@@ -76,7 +76,7 @@ install:
   # Java
   - python -m open_fortran_parser --dev-deps
   - set CLASSPATH=%cd%\\lib\\*;%CLASSPATH%
-  - ant
+  - ant -Dpython=python
   - set CLASSPATH=%cd%\\dist\\*;%CLASSPATH%
   # Java tests
   - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.8.1-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.8.1-runtime.jar"
