@@ -33,4 +33,5 @@ __pycache__
 /.coverage
 
 # other
+/bin
 /lib
