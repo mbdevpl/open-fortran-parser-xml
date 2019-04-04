@@ -60,7 +60,7 @@ before_install:
     set +e
   - |
     set -e
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+    if [[ "${TRAVIS_OS_NAME}" == "linux" && "$(lsb_release -cs)" == "trusty" ]]; then
       jdk_switcher use $TRAVIS_JDK_VERSION
     fi
     set +e
