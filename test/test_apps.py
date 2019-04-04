@@ -1,6 +1,7 @@
 """Testing ast_transformer module on FFB-MINI application."""
 
 import logging
+import os
 import pathlib
 import platform
 import unittest
@@ -11,11 +12,16 @@ _LOG = logging.getLogger(__name__)
 
 _HERE = pathlib.Path(__file__).resolve().parent
 
+_ROOT = _HERE.parent
+
+_APPS_ROOT = pathlib.Path(os.environ.get('TEST_APPS_ROOT', _ROOT.parent)).resolve()
+
 _APPS_ROOT_PATHS = {
     'miranda_io': pathlib.Path('..', 'miranda_io'),
     'FLASH-4.5': pathlib.Path('..', 'flash-4.5'),
     'FLASH-SUBSET': pathlib.Path('..', 'flash-subset', 'FLASH4.4'),
-    'FFB-MINI': pathlib.Path('..', 'ffb-mini')}
+    'FFB-MINI': pathlib.Path('..', 'ffb-mini'),
+    'flash5': _APPS_ROOT.joinpath('flash5')}
 
 _APPS_OPTIONAL = {'FLASH-4.5', 'FLASH-SUBSET'}
 
@@ -52,7 +58,20 @@ _APPS_CODE_FILEPATHS = {
             ] + _FLASH_COMMON_PATHS] if 'FLASH-SUBSET' in _APPS_ROOT_PATHS else [],
     'FFB-MINI': [path for path in all_fortran_paths(_APPS_ROOT_PATHS['FFB-MINI'].joinpath('src'))
                  if path.name not in ('gfc.h', 'gfrd_c.h', 'gfutil_c.h', 'gfutil_f.h', 'gfwrt_c.h',
-                                      'maprof.h', 'maprof_proc.h', 'maprof_yaml.h')]}
+                                      'maprof.h', 'maprof_proc.h', 'maprof_yaml.h')],
+    'flash5': [_APPS_ROOT_PATHS['flash5'].joinpath('source', _) for _ in {
+        pathlib.Path('physics', 'Hydro', 'HydroMain', 'unsplit', 'hy_getFaceFlux.F90'),
+        pathlib.Path('physics', 'Hydro', 'HydroMain', 'unsplit', 'hy_getRiemannState.F90'),
+        pathlib.Path('physics', 'Hydro', 'HydroMain', 'unsplit', 'hy_TVDslope.F90'),
+        pathlib.Path('physics', 'Hydro', 'HydroMain', 'unsplit', 'hy_upwindTransverseFlux.F90'),
+        pathlib.Path('physics', 'Hydro', 'HydroMain', 'unsplit', 'MHD', 'hy_eigenVector.F90'),
+        pathlib.Path('physics', 'Eos', 'EosMain', 'Helmholtz_starkiller', 'SpeciesBased',
+                     'actual_eos.F90'),
+        pathlib.Path('physics', 'sourceTerms', 'Burn', 'BurnMain', 'nuclearBurn', 'Aprox13',
+                     'bn_mapNetworkToSpecies.F90'),
+        pathlib.Path('physics', 'sourceTerms', 'Burn', 'BurnMain', 'nuclearBurn', 'bn_burner.F90'),
+        pathlib.Path('physics', 'sourceTerms', 'Burn', 'BurnMain', 'nuclearBurn', 'Burn.F90'),
+        pathlib.Path('Simulation', 'Simulation_init.F90')}]}
 
 
 class Tests(unittest.TestCase):
@@ -93,3 +112,6 @@ class Tests(unittest.TestCase):
     @unittest.skipIf(platform.system() == 'Windows', 'OFC not available on Windows')
     def test_ffb_mini_with_ofc(self):
         self._run_app_test('FFB-MINI', None, 35, True)
+
+    def test_flash5(self):
+        self._run_app_test('flash5', None, 9)
