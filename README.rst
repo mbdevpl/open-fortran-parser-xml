@@ -96,6 +96,14 @@ Build:
 
 This will create a `.jar` file in `dist` directory, and add it to the Java classpath.
 
+If you use a different python executable to install requirements, please provide it to ant too:
+
+.. code:: bash
+
+    ant -Dpython=/custom/python
+
+Because the build script by default relies on "python3" executable.
+
 
 how to run
 ----------
