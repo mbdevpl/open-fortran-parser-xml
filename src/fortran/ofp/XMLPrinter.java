@@ -783,10 +783,34 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
+	public void pointer_stmt(Token label, Token keyword, Token eos) {
+		super.pointer_stmt(label, keyword, eos);
+		if (!context.getTagName().equals("declaration"))
+			LOG.warning("pointer_stmt in unexpected context");
+		setAttribute("type", "pointer");
+	}
+
 	public void pointer_decl_list__begin() {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
-		super.pointer_decl_list__begin();
+		contextOpen("names");
+		if (verbosity >= 100)
+			super.pointer_decl_list__begin();
+	}
+
+	public void pointer_decl_list(int count) {
+		contextCloseAllInner("names");
+		if (verbosity >= 100)
+			super.pointer_decl_list(count);
+		setAttribute("count", count);
+		contextClose("names");
+	}
+
+	public void pointer_decl(Token id, boolean hasSpecList) {
+		contextOpen("name");
+		super.pointer_decl(id, hasSpecList);
+		setAttribute("id", id);
+		contextClose("name");
 	}
 
 	public void save_stmt(Token label, Token keyword, Token eos, boolean hasSavedEntityList) {
