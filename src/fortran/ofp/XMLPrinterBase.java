@@ -94,10 +94,10 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	 * @param name
 	 */
 	protected Element contextOpen(String name) {
-		Element new_context = doc.createElement(name);
+		Element newContext = doc.createElement(name);
 		if (context != null)
-			context.appendChild(new_context);
-		context = new_context;
+			context.appendChild(newContext);
+		context = newContext;
 		return context;
 	}
 
