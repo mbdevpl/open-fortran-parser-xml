@@ -6,7 +6,7 @@ import pathlib
 import platform
 import unittest
 
-from .test_compatibility import all_fortran_paths
+from .test_compatibility import all_fortran_paths, TestsBase
 
 _LOG = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ _APPS_CODE_FILEPATHS = {
                                       'maprof.h', 'maprof_proc.h', 'maprof_yaml.h')]}
 
 
-class Tests(unittest.TestCase):
+class Tests(TestsBase):
 
     maxDiff = None
 
@@ -73,9 +73,8 @@ class Tests(unittest.TestCase):
         failure_reports_path = _HERE.joinpath('results', 'apps', app_dirname, 'failure' + _suffix)
         success_reports_path = _HERE.joinpath('results', 'apps', app_dirname, 'success' + _suffix)
 
-        from .test_compatibility import Tests as CompatibilityTests
-        CompatibilityTests.check_cases_and_report(
-            self, app_name, failure_reports_path, success_reports_path,
+        self.check_cases_and_report(
+            app_name, failure_reports_path, success_reports_path,
             _APPS_ROOT_PATHS[app_name], _APPS_CODE_FILEPATHS[app_name],
             minimum_passed_cases, fall_back_to_ofc)
 

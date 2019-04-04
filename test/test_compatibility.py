@@ -37,7 +37,7 @@ _OFP_TESTS_DIR = _HERE.parent.joinpath(_OFP_RELATIVE_REPO_PATH, 'tests')
 ALL_OFP_TEST_PATHS = all_fortran_paths(_OFP_TESTS_DIR)
 
 
-class Tests(unittest.TestCase):
+class TestsBase(unittest.TestCase):
 
     maxDiff = None
 
@@ -61,6 +61,34 @@ class Tests(unittest.TestCase):
         success_reports_path = _HERE.joinpath('results', 'compatibility', 'success')
         self.check_cases_and_report(
             'OFP', failure_reports_path, success_reports_path, tests_absolute_path, cases)
+
+    def _check_case(self, input_path: pathlib.Path, fall_back_to_ofc: bool = False,
+                    ofc_target_path: pathlib.Path = None):
+        result = None
+        try:
+            try:
+                result = parse(input_path, verbosity=100, raise_on_error=True)
+                self.assertIsNotNone(result)
+            except subprocess.CalledProcessError as parser_err:
+                if not fall_back_to_ofc:
+                    raise parser_err
+                assert isinstance(ofc_target_path, pathlib.Path), ofc_target_path
+                code = None
+                try:
+                    code = transpile(input_path, raise_on_error=True)
+                    self.assertIsInstance(code, str)
+                    with ofc_target_path.open('w') as transpiled_file:
+                        transpiled_file.write(code)
+                    result = parse(ofc_target_path, verbosity=100, raise_on_error=True)
+                    self.assertIsNotNone(result)
+                    _LOG.info('OFC definitely fixed something, see %s', ofc_target_path)
+                except subprocess.CalledProcessError as err3:
+                    if code is not None:
+                        _LOG.warning('OFC succeeded but parser failed %s', ofc_target_path)
+                    raise parser_err from err3
+        except subprocess.CalledProcessError as err:
+            result = err
+        return result
 
     def check_cases_and_report(
             self, scenario_name: str, failure_reports_path: pathlib.Path,
@@ -89,35 +117,13 @@ class Tests(unittest.TestCase):
 
             relative_input_path = input_path.relative_to(input_paths_root)
             flat_relative_input_path = str(relative_input_path).replace(os.sep, '_')
+            ofc_target_path = pathlib.Path('/tmp', flat_relative_input_path)
 
             logger_level = logging.getLogger('open_fortran_parser.parser_wrapper').level
             logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logging.CRITICAL)
             ofc_logger_level = logging.getLogger('open_fortran_parser.ofc_wrapper').level
             logging.getLogger('open_fortran_parser.ofc_wrapper').setLevel(logging.CRITICAL)
-            result = None
-            try:
-                try:
-                    result = parse(input_path, verbosity=100, raise_on_error=True)
-                    self.assertIsNotNone(result)
-                except subprocess.CalledProcessError as parser_err:
-                    if not fall_back_to_ofc:
-                        raise parser_err
-                    transpiled_path = pathlib.Path('/tmp', flat_relative_input_path)
-                    code = None
-                    try:
-                        code = transpile(input_path, raise_on_error=True)
-                        self.assertIsInstance(code, str)
-                        with open(str(transpiled_path), 'w') as transpiled_file:
-                            transpiled_file.write(code)
-                        result = parse(transpiled_path, verbosity=100, raise_on_error=True)
-                        self.assertIsNotNone(result)
-                        _LOG.info('OFC definitely fixed something, see %s', transpiled_path)
-                    except subprocess.CalledProcessError as err3:
-                        if code is not None:
-                            _LOG.warning('OFC succeeded but parser failed %s', transpiled_path)
-                        raise parser_err from err3
-            except subprocess.CalledProcessError as err:
-                result = err
+            result = self._check_case(input_path, fall_back_to_ofc, ofc_target_path)
             logging.getLogger('open_fortran_parser.parser_wrapper').setLevel(logger_level)
             logging.getLogger('open_fortran_parser.ofc_wrapper').setLevel(ofc_logger_level)
 
@@ -190,6 +196,11 @@ class Tests(unittest.TestCase):
         self.assertGreaterEqual(passed_count, minimum_passed_cases, msg=passed_test_cases)
 
         return passed_test_cases, new_passed_cases, failed_test_cases, new_failed_cases
+
+
+class Tests(TestsBase):
+
+    maxDiff = None
 
     def test_comments(self):
         for suffix in ('.f', '.f90'):

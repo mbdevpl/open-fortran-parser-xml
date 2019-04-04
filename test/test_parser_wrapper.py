@@ -72,6 +72,7 @@ class Tests(unittest.TestCase):
         java_config['classpath'] = None
         with tempfile.NamedTemporaryFile() as output_file:
             execute_parser(INPUT_PATH, pathlib.Path(output_file.name))
+        self.assertIsNone(java_config['classpath'])
 
         java_config['classpath'] = classpath
         java_config['options'] = options
