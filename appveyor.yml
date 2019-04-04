@@ -5,14 +5,14 @@ environment:
     - ARCHITECTURE: "x86"
       PYTHON_VERSION: "3.5"
       PYTHON: "C:\\Python35"
-      JAVA_VERSION: "jdk8"
-      JAVA: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
+      JAVA_VERSION: "jdk9"
+      JAVA: "C:\\Program Files (x86)\\Java\\jdk9"
       ANT: "1.10.5"
     - ARCHITECTURE: "x64"
       PYTHON_VERSION: "3.5"
       PYTHON: "C:\\Python35-x64"
-      JAVA_VERSION: "jdk8"
-      JAVA: "C:\\Program Files\\Java\\jdk1.8.0"
+      JAVA_VERSION: "jdk9"
+      JAVA: "C:\\Program Files\\Java\\jdk9"
       ANT: "1.10.5"
     - ARCHITECTURE: "x86"
       PYTHON_VERSION: "3.6"
@@ -39,16 +39,28 @@ environment:
       JAVA: "C:\\Program Files\\Java\\jdk1.8.0"
       ANT: "1.10.5"
     - ARCHITECTURE: "x86"
+      PYTHON_VERSION: "3.6"
+      PYTHON: "C:\\Python36"
+      JAVA_VERSION: "jdk9"
+      JAVA: "C:\\Program Files (x86)\\Java\\jdk9"
+      ANT: "1.10.5"
+    - ARCHITECTURE: "x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON: "C:\\Python36-x64"
+      JAVA_VERSION: "jdk9"
+      JAVA: "C:\\Program Files\\Java\\jdk9"
+      ANT: "1.10.5"
+    - ARCHITECTURE: "x86"
       PYTHON_VERSION: "3.7"
       PYTHON: "C:\\Python37"
-      JAVA_VERSION: "jdk8"
-      JAVA: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
+      JAVA_VERSION: "jdk9"
+      JAVA: "C:\\Program Files (x86)\\Java\\jdk9"
       ANT: "1.10.5"
     - ARCHITECTURE: "x64"
       PYTHON_VERSION: "3.7"
       PYTHON: "C:\\Python37-x64"
-      JAVA_VERSION: "jdk8"
-      JAVA: "C:\\Program Files\\Java\\jdk1.8.0"
+      JAVA_VERSION: "jdk9"
+      JAVA: "C:\\Program Files\\Java\\jdk9"
       ANT: "1.10.5"
 
 init:
@@ -76,7 +88,7 @@ install:
   # Java
   - python -m open_fortran_parser --dev-deps
   - set CLASSPATH=%cd%\\lib\\*;%CLASSPATH%
-  - ant
+  - ant -Dpython=python
   - set CLASSPATH=%cd%\\dist\\*;%CLASSPATH%
   # Java tests
   - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.8.1-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.8.1-runtime.jar"
@@ -86,8 +98,8 @@ build: off
 
 test_script:
   - set TEST_PACKAGING=1
-  - if [%JAVA_VERSION%]==[jdk8] set TEST_DEPENDENCIES=1
-  - if [%JAVA_VERSION%]==[jdk8] set TEST_LONG=1
+  - if [%JAVA_VERSION%]==[jdk7] set TEST_DEPENDENCIES=1
+  - if [%JAVA_VERSION%]==[jdk7] set TEST_LONG=1
   - set TEST_COVERAGE=1
   - python -m coverage run --branch --source . -m unittest -v
 
