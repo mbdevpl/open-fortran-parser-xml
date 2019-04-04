@@ -3,17 +3,22 @@
 
 	<property name="debuglevel" value="source,lines,vars" />
 
-	<loadfile srcfile="open_fortran_parser/_version.py" property="version">
-		<filterchain>
-			<linecontainsregexp>
-				<regexp pattern="^VERSION = '.+'.*$" />
-			</linecontainsregexp>
-			<tokenfilter>
-				<replaceregex pattern="^VERSION = '(.+)'.*$" replace="\1" />
-			</tokenfilter>
-			<striplinebreaks />
-		</filterchain>
-	</loadfile>
+	<property name="python" value="python3" />
+
+	<exec executable="${python}" outputproperty="version" resultproperty="version.error">
+		<arg value="-m" />
+		<arg value="version_query" />
+		<arg value="-p" />
+		<arg value="." />
+	</exec>
+
+	<fail message="Failed to query project version: ${version}">
+		<condition>
+			<not>
+					<equals arg1="${version.error}" arg2="0" />
+			</not>
+		</condition>
+	</fail>
 
 	<property name="src.dir" value="src" />
 	<property name="bin.dir" value="bin" />
