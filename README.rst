@@ -140,10 +140,13 @@ Program
     </program>
 
 
-In the body, collection of declarations followed by any number of statements can be found.
+In the body, :ref:`declarations` followed by any number of statements can be found.
 
-And each of the statements listed after the declarations, can be either compound or simple.
+And each of the statements listed after the declarations,
+can be one of :ref:`statements-simple` or :ref:`statements-compound`.
 
+
+.. _declarations:
 
 Declarations
 ------------
@@ -170,6 +173,22 @@ what kind of declaration it is.
 Implicit declaration
 ~~~~~~~~~~~~~~~~~~~~
 
+.. code:: fortran
+
+    implicit none
+    implicit real (A-H,O-Z)
+
+.. code:: xml
+
+    <declaration subtype="none" type="implicit" />
+    <declaration subtype="some" type="implicit">
+      <type name="real" type="intrinsic" />
+      <letter-ranges>
+        <letter-range begin="A" end="H" />
+        <letter-range begin="O" end="Z" />
+      </letter-ranges>
+    </declaration>
+
 
 Variable declaration
 ~~~~~~~~~~~~~~~~~~~~
@@ -194,16 +213,33 @@ Use
 
 .. code:: fortran
 
-    use foo
-    use, fooo :: only bar
-    use, implicit :: foo only bar
-
+    use mpi
+    use my_interface, only: subroutine1, subroutine2
+    use, non_intrinsic :: my_module
+    use, intrinsic :: iso_c_binding, only: c_int, c_float
 
 .. code:: xml
 
-    <use name="empty">
+    <use name="mpi" />
+    <use name="my_interface">
+      <only>
+        <name id="subroutine1" />
+        <name id="subroutine2" />
+      </only>
+    </use>
+    <use name="my_module">
+      <nature name="non_intrinsic" />
+    </use>
+    <use name="iso_c_binding">
+      <nature name="intrinsic" />
+      <only>
+        <name id="c_int" />
+        <name id="c_float" />
+      </only>
     </use>
 
+
+.. _statements-compound:
 
 Compound statements
 -------------------
@@ -247,6 +283,8 @@ In the body of :xml:`<select>` there multiple :xml:`<case>` nodes.
 These are also compound (i.e. each of them has :xml:`<header>` and :xml:`<body>`),
 however they exist only within the body of select statement.
 
+
+.. _statements-simple:
 
 Simple statements
 -----------------
@@ -318,7 +356,6 @@ Module
 .. code:: xml
 
     <module name="abc">
-      <header />
       <body>
         <specification declarations="1" implicits="0" imports="0" uses="0">
           <declaration type="variable">
