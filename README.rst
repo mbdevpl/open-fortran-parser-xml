@@ -326,7 +326,7 @@ outdated dependencies by executing:
 as script
 ~~~~~~~~~
 
-.. code:: bash
+.. code::
 
     $ python3 -m open_fortran_parser -h
     usage: open_fortran_parser [-h] [--version] [-v VERBOSITY]
@@ -342,13 +342,13 @@ as script
 
     optional arguments:
       -h, --help            show this help message and exit
-      --version             show program\'s version number and exit
+      --version             show program's version number and exit
       -v VERBOSITY, --verbosity VERBOSITY
                             level of verbosity, from 0 to 100 (default: 100)
       --get-dependencies, --deps
                             download dependencies and exit (default: False)
 
-    Copyright 2017-2018 by the contributors, Apache License 2.0,
+    Copyright 2017-2019 by the contributors, Apache License 2.0,
     https://github.com/mbdevpl/open-fortran-parser-xml
 
 
