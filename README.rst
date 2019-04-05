@@ -1,6 +1,9 @@
 .. role:: bash(code)
     :language: bash
 
+.. role:: fortran(code)
+    :language: fortran
+
 .. role:: java(code)
     :language: java
 
@@ -39,10 +42,331 @@ Implementation has 2 parts: the XML generator written in Java, and Python wrappe
 
 The implementation is tested on Linux, OS X and Windows.
 
-In this file, first the Java implementation is described and then the Python wrapper.
+In this file, first the AST specification is described, then the Java implementation,
+and then the Python wrapper.
 
 .. contents::
     :backlinks: none
+
+
+AST specification
+=================
+
+For any Fortran file, the resulting XML file has the following structure:
+
+.. code:: xml
+
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <ofp version="0.8.4"> <!-- version of the Open Fortran Parser used -->
+      <file path="/path/to/parsed/file.f90">
+        <!-- Fortran syntax goes here -->
+      </file>
+    </ofp>
+
+Root node is :xml:`<ofp>`, it has one subnode :xml:`<file>`.
+
+Inside the :xml:`<file>`, there might be one or many of the following nodes:
+
+*   :xml:`<program>`
+*   :xml:`<subroutine>`
+*   :xml:`<function>`
+*   :xml:`<module>`
+*   :xml:`<interface>`
+*   ...
+
+Additionally, every XML node that was built using tokens from the source code
+(which means almost any XML node) has its source code location described in the following way:
+
+.. code:: xml
+
+    <node col_begin="..." col_end="..." line_begin="..." line_end="..." />
+
+For simplicity, the above XML file boilerplate as well as locations are stripped
+from the examples that follow.
+
+For each presented construct, Fortran code snippet and corresponding XML AST is given.
+
+
+Comments and directives
+-----------------------
+
+Comment:
+
+.. code:: fortran
+
+    ! my comment
+    !$omp parallel do
+
+.. code:: xml
+
+    <comment text="! my comment"/>
+    <comment text="!$omp parallel do"/>
+
+Directive:
+
+.. code:: fortran
+
+    #define NDIMS 3
+
+.. code:: xml
+
+    <directive text="#define NDIMS 3"/>
+
+
+Nodes :xml:`<comment>` and :xml:`<directive>`
+exist to carry comments and preprocessor directives, respectively.
+These nodes might be in principle inserted before, after or within any of other nodes,
+however, in practice they are either surrounding the top-level nodes (e.g. program or subroutine)
+or are placed in-between non-compound declarations and/or statements within them.
+
+Note: compiler directives are comments in Fortran.
+
+
+Program
+-------
+
+.. code:: fortran
+
+    program empty
+      ...
+    end program empty
+
+.. code:: xml
+
+    <program name="empty">
+      <body>
+        ...
+      </body>
+    </program>
+
+
+In the body, collection of declarations followed by any number of statements can be found.
+
+And each of the statements listed after the declarations, can be either compound or simple.
+
+
+Declarations
+------------
+
+A special node :xml:`<specification>` wraps all declarations:
+
+.. code:: xml
+
+    <specification declarations="0" implicits="0" imports="0" uses="0">
+      ...
+    </specification>
+
+It provides counts for each of the declaration type and contains a collection of declarations,
+which can any of the following:
+
+*   :xml:`<use>`
+*   :xml:`<declaraion>`
+*   ...
+
+The :xml:`<declaraion>` node is special in a sense that it has type attribute that specifies
+what kind of declaration it is.
+
+
+Implicit declaration
+~~~~~~~~~~~~~~~~~~~~
+
+
+Variable declaration
+~~~~~~~~~~~~~~~~~~~~
+
+.. code:: fortran
+
+    integer i, j
+
+.. code:: xml
+
+    <declaration type="variable">
+      <type name="integer" type="intrinsic"/>
+      <variables count="2">
+        <variable name="i"/>
+        <variable name="j"/>
+      </variables>
+    </declaration>
+
+
+Use
+~~~
+
+.. code:: fortran
+
+    use foo
+    use, fooo :: only bar
+    use, implicit :: foo only bar
+
+
+.. code:: xml
+
+    <use name="empty">
+    </use>
+
+
+Compound statements
+-------------------
+
+Compound statements, e.g.:
+
+*   :xml:`<if>`
+*   :xml:`<loop>`
+*   :xml:`<select>`
+*   ...
+
+each have :xml:`<header>` and :xml:`<body>`.
+
+
+If
+~~
+
+In the header of :xml:`<if>`, an expression is present.
+
+Expression might be a single node like:
+
+*   :xml:`<name>`
+*   :xml:`<literal>`
+*   ...
+
+More complex expressions are built from the :xml:`<operation>` nodes, each of which contains
+a collection of :xml:`<operand>` and :xml:`<operator>` nodes. Each operand contains an expression.
+
+
+Loop
+~~~~
+
+In the header of the :xml:`<loop>`, at least one :xml:`<index-variable>` is present.
+It has :xml:`<lower-bound>`, :xml:`<upper-bound>`  and :xml:`<step>`.
+
+
+Select
+~~~~~~
+
+In the body of :xml:`<select>` there multiple :xml:`<case>` nodes.
+These are also compound (i.e. each of them has :xml:`<header>` and :xml:`<body>`),
+however they exist only within the body of select statement.
+
+
+Simple statements
+-----------------
+
+All simple statements are using :xml:`<statement>` node, which wraps around nodes like:
+
+*   :xml:`<assignment>`
+*   :xml:`<pointer-assignment>`
+*   :xml:`<call>`
+*   :xml:`<open>`
+*   :xml:`<close>`
+*   :xml:`<write>`
+*   :xml:`<format>`
+*   :xml:`<print>`
+*   :xml:`<allocate>`
+*   :xml:`<deallocate>`
+*   :xml:`<return>`
+*   :xml:`<stop>`
+*   :xml:`<continue>`
+*   :xml:`<cycle>`
+*   ...
+
+
+Subroutine
+----------
+
+Many complex nodes contain :xml:`<header>` and :xml:`<body>`.
+
+The contents of the header depend on the type of the node. For example, in case of subroutines,
+it contains list of parameters.
+
+
+Function
+--------
+
+.. code:: fortran
+
+    function foo
+      ...
+    end function foo
+
+.. code:: xml
+
+    <function name="foo">
+      <header>
+        ...
+      </header>
+      <body>
+        ...
+      </body>
+    </function>
+
+
+Module
+------
+
+.. code:: fortran
+
+    module abc
+      integer i
+      ...
+    contains
+      subroutine sub()
+        ...
+      end subroutine sub
+      ...
+    end module abc
+
+.. code:: xml
+
+    <module name="abc">
+      <header />
+      <body>
+        <specification declarations="1" implicits="0" imports="0" uses="0">
+          <declaration type="variable">
+            <type name="integer" type="intrinsic"/>
+            <variables count="1">
+              <variable name="i"/>
+            </variables>
+          </declaration>
+        </specification>
+        ...
+      </body>
+      <members>
+        <subroutine name="sub">
+          <header/>
+          <body>
+            ...
+          </body>
+        </subroutine>
+        ...
+      </members>
+    </module>
+
+
+Work in progress
+----------------
+
+Remaining details of AST are not decided yet. For the time being, to see implementation details,
+please take a look into `<src/fortran/ofp/XMLPrinter.java>`_.
+
+
+Unhandled corner cases
+----------------------
+
+in certain corner cases, the parse tree might deviate from the above description.
+
+This might be due to two main reasons:
+
+1)   Some feature is not yet implemented in this XML output generator
+2)   The events provided by OFP are not sufficient to generate a correct tree.
+
+In case 1, all contributions to this project are very welcome. The implementation of any one
+of the missing features might not be very troublesome. The main reason why many of those features
+are not implemented yet is because the Fortran codes the current contributors work with
+do not use them.
+
+In case 2, there is a need to dynamically reorder/modify/delete nodes, or otherwise manipulate
+existing parse tree while adding new nodes. Contributions are also very welcome,
+but implementation might be much more challenging in this case.
 
 
 Java XML generator for OFP
@@ -142,110 +466,6 @@ And to dump XML with maximum verbosity to console:
 
     java fortran.ofp.FrontEnd --class fortran.ofp.XMLPrinter \
       --verbosity 100 some_fortran_file.f
-
-
-AST specification
------------------
-
-Root node is :xml:`<ofp>`, it has one subnode :xml:`<file>`.
-
-Inside the :xml:`<file>`, there might be one or many of the following nodes:
-
-*   :xml:`<program>`
-*   :xml:`<subroutine>`
-*   :xml:`<module>`
-*   :xml:`<interface>`
-*   ...
-
-Each of which has :xml:`<header>` and :xml:`<body>`.
-Additionally, :xml:`<module>` has :xml:`<members>`.
-
-The contents of the header depend on the type of the node. For example, in case of subroutines,
-it contains list of parameters.
-
-In the body, a special node :xml:`<specification>`, followed by a collection of statements can be found.
-
-The :xml:`<specification>` contains a collection of following nodes:
-
-*   :xml:`<declaraion>`
-*   :xml:`<use>`
-*   ...
-
-And, each of the statements listed after the specification, can be either compound or simple.
-
-Compound statements, e.g.:
-
-*   :xml:`<if>`
-*   :xml:`<loop>`
-*   :xml:`<select>`
-*   ...
-
-each have :xml:`<header>` and :xml:`<body>`.
-
-In the header of the :xml:`<loop>`, at least one :xml:`<index-variable>` is present.
-It has :xml:`<lower-bound>`, :xml:`<upper-bound>`  and :xml:`<step>`.
-
-In the header of :xml:`<if>`, an expression is present.
-
-In the body of :xml:`<select>` there multiple :xml:`<case>` nodes.
-These are also compound (i.e. each of them has :xml:`<header>` and :xml:`<body>`),
-however they exist only within the body of select statement.
-
-Expression might be a single node like:
-
-*   :xml:`<name>`
-*   :xml:`<literal>`
-*   ...
-
-More complex expressions are built from the :xml:`<operation>` nodes, each of which contains
-a collection of :xml:`<operand>` and :xml:`<operator>` nodes. Each operand constains an expression.
-
-All simple statements are using :xml:`<statement>` node, which wraps around nodes like:
-
-*   :xml:`<assignment>`
-*   :xml:`<pointer-assignment>`
-*   :xml:`<call>`
-*   :xml:`<open>`
-*   :xml:`<close>`
-*   :xml:`<write>`
-*   :xml:`<format>`
-*   :xml:`<print>`
-*   :xml:`<allocate>`
-*   :xml:`<deallocate>`
-*   :xml:`<return>`
-*   :xml:`<stop>`
-*   :xml:`<continue>`
-*   :xml:`<cycle>`
-*   ...
-
-In addition to the above, nodes :xml:`<comment>` and :xml:`<directive>` exist to carry comments
-and preprocessor directives, respectively. These nodes might be in principle inserted before,
-after or within any of other nodes, however, in practice they are either surrounding
-the top-level nodes (such as program or subroutine) or are placed in-between non-compound
-declarations and/or statements within them.
-
-Remaining details of AST are not decided yet. For the time being, to see implementation details,
-please take a look into `<src/fortran/ofp/XMLPrinter.java>`_.
-
-
-Unhandled corner cases
-~~~~~~~~~~~~~~~~~~~~~~
-
-in certain corner cases, the parse tree might deviate from the above description.
-
-This might be due to two main reasons:
-
-1)   Some feature is not yet implemented in this XML output generator
-2)   The events provided by OFP are not sufficient to generate a correct tree.
-
-In case 1, all contributions to this project are very welcome. The implementation of any one
-of the missing features might not be very troublesome. The main reason why many of those features
-are not implemented yet is because the Fortran codes the current contributors work with
-do not use them.
-
-In case 2, there is a need to dynamically reorder/modify/delete nodes, or otherwise manipulate
-existing parse tree while adding new nodes. In such case contributions are also very welcome,
-but implementation might be much more challenging in such cases.
 
 
 Python wrapper for the generator
