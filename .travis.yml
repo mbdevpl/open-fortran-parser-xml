@@ -47,8 +47,6 @@ matrix:
       env:
         - TRAVIS_PYTHON_VERSION="3.7"
         - TRAVIS_JDK_VERSION=oraclejdk8
-  allow_failures:
-    - python: "3.7"
 
 before_install:
   - |
