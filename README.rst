@@ -634,8 +634,8 @@ Set up code coverage for Java:
 
 .. code:: bash
 
-    wget "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.8.1-runtime.jar" -O "lib/org.jacoco.agent-0.8.1-runtime.jar"
-    wget "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.cli-0.8.1-nodeps.jar" -O "lib/org.jacoco.cli-0.8.1-nodeps.jar"
+    wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.8.3/org.jacoco.agent-0.8.3-runtime.jar" -O "lib/org.jacoco.agent-0.8.3-runtime.jar"
+    wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.cli/0.8.3/org.jacoco.cli-0.8.3-nodeps.jar" -O "lib/org.jacoco.cli-0.8.3-nodeps.jar"
 
 Then, run all test and gather code coverage:
 
@@ -656,4 +656,4 @@ Finally, generate results for Java code:
 
 .. code:: bash
 
-    java -jar "lib/org.jacoco.cli-0.8.1-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --xml jacoco.xml
+    java -jar "lib/org.jacoco.cli-0.8.3-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --xml jacoco.xml

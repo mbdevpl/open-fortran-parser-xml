@@ -1,6 +1,9 @@
 sudo: required
 language: generic
 addons:
+  apt:
+    packages:
+      - ant
   homebrew:
     packages:
       - ant
@@ -28,7 +31,7 @@ matrix:
       sudo: true
       language: python
       python: "3.7"
-      env: TRAVIS_JDK_VERSION=oraclejdk9
+      env: TRAVIS_JDK_VERSION=openjdk11
     - os: osx
       language: generic
       env:
@@ -44,8 +47,6 @@ matrix:
       env:
         - TRAVIS_PYTHON_VERSION="3.7"
         - TRAVIS_JDK_VERSION=oraclejdk8
-  allow_failures:
-    - python: "3.7"
 
 before_install:
   - |
@@ -60,7 +61,7 @@ before_install:
     set +e
   - |
     set -e
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+    if [[ "${TRAVIS_OS_NAME}" == "linux" && "$(lsb_release -cs)" == "trusty" ]]; then
       jdk_switcher use $TRAVIS_JDK_VERSION
     fi
     set +e
@@ -89,8 +90,8 @@ install:
   - ant -Dpython=python
   - export CLASSPATH="${CLASSPATH}:$(pwd)/dist/*"
   # Java tests
-  - wget "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.8.1-runtime.jar" -O "lib/org.jacoco.agent-0.8.1-runtime.jar"
-  - wget "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.cli-0.8.1-nodeps.jar" -O "lib/org.jacoco.cli-0.8.1-nodeps.jar"
+  - wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.8.3/org.jacoco.agent-0.8.3-runtime.jar" -O "lib/org.jacoco.agent-0.8.3-runtime.jar"
+  - wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.cli/0.8.3/org.jacoco.cli-0.8.3-nodeps.jar" -O "lib/org.jacoco.cli-0.8.3-nodeps.jar"
 
 script:
   - |
@@ -102,7 +103,7 @@ script:
 
 after_success:
   - python -m coverage report --show-missing
-  - java -jar "lib/org.jacoco.cli-0.8.1-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --xml jacoco.xml
+  - java -jar "lib/org.jacoco.cli-0.8.3-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --xml jacoco.xml
   - codecov
 
 before_deploy:

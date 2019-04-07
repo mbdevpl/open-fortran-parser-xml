@@ -51,6 +51,30 @@ environment:
       JAVA: "C:\\Program Files\\Java\\jdk9"
       ANT: "1.10.5"
     - ARCHITECTURE: "x86"
+      PYTHON_VERSION: "3.6"
+      PYTHON: "C:\\Python36"
+      JAVA_VERSION: "jdk10"
+      JAVA: "C:\\Program Files (x86)\\Java\\jdk10"
+      ANT: "1.10.5"
+    - ARCHITECTURE: "x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON: "C:\\Python36-x64"
+      JAVA_VERSION: "jdk10"
+      JAVA: "C:\\Program Files\\Java\\jdk10"
+      ANT: "1.10.5"
+    - ARCHITECTURE: "x86"
+      PYTHON_VERSION: "3.6"
+      PYTHON: "C:\\Python36"
+      JAVA_VERSION: "jdk11"
+      JAVA: "C:\\Program Files (x86)\\Java\\jdk11"
+      ANT: "1.10.5"
+    - ARCHITECTURE: "x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON: "C:\\Python36-x64"
+      JAVA_VERSION: "jdk11"
+      JAVA: "C:\\Program Files\\Java\\jdk11"
+      ANT: "1.10.5"
+    - ARCHITECTURE: "x86"
       PYTHON_VERSION: "3.7"
       PYTHON: "C:\\Python37"
       JAVA_VERSION: "jdk9"
@@ -93,8 +117,8 @@ install:
   - ant -Dpython=python
   - set CLASSPATH=%cd%\\dist\\*;%CLASSPATH%
   # Java tests
-  - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.agent-0.8.1-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.8.1-runtime.jar"
-  - ps: Invoke-WebRequest "https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.2.0/org.jacoco.cli-0.8.1-nodeps.jar" -OutFile "lib\\org.jacoco.cli-0.8.1-nodeps.jar"
+  - ps: Invoke-WebRequest "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.8.3/org.jacoco.agent-0.8.3-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.8.3-runtime.jar"
+  - ps: Invoke-WebRequest "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.cli/0.8.3/org.jacoco.cli-0.8.3-nodeps.jar" -OutFile "lib\\org.jacoco.cli-0.8.3-nodeps.jar"
 
 build: off
 
@@ -107,7 +131,7 @@ test_script:
 
 after_test:
   - python -m coverage report --show-missing
-  - java -jar "lib\\org.jacoco.cli-0.8.1-nodeps.jar" report "jacoco.exec" --classfiles "bin\\" --sourcefiles "src\\" --xml jacoco.xml
+  - java -jar "lib\\org.jacoco.cli-0.8.3-nodeps.jar" report "jacoco.exec" --classfiles "bin\\" --sourcefiles "src\\" --xml jacoco.xml
   - codecov
   # Bintray archive preparation
   - python -m pip install version_query
