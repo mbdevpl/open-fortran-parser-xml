@@ -139,14 +139,11 @@ Program
       </body>
     </program>
 
-
-In the body, :ref:`declarations` followed by any number of statements can be found.
+In the body, `Declarations`_ followed by any number of statements can be found.
 
 And each of the statements listed after the declarations,
-can be one of :ref:`statements-simple` or :ref:`statements-compound`.
+can be one of `Simple statements`_ or `Compound statements`_.
 
-
-.. _declarations:
 
 Declarations
 ------------
@@ -239,8 +236,6 @@ Use
     </use>
 
 
-.. _statements-compound:
-
 Compound statements
 -------------------
 
@@ -283,8 +278,6 @@ In the body of :xml:`<select>` there multiple :xml:`<case>` nodes.
 These are also compound (i.e. each of them has :xml:`<header>` and :xml:`<body>`),
 however they exist only within the body of select statement.
 
-
-.. _statements-simple:
 
 Simple statements
 -----------------
