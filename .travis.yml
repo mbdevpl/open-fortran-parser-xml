@@ -13,10 +13,6 @@ matrix:
     - os: linux
       language: python
       python: "3.5"
-      env: TRAVIS_JDK_VERSION=oraclejdk9
-    - os: linux
-      language: python
-      python: "3.6"
       env: TRAVIS_JDK_VERSION=openjdk7
     - os: linux
       language: python
