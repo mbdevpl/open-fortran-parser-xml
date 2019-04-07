@@ -1762,6 +1762,30 @@ public class XMLPrinter extends XMLPrinterBase {
 		super.goto_stmt(label, goKeyword, toKeyword, target_label, eos);
 	}
 
+	public void arithmetic_if_stmt(Token label, Token ifKeyword, Token label1, Token label2, Token label3, Token eos) {
+		Element test = contextNode(-4);
+		Element ifNegative = contextNode(-3);
+		Element ifZero = contextNode(-2);
+		Element ifPositive = contextNode(-1);
+		contextOpen("arithmetic-if");
+		contextOpen("header");
+		moveHere(test);
+		contextClose();
+		contextOpen("body");
+		contextOpen("if-negative");
+		moveHere(ifNegative);
+		contextClose();
+		contextOpen("if-zero");
+		moveHere(ifZero);
+		contextClose();
+		contextOpen("if-positive");
+		moveHere(ifPositive);
+		contextClose();
+		contextClose();
+		super.arithmetic_if_stmt(label, ifKeyword, label1, label2, label3, eos);
+		contextClose();
+	}
+
 	public void continue_stmt(Token label, Token continueKeyword, Token eos) {
 		Element labelNode = contextNodesCount() > 0 ? contextNode(-1) : null;
 		labelNode = labelNode != null && labelNode.getTagName() == "label" ? labelNode : null;
