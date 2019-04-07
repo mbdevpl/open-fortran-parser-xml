@@ -678,6 +678,7 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void data_stmt_value(Token asterisk) {
+		contextCloseAllInner("values");
 		if (verbosity >= 100)
 			super.data_stmt_value(asterisk);
 	}
