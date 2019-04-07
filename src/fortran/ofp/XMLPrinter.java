@@ -1965,6 +1965,8 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (verbosity >= 60)
 			super.format_stmt(label, formatKeyword, eos);
 		contextClose();
+		if (context.getTagName().equals("declaration"))
+			setAttribute("type", "format");
 	}
 
 	public void format_specification(boolean hasFormatItemList) {
