@@ -757,6 +757,7 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void save_stmt(Token label, Token keyword, Token eos, boolean hasSavedEntityList) {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
+		setAttribute("type", "save");
 		super.save_stmt(label, keyword, eos, hasSavedEntityList);
 	}
 
@@ -2154,6 +2155,7 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void end_interface_stmt(Token label, Token kw1, Token kw2, Token eos, boolean hasGenericSpec) {
 		contextCloseAllInner("interface");
 		super.end_interface_stmt(label, kw1, kw2, eos, hasGenericSpec);
+		setAttribute("type", "interface");
 		contextClose();
 	}
 
