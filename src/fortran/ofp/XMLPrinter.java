@@ -761,6 +761,13 @@ public class XMLPrinter extends XMLPrinterBase {
 		super.save_stmt(label, keyword, eos, hasSavedEntityList);
 	}
 
+	public void saved_entity(Token id, boolean isCommonBlockName) {
+		contextOpen("name");
+		super.saved_entity(id, isCommonBlockName);
+		setAttribute("id", id);
+		contextClose();
+	}
+
 	public void target_decl_list__begin() {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");

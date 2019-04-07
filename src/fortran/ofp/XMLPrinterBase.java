@@ -113,8 +113,8 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		addListContext("pointer-decl", "names", null);
 		/*
 		addListContext("cray-pointer-assoc", "", "");
-		addListContext("saved-entity", "", "");
 		*/
+		addListContext("saved-entity", "names", "name");
 		// addListContext("target-decl", null, null); // currently not necessary
 		/*
 		addListContext("implicit-spec", "", "");
