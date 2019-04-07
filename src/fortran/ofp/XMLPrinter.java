@@ -2162,8 +2162,10 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void end_interface_stmt(Token label, Token kw1, Token kw2, Token eos, boolean hasGenericSpec) {
 		contextCloseAllInner("interface");
 		super.end_interface_stmt(label, kw1, kw2, eos, hasGenericSpec);
-		setAttribute("type", "interface");
 		contextClose();
+		if (!context.getTagName().equals("declaration"))
+			cleanUpAfterError("expected interface to be within declaration context, but its in " + context.getTagName());
+		setAttribute("type", "interface");
 	}
 
 	public void interface_body(boolean hasPrefix) {
