@@ -696,9 +696,9 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 	 */
 	protected void insertTokens(Element context, int tokenType, String tokenContextName, String tokenTextAttributeName)
 			throws IOException {
-		// System.err.println("all tokens: " + new TokensList(new File(filename)));
+		// LOG.log(Level.INFO, "all tokens: {0}", new TokensList(new File(filename)));
 		TokensList tokens = new TokensList(new File(filename), tokenType);
-		// System.err.println("found tokens: " + tokens);
+		// LOG.log(Level.INFO, "found tokens of type={0}: {1}", new Object[]{tokenType, tokens});
 		insertTokens(context, tokens, tokenContextName, tokenTextAttributeName);
 	}
 
