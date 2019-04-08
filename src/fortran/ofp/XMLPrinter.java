@@ -678,6 +678,7 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void data_stmt_value(Token asterisk) {
+		contextCloseAllInner("values");
 		if (verbosity >= 100)
 			super.data_stmt_value(asterisk);
 	}
@@ -757,7 +758,15 @@ public class XMLPrinter extends XMLPrinterBase {
 	public void save_stmt(Token label, Token keyword, Token eos, boolean hasSavedEntityList) {
 		if (!context.getTagName().equals("declaration"))
 			contextOpen("declaration");
+		setAttribute("type", "save");
 		super.save_stmt(label, keyword, eos, hasSavedEntityList);
+	}
+
+	public void saved_entity(Token id, boolean isCommonBlockName) {
+		contextOpen("name");
+		super.saved_entity(id, isCommonBlockName);
+		setAttribute("id", id);
+		contextClose();
 	}
 
 	public void target_decl_list__begin() {
@@ -1753,6 +1762,30 @@ public class XMLPrinter extends XMLPrinterBase {
 		super.goto_stmt(label, goKeyword, toKeyword, target_label, eos);
 	}
 
+	public void arithmetic_if_stmt(Token label, Token ifKeyword, Token label1, Token label2, Token label3, Token eos) {
+		Element test = contextNode(-4);
+		Element ifNegative = contextNode(-3);
+		Element ifZero = contextNode(-2);
+		Element ifPositive = contextNode(-1);
+		contextOpen("arithmetic-if");
+		contextOpen("header");
+		moveHere(test);
+		contextClose();
+		contextOpen("body");
+		contextOpen("if-negative");
+		moveHere(ifNegative);
+		contextClose();
+		contextOpen("if-zero");
+		moveHere(ifZero);
+		contextClose();
+		contextOpen("if-positive");
+		moveHere(ifPositive);
+		contextClose();
+		contextClose();
+		super.arithmetic_if_stmt(label, ifKeyword, label1, label2, label3, eos);
+		contextClose();
+	}
+
 	public void continue_stmt(Token label, Token continueKeyword, Token eos) {
 		Element labelNode = contextNodesCount() > 0 ? contextNode(-1) : null;
 		labelNode = labelNode != null && labelNode.getTagName() == "label" ? labelNode : null;
@@ -1956,6 +1989,8 @@ public class XMLPrinter extends XMLPrinterBase {
 		if (verbosity >= 60)
 			super.format_stmt(label, formatKeyword, eos);
 		contextClose();
+		if (context.getTagName().equals("declaration"))
+			setAttribute("type", "format");
 	}
 
 	public void format_specification(boolean hasFormatItemList) {
@@ -2155,6 +2190,9 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextCloseAllInner("interface");
 		super.end_interface_stmt(label, kw1, kw2, eos, hasGenericSpec);
 		contextClose();
+		if (!context.getTagName().equals("declaration"))
+			cleanUpAfterError("expected interface to be within declaration context, but its in " + context.getTagName());
+		setAttribute("type", "interface");
 	}
 
 	public void interface_body(boolean hasPrefix) {
