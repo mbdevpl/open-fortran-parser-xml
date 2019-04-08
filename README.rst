@@ -205,6 +205,22 @@ Variable declaration
     </declaration>
 
 
+External declaration
+~~~~~~~~~~~~~~~~~~~~
+
+.. code:: fortran
+
+    external omp_get_num_procs
+
+
+Save declaration
+~~~~~~~~~~~~~~~~
+
+.. code:: fortran
+
+    save n
+
+
 Use
 ~~~
 
@@ -298,6 +314,7 @@ All simple statements are using :xml:`<statement>` node, which wraps around node
 *   :xml:`<stop>`
 *   :xml:`<continue>`
 *   :xml:`<cycle>`
+*   :xml:`<arithmetic-if>`
 *   ...
 
 
