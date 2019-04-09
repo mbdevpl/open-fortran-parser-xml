@@ -266,18 +266,11 @@ each have :xml:`<header>` and :xml:`<body>`.
 
 
 If
-~~
+~~~
 
 In the header of :xml:`<if>`, an expression is present.
 
-Expression might be a single node like:
-
-*   :xml:`<name>`
-*   :xml:`<literal>`
-*   ...
-
-More complex expressions are built from the :xml:`<operation>` nodes, each of which contains
-a collection of :xml:`<operand>` and :xml:`<operator>` nodes. Each operand contains an expression.
+See `Expressions`_ for a definition.
 
 
 Loop
@@ -298,6 +291,12 @@ however they exist only within the body of select statement.
 Simple statements
 -----------------
 
+.. code:: xml
+
+    <statement>
+      ...
+    </statement>
+
 All simple statements are using :xml:`<statement>` node, which wraps around nodes like:
 
 *   :xml:`<assignment>`
@@ -316,6 +315,128 @@ All simple statements are using :xml:`<statement>` node, which wraps around node
 *   :xml:`<cycle>`
 *   :xml:`<arithmetic-if>`
 *   ...
+
+
+Assignment
+~~~~~~~~~~
+
+.. code:: fortran
+
+    x = 1
+
+.. code:: xml
+
+    <assignment>
+      <target>
+        <name id="i" />
+      </target>
+      <value>
+        <literal type="int" value="1" />
+      </value>
+    </assignment>
+
+
+Call
+~~~~
+
+.. code:: fortran
+
+    call configure
+    call initialize()
+    call calculate(1, 2)
+    call something(thing=my_value)
+
+.. code:: xml
+
+    <call>
+      <name hasSubscripts="false" id="configure" type="procedure" />
+    </call>
+    <call>
+      <name hasSubscripts="true" id="initialize" type="procedure">
+        <subscripts count="0" />
+      </name>
+    </call>
+    <call>
+      <name hasSubscripts="true" id="calculate" type="procedure">
+        <subscripts count="2">
+          <subscript type="simple">
+            <literal  type="int" value="1" />
+          </subscript>
+          <subscript type="simple">
+            <literal type="int" value="2" />
+          </subscript>
+        </subscripts>
+      </name>
+    </call>
+    <call >
+      <name hasSubscripts="true" id="something" type="procedure">
+        <subscripts count="1">
+          <argument name="thing">
+            <name id="my_value" />
+          </argument>
+        </subscripts>
+      </name>
+    </call>
+
+
+Expressions
+-----------
+
+Expression might be a single node like:
+
+*   :xml:`<name>`
+*   :xml:`<literal>`
+*   ...
+
+More complex expressions are built from the :xml:`<operation>` nodes, each of which contains
+a collection of :xml:`<operand>` and :xml:`<operator>` nodes. Each operand contains an expression.
+
+
+Unary operation
+~~~~~~~~~~~~~~~
+
+.. code:: fortran
+
+    .not. flag
+
+.. code:: xml
+
+    <operation type="unary">
+      <operator operator=".not." />
+      <operand>
+        <name id="flag" />
+      </operand>
+    </operation>
+
+
+Multiary operation
+~~~~~~~~~~~~~~~~~~
+
+.. code:: fortran
+
+    'Hello' // ' world'
+    5 + x
+
+.. code:: xml
+
+    <operation type="multiary">
+      <operand >
+        <literal type="char" value="'Hello'" />
+      </operand>
+      <operator operator="//" />
+      <operand>
+        <literal type="char" value="' world'" />
+      </operand>
+    </operation>
+    <operation type="multiary">
+      <operand>
+        <literal type="int" value="5" />
+      </operand>
+      <operator operator="+" />
+      <operand>
+        <name id="x" />
+      </operand>
+    </operation>
 
 
 Subroutine
@@ -673,4 +794,4 @@ Finally, generate results for Java code:
 
 .. code:: bash
 
-    java -jar "lib/org.jacoco.cli-0.8.3-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --xml jacoco.xml
+    java -jar "lib/org.jacoco.cli-0.8.3-nodeps.jar" report "jacoco.exec" --classfiles "bin/" --sourcefiles "src/" --html jacoco
