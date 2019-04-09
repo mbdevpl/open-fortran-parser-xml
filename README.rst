@@ -57,7 +57,7 @@ For any Fortran file, the resulting XML file has the following structure:
 .. code:: xml
 
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <ofp version="0.8.4"> <!-- version of the Open Fortran Parser used -->
+    <ofp version="0.8.5-1"> <!-- version of the Open Fortran Parser used -->
       <file path="/path/to/parsed/file.f90">
         <!-- Fortran syntax goes here -->
       </file>
@@ -498,7 +498,7 @@ where:
 *   The :bash:`--output` flag controls where the XML should be written. Defaults to standard output
     when omitted.
 
-and remaining command-line options are exactly as defined in OFP 0.8.4.
+and remaining command-line options are exactly as defined in OFP 0.8.5.
 
 To parse :bash:`some_fortran_file.f` and save XML output in :bash:`tree.xml` with minimum verbosity:
 

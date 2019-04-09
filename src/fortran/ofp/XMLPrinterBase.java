@@ -188,7 +188,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 			doc = docBuilder.newDocument();
 			root = contextOpen("ofp");
-			setAttribute("version", "0.8.4");
+			setAttribute("version", "0.8.5-1");
 			doc.appendChild(root);
 		} catch (Exception error) {
 			error.printStackTrace();
