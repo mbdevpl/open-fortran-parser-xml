@@ -455,7 +455,7 @@ Get dependencies, either manually, or using the provided script:
 .. code:: bash
 
     pip3 install -U -r requirements.txt
-    python3 -m open_fortran_parser --dev-deps
+    python3 -m open_fortran_parser --deps
     export CLASSPATH="${CLASSPATH}:$(pwd)/lib/*"
 
 Build:
@@ -580,7 +580,7 @@ You can make sure that dependencies are configured correctly by running:
 
 .. code:: bash
 
-    python3 -m open_fortran_parser --deps
+    python3 -m open_fortran_parser --check-deps
 
 If the depenencies changed since you first ran the wrapper from the source tree, you can cleanup
 outdated dependencies by executing:
@@ -597,7 +597,7 @@ as script
 
     $ python3 -m open_fortran_parser -h
     usage: open_fortran_parser [-h] [--version] [-v VERBOSITY]
-                               [--get-dependencies]
+                               [--check-dependencies]
                                [input] [output]
 
     Python wrapper around XML generator for Open Fortran Parser
@@ -612,8 +612,9 @@ as script
       --version             show program's version number and exit
       -v VERBOSITY, --verbosity VERBOSITY
                             level of verbosity, from 0 to 100 (default: 100)
-      --get-dependencies, --deps
-                            download dependencies and exit (default: False)
+      --check-dependencies, --check-deps
+                            check if all required dependencies are present and
+                            exit (default: False)
 
     Copyright 2017-2019 by the contributors, Apache License 2.0,
     https://github.com/mbdevpl/open-fortran-parser-xml

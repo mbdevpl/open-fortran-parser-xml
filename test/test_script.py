@@ -38,15 +38,17 @@ class Tests(unittest.TestCase):
         self.assertIn('usage', text)
         self.assertIn('open_fortran_parser', text)
 
-    @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
-    def test_deps_flag(self):
+    def test_check_deps_flag(self):
         sio = io.StringIO()
         with contextlib.redirect_stderr(sio):
-            run_module('open_fortran_parser', '--deps')
+            run_module('open_fortran_parser', '--check-deps')
         self.assertGreater(len(sio.getvalue()), 0)
         self.assertGreater(len(os.listdir(str(DEPENDENCIES_PATH))), 0)
 
-        run_module('open_fortran_parser', '--dev-deps')
+    @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
+    def test_development_flags(self):
+        run_module('open_fortran_parser', '--deps')
+        run_module('open_fortran_parser', '--cleanup-deps')
         self.assertGreater(len(os.listdir(str(DEV_DEPENDENCIES_PATH))), 0)
 
     def test_verbosity_flag(self):

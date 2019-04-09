@@ -6,9 +6,11 @@ import urllib
 
 from ._version import VERSION
 
-DEV_DEPENDENCIES_PATH = pathlib.Path(os.getcwd(), 'lib')
+DEPENDENCIES_PATH = pathlib.Path(__file__).resolve().parent
 
-DEV_DEPENDENCIES = {
+DEV_DEPENDENCIES_PATH = DEPENDENCIES_PATH.parent.joinpath('lib')
+
+COMMON_DEPENDENCIES = {
     'ANTLR 3.5.2': (
         urllib.parse.urlparse(
             'https://github.com/mbdevpl/open-fortran-parser/releases/download/v0.8.5-1/'),
@@ -22,9 +24,9 @@ DEV_DEPENDENCIES = {
             'https://github.com/mbdevpl/open-fortran-parser-xml/releases/download/v0.1.0/'),
         pathlib.Path('commons-cli-1.4.jar'))}
 
-DEPENDENCIES_PATH = pathlib.Path(__file__).resolve().parent
+DEV_DEPENDENCIES = COMMON_DEPENDENCIES.copy()
 
-DEPENDENCIES = DEV_DEPENDENCIES.copy()
+DEPENDENCIES = COMMON_DEPENDENCIES.copy()
 
 DEPENDENCIES.update({
     'Open Fortran Parser XML {}'.format(VERSION): (

@@ -88,7 +88,7 @@ install:
   - python -m pip install -U pip
   - python -m pip install -U -r dev_requirements.txt
   # Java
-  - python -m open_fortran_parser --dev-deps
+  - python -m open_fortran_parser --deps
   - set CLASSPATH=%cd%\\lib\\*;%CLASSPATH%
   - ant -Dpython=python
   - set CLASSPATH=%cd%\\dist\\*;%CLASSPATH%
