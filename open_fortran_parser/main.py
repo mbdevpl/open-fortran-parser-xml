@@ -38,22 +38,22 @@ def main(args=None, namespace=None):
         '-v', '--verbosity', type=int, default=100, help='''level of verbosity, from 0 to 100''')
     parser.add_argument(
         '--get-dependencies', '--deps', action='store_true',
-        help='''download dependencies and exit''')
+        help=argparse.SUPPRESS)  # download dependencies for development and exit
     parser.add_argument(
-        '--get-development-dependencies', '--dev-deps', action='store_true',
-        help=argparse.SUPPRESS)
+        '--check-dependencies', '--check-deps', action='store_true',
+        help='''check if all required dependencies are present and exit''')
     parser.add_argument(
         '--cleanup-dependencies', '--cleanup-deps', action='store_true',
-        help=argparse.SUPPRESS)
+        help=argparse.SUPPRESS)  # delete outdated development dependencies and exit
 
     args = parser.parse_args(args, namespace)
 
-    if args.get_development_dependencies:
+    if args.get_dependencies:
         ensure_dependencies(DEV_DEPENDENCIES, DEV_DEPENDENCIES_PATH)
         return
 
-    if args.get_dependencies:
-        ensure_dependencies(DEPENDENCIES, DEPENDENCIES_PATH)
+    if args.check_dependencies:
+        ensure_dependencies(DEPENDENCIES, DEPENDENCIES_PATH, download=False)
         return
 
     if args.cleanup_dependencies:

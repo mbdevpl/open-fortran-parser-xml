@@ -81,13 +81,10 @@ install:
   - pip install -U pip
   - pip install -U -r dev_requirements.txt
   # Java
-  - python -m open_fortran_parser --dev-deps
+  - python -m open_fortran_parser --deps
   - export CLASSPATH="${CLASSPATH}:$(pwd)/lib/*"
   - ant -Dpython=python
   - export CLASSPATH="${CLASSPATH}:$(pwd)/dist/*"
-  # Java tests
-  - wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.8.3/org.jacoco.agent-0.8.3-runtime.jar" -O "lib/org.jacoco.agent-0.8.3-runtime.jar"
-  - wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.cli/0.8.3/org.jacoco.cli-0.8.3-nodeps.jar" -O "lib/org.jacoco.cli-0.8.3-nodeps.jar"
 
 script:
   - |

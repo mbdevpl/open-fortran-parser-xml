@@ -455,7 +455,7 @@ Get dependencies, either manually, or using the provided script:
 .. code:: bash
 
     pip3 install -U -r requirements.txt
-    python3 -m open_fortran_parser --dev-deps
+    python3 -m open_fortran_parser --deps
     export CLASSPATH="${CLASSPATH}:$(pwd)/lib/*"
 
 Build:
@@ -580,7 +580,7 @@ You can make sure that dependencies are configured correctly by running:
 
 .. code:: bash
 
-    python3 -m open_fortran_parser --deps
+    python3 -m open_fortran_parser --check-deps
 
 If the depenencies changed since you first ran the wrapper from the source tree, you can cleanup
 outdated dependencies by executing:
@@ -597,7 +597,7 @@ as script
 
     $ python3 -m open_fortran_parser -h
     usage: open_fortran_parser [-h] [--version] [-v VERBOSITY]
-                               [--get-dependencies]
+                               [--check-dependencies]
                                [input] [output]
 
     Python wrapper around XML generator for Open Fortran Parser
@@ -612,8 +612,9 @@ as script
       --version             show program's version number and exit
       -v VERBOSITY, --verbosity VERBOSITY
                             level of verbosity, from 0 to 100 (default: 100)
-      --get-dependencies, --deps
-                            download dependencies and exit (default: False)
+      --check-dependencies, --check-deps
+                            check if all required dependencies are present and
+                            exit (default: False)
 
     Copyright 2017-2019 by the contributors, Apache License 2.0,
     https://github.com/mbdevpl/open-fortran-parser-xml
@@ -645,16 +646,15 @@ Run basic tests:
 code coverage
 ~~~~~~~~~~~~~
 
-Getting code coverage results for Java requires JaCoCo agent, and JaCoCo CLI.
+Getting code coverage results for Java requires JaCoCo agent, and JaCoCo CLI,
+and both are dowonloaded automatically along with other development dependencies.
 
-Set up code coverage for Java:
+Currently, test setup relies on JaCoCo 0.8.3:
 
-.. code:: bash
+*   JaCoCo agent 0.8.3 (runtime)
+*   JaCoCo CLI 0.8.3 (nodeps)
 
-    wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.8.3/org.jacoco.agent-0.8.3-runtime.jar" -O "lib/org.jacoco.agent-0.8.3-runtime.jar"
-    wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.cli/0.8.3/org.jacoco.cli-0.8.3-nodeps.jar" -O "lib/org.jacoco.cli-0.8.3-nodeps.jar"
-
-Then, run all test and gather code coverage:
+Run all test and gather code coverage:
 
 .. code:: bash
 
