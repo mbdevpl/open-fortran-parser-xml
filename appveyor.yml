@@ -92,9 +92,6 @@ install:
   - set CLASSPATH=%cd%\\lib\\*;%CLASSPATH%
   - ant -Dpython=python
   - set CLASSPATH=%cd%\\dist\\*;%CLASSPATH%
-  # Java tests
-  - ps: Invoke-WebRequest "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.8.3/org.jacoco.agent-0.8.3-runtime.jar" -OutFile "lib\\org.jacoco.agent-0.8.3-runtime.jar"
-  - ps: Invoke-WebRequest "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.cli/0.8.3/org.jacoco.cli-0.8.3-nodeps.jar" -OutFile "lib\\org.jacoco.cli-0.8.3-nodeps.jar"
 
 build: off
 

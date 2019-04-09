@@ -26,6 +26,17 @@ COMMON_DEPENDENCIES = {
 
 DEV_DEPENDENCIES = COMMON_DEPENDENCIES.copy()
 
+DEV_DEPENDENCIES.update({
+    'JaCoCo agent 0.8.3': (
+        urllib.parse.urlparse(
+            'https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.8.3/'),
+        pathlib.Path('org.jacoco.agent-0.8.3-runtime.jar')),
+    'JaCoCo CLI 0.8.3': (
+        urllib.parse.urlparse(
+            'https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.cli/0.8.3/'),
+        pathlib.Path('org.jacoco.cli-0.8.3-nodeps.jar')),
+    })
+
 DEPENDENCIES = COMMON_DEPENDENCIES.copy()
 
 DEPENDENCIES.update({

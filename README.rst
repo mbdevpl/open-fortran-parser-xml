@@ -646,16 +646,15 @@ Run basic tests:
 code coverage
 ~~~~~~~~~~~~~
 
-Getting code coverage results for Java requires JaCoCo agent, and JaCoCo CLI.
+Getting code coverage results for Java requires JaCoCo agent, and JaCoCo CLI,
+and both are dowonloaded automatically along with other development dependencies.
 
-Set up code coverage for Java:
+Currently, test setup relies on JaCoCo 0.8.3:
 
-.. code:: bash
+*   JaCoCo agent 0.8.3 (runtime)
+*   JaCoCo CLI 0.8.3 (nodeps)
 
-    wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.agent/0.8.3/org.jacoco.agent-0.8.3-runtime.jar" -O "lib/org.jacoco.agent-0.8.3-runtime.jar"
-    wget "https://search.maven.org/remotecontent?filepath=org/jacoco/org.jacoco.cli/0.8.3/org.jacoco.cli-0.8.3-nodeps.jar" -O "lib/org.jacoco.cli-0.8.3-nodeps.jar"
-
-Then, run all test and gather code coverage:
+Run all test and gather code coverage:
 
 .. code:: bash
 
