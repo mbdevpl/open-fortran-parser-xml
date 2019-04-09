@@ -57,4 +57,4 @@ def cleanup_old_dependencies(
         else:
             _LOG.warning('Moving %s from path "%s" to path "%s"...',
                          dependency, current_dir, backup_dir)
-            path.move()
+            path.rename(backup_dir.joinpath(filename))
