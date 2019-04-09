@@ -18,11 +18,15 @@ class Tests(unittest.TestCase):
     @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
     def test_deps(self):
         with tempfile.TemporaryDirectory() as temp_dir:
-            ensure_dependencies(DEV_DEPENDENCIES, pathlib.Path(temp_dir), silent=False)
+            self.assertEqual(len(os.listdir(temp_dir)), 0)
+            ensure_dependencies(TESTED_DEPENDENCIES, pathlib.Path(temp_dir), download=False)
+            self.assertEqual(len(os.listdir(temp_dir)), 0)
+            ensure_dependencies(TESTED_DEPENDENCIES, pathlib.Path(temp_dir), silent=False)
             self.assertGreater(len(os.listdir(temp_dir)), 0)
+            ensure_dependencies(TESTED_DEPENDENCIES, pathlib.Path(temp_dir), silent=False)
         with tempfile.TemporaryDirectory() as temp_dir:
             os.rmdir(temp_dir)
-            ensure_dependencies(DEV_DEPENDENCIES, pathlib.Path(temp_dir), silent=True)
+            ensure_dependencies(TESTED_DEPENDENCIES, pathlib.Path(temp_dir), silent=True)
             self.assertGreater(len(os.listdir(temp_dir)), 0)
 
     @unittest.skipUnless(os.environ.get('TEST_DEPENDENCIES'), 'skipping dependency test')
