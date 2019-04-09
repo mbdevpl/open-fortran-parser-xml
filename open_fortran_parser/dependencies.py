@@ -14,7 +14,7 @@ _LOG = logging.getLogger(__name__)
 
 def ensure_dependencies(
         dependencies: t.Mapping[str, t.Tuple[urllib.parse.ParseResult, pathlib.Path]],
-        target_dir: pathlib.Path, silent: bool = False) -> None:
+        target_dir: pathlib.Path, download: bool = True, silent: bool = False) -> None:
     """Download missing depenedencies."""
     if not target_dir.exists():
         _LOG.warning('Creating directory "%s"...', target_dir)
@@ -23,6 +23,9 @@ def ensure_dependencies(
         path = target_dir.joinpath(filename)
         if path.is_file():
             _LOG.warning('%s is present already.', dependency)
+            continue
+        if not download:
+            _LOG.warning('%s is not present!', dependency)
             continue
         url = urllib.parse.urlunparse(url_root) + str(filename)
         _LOG.warning('Downloading %s from URL "%s" to path "%s"...', dependency, url, path)
