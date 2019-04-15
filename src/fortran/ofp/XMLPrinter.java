@@ -410,7 +410,10 @@ public class XMLPrinter extends XMLPrinterBase {
 				n = getAttribute("name");
 				if (n != null)
 					new IllegalArgumentException(declaration.getTagName());
-				setAttribute("name", declaration.getAttribute("keyword1"));
+				String name = declaration.getAttribute("keyword1");
+				if (declaration.getAttribute("keyword2").length() > 0)
+					name += " " + declaration.getAttribute("keyword2");
+				setAttribute("name", name);
 				setAttribute("type", "intrinsic");
 				break;
 			case "derived-type-spec":
