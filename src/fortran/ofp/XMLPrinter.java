@@ -646,15 +646,11 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
-	public void access_id_list__begin() {
-		// contextOpen("access-list");
-		if (verbosity >= 100)
-			super.access_id_list__begin();
-	}
-
-	public void access_id_list(int count) {
-		super.access_id_list(count);
-		// contextClose("access-list");
+	public void access_stmt(Token label, Token eos, boolean hasList) {
+		if (!context.getTagName().equals("declaration"))
+			cleanUpAfterError("tag name is not 'declaration' but '" + context.getTagName() + "'");
+		setAttribute("type", "access");
+		super.access_stmt(label, eos, hasList);
 	}
 
 	public void allocatable_decl_list__begin() {
