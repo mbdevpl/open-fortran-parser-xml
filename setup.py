@@ -9,7 +9,7 @@ class Package(setup_boilerplate.Package):
 
     name = 'open-fortran-parser'
     description = 'Python wrapper for XML output generator for Open Fortran Parser'
-    download_url = 'https://github.com/mbdevpl/open-fortran-parser-xml'
+    url = 'https://github.com/mbdevpl/open-fortran-parser-xml'
     classifiers = [
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
