@@ -11,17 +11,14 @@ addons:
 matrix:
   include:
     - os: linux
+      dist: trusty
       language: python
       python: "3.5"
       env: TRAVIS_JDK_VERSION=openjdk7
     - os: linux
       language: python
       python: "3.6"
-      env: TRAVIS_JDK_VERSION=openjdk8
-    - os: linux
-      language: python
-      python: "3.6"
-      env: TRAVIS_JDK_VERSION=oraclejdk9
+      env: TRAVIS_JDK_VERSION=openjdk11
     - os: linux
       language: python
       python: "3.7"
