@@ -27,32 +27,26 @@ matrix:
       python: "3.7"
       env: TRAVIS_JDK_VERSION=openjdk11
     - os: osx
+      osx_image: xcode11
       language: generic
       env:
         - TRAVIS_PYTHON_VERSION="3.5"
-        - TRAVIS_JDK_VERSION=oraclejdk8
+        - TRAVIS_JDK_VERSION=oraclejdk12
     - os: osx
+      osx_image: xcode11
       language: generic
       env:
         - TRAVIS_PYTHON_VERSION="3.6"
-        - TRAVIS_JDK_VERSION=oraclejdk8
+        - TRAVIS_JDK_VERSION=oraclejdk12
     - os: osx
+      osx_image: xcode11
       language: generic
       env:
         - TRAVIS_PYTHON_VERSION="3.7"
-        - TRAVIS_JDK_VERSION=oraclejdk8
+        - TRAVIS_JDK_VERSION=oraclejdk12
 
 before_install:
-  - |
-    set -e
-    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      if ! [[ ${TRAVIS_PYTHON_VERSION} =~ .*-dev$ ]] ; then
-        TRAVIS_PYTHON_VERSION="$(pyenv install --list | grep -E " ${TRAVIS_PYTHON_VERSION}(\.[0-9brc]+)+$" | tail -n 1 | sed -e 's/^[[:space:]]*//')"
-      fi
-      pyenv install "${TRAVIS_PYTHON_VERSION}"
-      export PATH="${HOME}/.pyenv/versions/${TRAVIS_PYTHON_VERSION}/bin:${PATH}"
-    fi
-    set +e
+  - DIAGNOSE_PYENV=1 .build/install_pyenv.sh
   - |
     set -e
     if [[ "${TRAVIS_OS_NAME}" == "linux" && "$(lsb_release -cs)" == "trusty" ]]; then
