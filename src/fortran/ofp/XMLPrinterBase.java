@@ -98,7 +98,7 @@ public class XMLPrinterBase extends FortranParserActionPrint {
 		/*
 		addListContext("explicit-shape-spec", "", "");
 		*/
-		// addListContext("access-id", /*"access-list"*/ null, null); // currently not necessary
+		addListContext("access-id", "names", null);
 		// addListContext("allocatable-decl", null, null); // currently not necessary
 		/*
 		addListContext("bind-entity", "", "");

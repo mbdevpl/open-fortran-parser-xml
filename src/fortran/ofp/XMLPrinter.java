@@ -439,10 +439,25 @@ public class XMLPrinter extends XMLPrinterBase {
 	}
 
 	public void attr_spec(Token attrKeyword, int attr) {
+		Element preceeding = null;
 		String nestIn = "";
 		switch (attr) {
 		case IActionEnums.AttrSpec_access:
-			// private
+			preceeding = contextNode(-1);
+			int accessType = Integer.parseInt(getAttribute("type", preceeding).getValue());
+			switch (accessType) {
+			case IActionEnums.AttrSpec_PUBLIC:
+				nestIn = "public";
+				break;
+			case IActionEnums.AttrSpec_PROTECTED:
+				nestIn = "protected";
+				break;
+			case IActionEnums.AttrSpec_PRIVATE:
+				nestIn = "private";
+				break;
+			default:
+				throw new IllegalArgumentException(Integer.toString(attr) + " - " + attrKeyword + ", type=" + Integer.toString(accessType));
+			}
 			break;
 		case IActionEnums.AttrSpec_language_binding:
 			// bind
@@ -497,6 +512,8 @@ public class XMLPrinter extends XMLPrinterBase {
 		}
 		if (nestIn.length() > 0)
 			contextOpen("attribute-" + nestIn);
+		if (preceeding != null)
+			moveHere(preceeding);
 		super.attr_spec(attrKeyword, attr);
 		if (nestIn.length() > 0)
 			contextClose();
@@ -629,15 +646,11 @@ public class XMLPrinter extends XMLPrinterBase {
 		contextClose();
 	}
 
-	public void access_id_list__begin() {
-		// contextOpen("access-list");
-		if (verbosity >= 100)
-			super.access_id_list__begin();
-	}
-
-	public void access_id_list(int count) {
-		super.access_id_list(count);
-		// contextClose("access-list");
+	public void access_stmt(Token label, Token eos, boolean hasList) {
+		if (!context.getTagName().equals("declaration"))
+			cleanUpAfterError("tag name is not 'declaration' but '" + context.getTagName() + "'");
+		setAttribute("type", "access");
+		super.access_stmt(label, eos, hasList);
 	}
 
 	public void allocatable_decl_list__begin() {
