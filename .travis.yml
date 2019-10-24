@@ -43,7 +43,7 @@ matrix:
         - TRAVIS_JDK_VERSION=oraclejdk12
 
 before_install:
-  - DIAGNOSE_PYENV=1 .build/install_pyenv.sh
+  - .build/install_pyenv.sh
   - |
     set -e
     if [[ "${TRAVIS_OS_NAME}" == "linux" && "$(lsb_release -cs)" == "trusty" ]]; then
