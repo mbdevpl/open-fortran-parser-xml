@@ -76,7 +76,7 @@ init:
   # FFB-MINI app
   - git clone "https://github.com/mbdevpl/ffb-mini" "..\\ffb-mini" --branch ofp_tests
   # FLASH 5 app
-  - git clone "https://github.com/ECP-Astro/FLASH5.git" "..\\flash5"
+  - git clone "https://github.com/mbdevpl/FLASH5.git" "..\\flash5"
   # miranda_io app
   - git clone "https://github.com/mbdevpl/miranda_io" "..\\miranda_io"
   # ant
