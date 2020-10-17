@@ -20,8 +20,8 @@ XML output generator for Open Fortran Parser
 
 Extension of Java-based Open Fortran Parser and a Python wrapper enabling Fortran parsing from Python.
 
-.. image:: https://travis-ci.org/mbdevpl/open-fortran-parser-xml.svg?branch=master
-    :target: https://travis-ci.org/mbdevpl/open-fortran-parser-xml
+.. image:: https://travis-ci.com/mbdevpl/open-fortran-parser-xml.svg?branch=master
+    :target: https://travis-ci.com/mbdevpl/open-fortran-parser-xml
     :alt: build status from Travis CI
 
 .. image:: https://ci.appveyor.com/api/projects/status/github/mbdevpl/open-fortran-parser-xml?branch=master&svg=true
